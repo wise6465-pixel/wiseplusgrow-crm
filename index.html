@@ -7,109 +7,233 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Sarabun',sans-serif;background:#f0f2f5;display:flex;height:100vh;overflow:hidden;}
-.sidebar{width:60px;min-width:60px;background:#1e2a3a;display:flex;flex-direction:column;align-items:center;padding:12px 0;transition:width .25s;overflow:hidden;z-index:100;flex-shrink:0;}
-.sidebar:hover{width:220px;}
-.sidebar .brand{display:flex;align-items:center;gap:10px;color:#fff;font-size:18px;font-weight:700;padding:8px 16px 20px;width:100%;white-space:nowrap;overflow:hidden;}
-.sidebar .brand span{opacity:0;transition:opacity .2s;font-size:15px;}
-.sidebar:hover .brand span{opacity:1;}
-.nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 18px;cursor:pointer;color:#8fa3b1;transition:all .2s;white-space:nowrap;overflow:hidden;border-left:3px solid transparent;}
-.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
-.nav-item.active{background:rgba(74,144,226,.15);color:#4a90e2;border-left:3px solid #4a90e2;}
-.nav-item .icon{font-size:18px;min-width:24px;text-align:center;}
-.nav-item .label{opacity:0;transition:opacity .2s;font-size:13.5px;}
-.sidebar:hover .nav-item .label{opacity:1;}
+body{font-family:'Sarabun',sans-serif;background:#f4f5f7;display:flex;height:100vh;overflow:hidden;font-size:14px;}
+
+/* SIDEBAR */
+.sidebar{width:58px;min-width:58px;background:#1a2332;display:flex;flex-direction:column;align-items:center;padding:0;transition:width .25s;overflow:hidden;z-index:200;flex-shrink:0;}
+.sidebar:hover{width:200px;}
+.sidebar-logo{display:flex;align-items:center;justify-content:center;height:52px;width:100%;background:#141d2b;border-bottom:1px solid #243044;flex-shrink:0;}
+.sidebar-logo .logo-icon{font-size:20px;min-width:34px;text-align:center;}
+.sidebar-logo .logo-text{opacity:0;transition:opacity .2s;font-size:14px;font-weight:700;color:#fff;white-space:nowrap;}
+.sidebar:hover .logo-text{opacity:1;}
+.nav-group{width:100%;padding:8px 0;}
+.nav-item{display:flex;align-items:center;gap:0;width:100%;height:46px;cursor:pointer;color:#8fa3b8;transition:all .18s;white-space:nowrap;overflow:hidden;position:relative;}
+.nav-item:hover{background:#243044;color:#fff;}
+.nav-item.active{background:#243044;color:#f0c040;}
+.nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#f0c040;}
+.nav-item .ni{font-size:17px;min-width:58px;text-align:center;flex-shrink:0;}
+.nav-item .nl{opacity:0;transition:opacity .15s;font-size:13px;font-weight:500;}
+.sidebar:hover .nav-item .nl{opacity:1;}
+.nav-label{font-size:10px;color:#4a6278;padding:8px 0 4px 0;text-align:center;width:100%;letter-spacing:.5px;opacity:0;white-space:nowrap;}
+.sidebar:hover .nav-label{opacity:1;}
+
+/* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
-.topbar{background:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8edf2;flex-shrink:0;}
-.topbar h2{font-size:18px;font-weight:600;color:#1e2a3a;}
-.topbar-right{display:flex;gap:10px;align-items:center;}
-.btn-primary{background:#4a90e2;color:#fff;border:none;padding:8px 18px;border-radius:7px;cursor:pointer;font-size:13.5px;font-family:'Sarabun',sans-serif;font-weight:500;display:flex;align-items:center;gap:6px;}
-.btn-primary:hover{background:#3a7bd5;}
-.btn-outline{background:#fff;color:#1e2a3a;border:1px solid #dde3ec;padding:7px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-family:'Sarabun',sans-serif;display:flex;align-items:center;gap:6px;}
-.content{flex:1;overflow-y:auto;padding:24px;}
+
+/* TOPBAR */
+.topbar{background:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #f0c040;flex-shrink:0;padding:0 20px;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-left h2{font-size:17px;font-weight:700;color:#1a2332;}
+.topbar-filters{display:flex;gap:8px;}
+.filter-btn{background:#f4f5f7;border:1px solid #dde2ea;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;color:#4a5568;}
+.filter-btn.active{background:#1a2332;color:#fff;border-color:#1a2332;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+.btn-add{background:#1a2332;color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Sarabun',sans-serif;font-weight:600;}
+.btn-add:hover{background:#243044;}
+.user-badge{display:flex;align-items:center;gap:8px;font-size:13px;color:#4a5568;}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:#f0c040;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1a2332;font-size:13px;}
+
+/* DATE BAR */
+.date-bar{background:#fff;border-bottom:1px solid #e8ecf0;padding:6px 20px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.date-range{font-size:12px;color:#6b7280;font-weight:500;}
+.period-btns{display:flex;gap:4px;margin-left:auto;}
+.period-btn{padding:4px 12px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid #dde2ea;background:#fff;font-family:'Sarabun',sans-serif;color:#4a5568;}
+.period-btn.active{background:#1a2332;color:#fff;border-color:#1a2332;}
+
+/* CONTENT SCROLL */
+.content{flex:1;overflow-y:auto;padding:16px 20px;}
+
+/* PAGES */
 .page{display:none;}
 .page.active{display:block;}
-.stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px;}
-.stat-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-.stat-card .num{font-size:26px;font-weight:700;color:#1e2a3a;margin:6px 0;}
-.stat-card .lbl{font-size:12px;color:#8fa3b1;}
-.stat-card .sub{font-size:11.5px;margin-top:8px;}
-.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
-.tag-blue{background:#e8f0fb;color:#4a90e2;}
-.tag-green{background:#e6f9f0;color:#27ae60;}
-.tag-orange{background:#fff3e6;color:#e67e22;}
-.tag-red{background:#fdecea;color:#e74c3c;}
-.dash-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
-.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-.card h3{font-size:14px;font-weight:600;color:#1e2a3a;margin-bottom:16px;}
-.goal-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;}
-.goal-row .glabel{flex:0 0 120px;color:#4a5568;}
-.bar-bg{flex:1;height:8px;background:#eef1f5;border-radius:4px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:4px;background:#4a90e2;}
-.goal-row .gval{flex:0 0 80px;text-align:right;font-size:12px;color:#8fa3b1;}
-.donut-wrap{display:flex;align-items:center;gap:20px;}
-.donut{position:relative;width:110px;height:110px;}
-.donut svg{transform:rotate(-90deg);}
-.donut .center-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:11.5px;color:#4a5568;font-weight:600;}
-.legend{display:flex;flex-direction:column;gap:8px;}
-.legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#4a5568;}
-.legend-dot{width:10px;height:10px;border-radius:50%;}
-.card-table{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:22px;}
-.card-table h3{font-size:14px;font-weight:600;color:#1e2a3a;margin-bottom:14px;}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;padding:9px 12px;color:#8fa3b1;font-weight:600;border-bottom:1px solid #eef1f5;font-size:12px;}
-td{padding:10px 12px;border-bottom:1px solid #f5f7fa;color:#2d3748;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#fafbfc;}
-.empty-row{text-align:center;color:#b0bec5;padding:24px;font-size:13px;}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;}
+
+/* STAT CARDS ROW - JUBILI STYLE */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:#fff;border-radius:8px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.kpi-card{padding:14px 16px;border-right:1px solid #f0f2f5;position:relative;}
+.kpi-card:last-child{border-right:none;}
+.kpi-label{font-size:11px;color:#8fa3b8;font-weight:600;letter-spacing:.3px;margin-bottom:4px;}
+.kpi-unit{font-size:10px;color:#8fa3b8;position:absolute;top:14px;right:10px;}
+.kpi-num{font-size:24px;font-weight:700;color:#1a2332;line-height:1.1;}
+.kpi-num span{font-size:13px;color:#8fa3b8;font-weight:400;}
+.kpi-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-top:8px;}
+.kpi-badge.red{background:#ffe8e8;color:#dc2626;}
+.kpi-badge.green{background:#e8f9f0;color:#16a34a;}
+.kpi-badge.blue{background:#e8f0fb;color:#2563eb;}
+.kpi-badge.yellow{background:#fef9e7;color:#d97706;}
+.kpi-badge.gray{background:#f4f5f7;color:#6b7280;}
+
+/* SECTION GRID */
+.dash-row2{display:grid;grid-template-columns:340px 1fr;gap:16px;margin-bottom:16px;}
+
+/* GOAL SECTION - Jubili style */
+.card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.card-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:14px;font-weight:700;color:#1a2332;}
+.card-header .ch-icon{font-size:16px;}
+.goal-item{margin-bottom:16px;}
+.goal-name{font-size:13px;color:#4a5568;margin-bottom:4px;}
+.goal-pct{font-size:22px;font-weight:700;color:#16a34a;line-height:1;}
+.goal-sub{font-size:11px;color:#8fa3b8;margin-top:2px;}
+.goal-bar-bg{height:6px;background:#f0f2f5;border-radius:3px;margin-top:6px;overflow:hidden;}
+.goal-bar-fill{height:100%;border-radius:3px;background:#16a34a;transition:width .5s;}
+
+/* STATUS SECTION */
+.status-grid{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start;}
+.donut-wrap{position:relative;width:180px;height:180px;margin:0 auto;}
+.donut-wrap svg{transform:rotate(-90deg);}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.donut-center .dc-num{font-size:20px;font-weight:700;color:#1a2332;}
+.donut-center .dc-lbl{font-size:11px;color:#8fa3b8;}
+.status-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#4a5568;}
+.leg-dot{width:10px;height:10px;border-radius:2px;}
+
+/* STATUS TABLE */
+.status-table{font-size:12px;}
+.status-table table{width:100%;border-collapse:collapse;}
+.status-table th{text-align:center;padding:8px 6px;color:#8fa3b8;font-weight:600;font-size:11px;border-bottom:2px solid #f0f2f5;}
+.status-table th:first-child{text-align:left;}
+.status-table td{text-align:center;padding:8px 6px;border-bottom:1px solid #f9fafb;color:#374151;}
+.status-table td:first-child{text-align:left;font-weight:500;}
+.status-table tr.total-row td{background:#f4f5f7;font-weight:700;}
+.status-table .win-cell{color:#16a34a;font-weight:700;}
+
+/* BOTTOM ROW */
+.dash-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+
+/* FUNNEL */
+.funnel-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;}
+.funnel-bar{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;border-radius:4px;transition:width .3s;}
+
+/* LINE CHART SIMPLE */
+.line-chart{height:120px;position:relative;margin-top:8px;}
+.lc-svg{width:100%;height:100%;}
+
+/* ACTIVITY LIST */
+.act-list{display:flex;flex-direction:column;gap:8px;}
+.act-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:6px;background:#f9fafb;}
+.act-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.act-text{flex:1;}
+.act-title{font-size:12px;font-weight:600;color:#1a2332;}
+.act-meta{font-size:11px;color:#8fa3b8;margin-top:2px;}
+
+/* PAGE TITLE BAR */
+.page-title-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.page-title-text{font-size:16px;font-weight:700;color:#1a2332;}
+
+/* TABLE CARD */
+.tcard{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden;}
+.tcard-header{padding:14px 16px;border-bottom:1px solid #f0f2f5;font-weight:700;font-size:14px;color:#1a2332;display:flex;align-items:center;gap:8px;}
+table.main-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.main-table th{text-align:left;padding:10px 14px;color:#8fa3b8;font-weight:600;border-bottom:1px solid #f0f2f5;font-size:12px;background:#fafbfc;}
+table.main-table td{padding:11px 14px;border-bottom:1px solid #f9fafb;color:#374151;}
+table.main-table tr:last-child td{border-bottom:none;}
+table.main-table tr:hover td{background:#f9fafb;}
+.empty-row{text-align:center;color:#b0bec5;padding:28px;font-size:13px;}
+
+/* TAG */
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.tag-green{background:#e8f9f0;color:#16a34a;}
+.tag-blue{background:#e8f0fb;color:#2563eb;}
+.tag-yellow{background:#fef9e7;color:#d97706;}
+.tag-red{background:#ffe8e8;color:#dc2626;}
+.tag-gray{background:#f4f5f7;color:#6b7280;}
+
+/* PIPELINE */
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.pipe-col{background:#f9fafb;border-radius:8px;padding:12px;border-top:3px solid #1a2332;}
+.pipe-col.c0{border-color:#f0c040;}
+.pipe-col.c1{border-color:#3b82f6;}
+.pipe-col.c2{border-color:#f97316;}
+.pipe-col.c3{border-color:#22c55e;}
+.pipe-col-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.pipe-col-title{font-size:12px;font-weight:700;color:#4a5568;}
+.pipe-count{background:#1a2332;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700;}
+.pipe-card{background:#fff;border-radius:6px;padding:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.pipe-card .pname{font-size:13px;font-weight:600;color:#1a2332;}
+.pipe-card .pmeta{font-size:11px;color:#8fa3b8;margin-top:3px;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal-box{background:#fff;border-radius:14px;width:500px;max-width:95vw;max-height:85vh;overflow:auto;padding:28px;}
-.modal-box h3{font-size:16px;font-weight:700;color:#1e2a3a;margin-bottom:22px;}
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:13px;color:#4a5568;font-weight:500;margin-bottom:6px;}
-.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1px solid #dde3ec;border-radius:8px;font-family:'Sarabun',sans-serif;font-size:13.5px;outline:none;color:#2d3748;}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#4a90e2;}
-.form-group textarea{resize:vertical;min-height:80px;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
-.btn-cancel{background:#f0f2f5;color:#4a5568;border:none;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:14px;}
-.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.pipe-col{background:#f5f7fa;border-radius:10px;padding:14px;}
-.pipe-col h4{font-size:13px;font-weight:600;color:#4a5568;margin-bottom:12px;display:flex;justify-content:space-between;}
-.pipe-card{background:#fff;border-radius:8px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
-.pipe-card .pname{font-size:13px;font-weight:600;color:#1e2a3a;}
-.pipe-card .pmeta{font-size:12px;color:#8fa3b1;margin-top:4px;}
-.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.page-title{font-size:16px;font-weight:700;color:#1e2a3a;}
-.setting-section{background:#fff;border-radius:12px;padding:22px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
-.setting-section h3{font-size:14px;font-weight:600;margin-bottom:16px;color:#1e2a3a;}
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f5f7fa;}
+.modal-box{background:#fff;border-radius:10px;width:480px;max-width:95vw;max-height:85vh;overflow:auto;}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid #f0f2f5;font-size:15px;font-weight:700;color:#1a2332;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{cursor:pointer;font-size:18px;color:#8fa3b8;}
+.modal-body{padding:18px 22px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;color:#4a5568;font-weight:600;margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 11px;border:1px solid #dde2ea;border-radius:6px;font-family:'Sarabun',sans-serif;font-size:13px;outline:none;color:#1a2332;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#f0c040;box-shadow:0 0 0 3px rgba(240,192,64,.15);}
+.form-group textarea{resize:vertical;min-height:75px;}
+.modal-footer{padding:14px 22px;border-top:1px solid #f0f2f5;display:flex;gap:8px;justify-content:flex-end;}
+.btn-save{background:#1a2332;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;}
+.btn-save:hover{background:#243044;}
+.btn-cancel{background:#f4f5f7;color:#4a5568;border:1px solid #dde2ea;padding:8px 16px;border-radius:6px;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:13px;}
+
+/* SETTING */
+.setting-section{background:#fff;border-radius:8px;padding:20px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.setting-section h3{font-size:14px;font-weight:700;margin-bottom:14px;color:#1a2332;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f9fafb;}
 .setting-row:last-child{border-bottom:none;}
-.setting-label{font-size:13.5px;color:#2d3748;}
-.setting-val{font-size:13px;color:#8fa3b1;}
-.forecast-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+.setting-label{font-size:13px;color:#374151;}
+.setting-val{font-size:13px;color:#8fa3b8;}
+
+/* FORECAST */
+.fc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.fc-card{background:#fff;border-radius:8px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+.fc-card h3{font-size:12px;font-weight:700;color:#8fa3b8;margin-bottom:8px;letter-spacing:.3px;}
+.fc-card .fc-num{font-size:22px;font-weight:700;color:#1a2332;}
+.fc-card .fc-sub{font-size:11px;color:#8fa3b8;margin-top:4px;}
 </style>
 </head>
 <body>
 <div class="sidebar" id="sidebar">
-  <div class="brand">&#x1F48E; <span>Wiseplusgrow</span></div>
-  <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">&#x1F4CA;</span><span class="label">&#x0E41;&#x0E1C;&#x0E07;&#x0E1A;&#x0E23;&#x0E34;&#x0E2B;&#x0E32;&#x0E23;</span></div>
-  <div class="nav-item" onclick="showPage('activity',this)"><span class="icon">&#x2705;</span><span class="label">&#x0E07;&#x0E32;&#x0E19;&#x0E15;&#x0E34;&#x0E14;&#x0E15;&#x0E32;&#x0E21;</span></div>
-  <div class="nav-item" onclick="showPage('customer',this)"><span class="icon">&#x1F465;</span><span class="label">&#x0E25;&#x0E39;&#x0E01;&#x0E04;&#x0E49;&#x0E32;</span></div>
-  <div class="nav-item" onclick="showPage('project',this)"><span class="icon">&#x1F4C1;</span><span class="label">&#x0E42;&#x0E04;&#x0E23;&#x0E07;&#x0E01;&#x0E32;&#x0E23;</span></div>
-  <div class="nav-item" onclick="showPage('lead',this)"><span class="icon">&#x1F3AF;</span><span class="label">&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;</span></div>
-  <div class="nav-item" onclick="showPage('quotation',this)"><span class="icon">&#x1F4C4;</span><span class="label">&#x0E43;&#x0E1A;&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;</span></div>
-  <div class="nav-item" onclick="showPage('saleorder',this)"><span class="icon">&#x1F6D2;</span><span class="label">&#x0E43;&#x0E1A;&#x0E2A;&#x0E31;&#x0E48;&#x0E07;&#x0E02;&#x0E32;&#x0E22;</span></div>
-  <div class="nav-item" onclick="showPage('forecast',this)"><span class="icon">&#x1F4C8;</span><span class="label">&#x0E04;&#x0E32;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E13;&#x0E4C;</span></div>
-  <div class="nav-item" onclick="showPage('report',this)"><span class="icon">&#x1F4CB;</span><span class="label">&#x0E23;&#x0E32;&#x0E22;&#x0E07;&#x0E32;&#x0E19;</span></div>
-  <div class="nav-item" onclick="showPage('setting',this)"><span class="icon">&#x2699;&#xFE0F;</span><span class="label">&#x0E15;&#x0E31;&#x0E49;&#x0E07;&#x0E04;&#x0E48;&#x0E32;</span></div>
+  <div class="sidebar-logo">
+    <span class="logo-icon">&#x1F48E;</span>
+    <span class="logo-text">Wiseplusgrow</span>
+  </div>
+  <div class="nav-group">
+    <div class="nav-item active" onclick="showPage('dashboard',this)" title="&#x0E41;&#x0E1C;&#x0E07;&#x0E1A;&#x0E23;&#x0E34;&#x0E2B;&#x0E32;&#x0E23;"><span class="ni">&#x1F4CA;</span><span class="nl">&#x0E41;&#x0E1C;&#x0E07;&#x0E1A;&#x0E23;&#x0E34;&#x0E2B;&#x0E32;&#x0E23;</span></div>
+    <div class="nav-item" onclick="showPage('activity',this)" title="&#x0E07;&#x0E32;&#x0E19;&#x0E15;&#x0E34;&#x0E14;&#x0E15;&#x0E32;&#x0E21;"><span class="ni">&#x2705;</span><span class="nl">&#x0E07;&#x0E32;&#x0E19;&#x0E15;&#x0E34;&#x0E14;&#x0E15;&#x0E32;&#x0E21;</span></div>
+    <div class="nav-item" onclick="showPage('customer',this)" title="&#x0E25;&#x0E39;&#x0E01;&#x0E04;&#x0E49;&#x0E32;"><span class="ni">&#x1F465;</span><span class="nl">&#x0E25;&#x0E39;&#x0E01;&#x0E04;&#x0E49;&#x0E32;</span></div>
+    <div class="nav-item" onclick="showPage('project',this)" title="&#x0E42;&#x0E04;&#x0E23;&#x0E07;&#x0E01;&#x0E32;&#x0E23;"><span class="ni">&#x1F4C1;</span><span class="nl">&#x0E42;&#x0E04;&#x0E23;&#x0E07;&#x0E01;&#x0E32;&#x0E23;</span></div>
+    <div class="nav-item" onclick="showPage('lead',this)" title="&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;"><span class="ni">&#x1F3AF;</span><span class="nl">&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;</span></div>
+    <div class="nav-item" onclick="showPage('quotation',this)" title="&#x0E43;&#x0E1A;&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;"><span class="ni">&#x1F4C4;</span><span class="nl">&#x0E43;&#x0E1A;&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;</span></div>
+    <div class="nav-item" onclick="showPage('saleorder',this)" title="&#x0E43;&#x0E1A;&#x0E2A;&#x0E31;&#x0E48;&#x0E07;&#x0E02;&#x0E32;&#x0E22;"><span class="ni">&#x1F6D2;</span><span class="nl">&#x0E43;&#x0E1A;&#x0E2A;&#x0E31;&#x0E48;&#x0E07;&#x0E02;&#x0E32;&#x0E22;</span></div>
+    <div class="nav-item" onclick="showPage('forecast',this)" title="&#x0E04;&#x0E32;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E13;&#x0E4C;"><span class="ni">&#x1F4C8;</span><span class="nl">&#x0E04;&#x0E32;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E13;&#x0E4C;</span></div>
+    <div class="nav-item" onclick="showPage('report',this)" title="&#x0E23;&#x0E32;&#x0E22;&#x0E07;&#x0E32;&#x0E19;"><span class="ni">&#x1F4CB;</span><span class="nl">&#x0E23;&#x0E32;&#x0E22;&#x0E07;&#x0E32;&#x0E19;</span></div>
+    <div class="nav-item" onclick="showPage('setting',this)" title="&#x0E15;&#x0E31;&#x0E49;&#x0E07;&#x0E04;&#x0E48;&#x0E32;"><span class="ni">&#x2699;&#xFE0F;</span><span class="nl">&#x0E15;&#x0E31;&#x0E49;&#x0E07;&#x0E04;&#x0E48;&#x0E32;</span></div>
+  </div>
 </div>
 <div class="main">
   <div class="topbar">
-    <h2 id="page-title">&#x0E41;&#x0E1C;&#x0E07;&#x0E1A;&#x0E23;&#x0E34;&#x0E2B;&#x0E32;&#x0E23;</h2>
+    <div class="topbar-left">
+      <h2 id="page-title">&#x0E41;&#x0E1C;&#x0E07;&#x0E1A;&#x0E23;&#x0E34;&#x0E2B;&#x0E32;&#x0E23;</h2>
+    </div>
     <div class="topbar-right">
-      <button class="btn-primary" onclick="openModal()">+ &#x0E40;&#x0E1E;&#x0E34;&#x0E48;&#x0E21;&#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;</button>
-      <button class="btn-outline">&#x1F464; &#x0E1C;&#x0E39;&#x0E49;&#x0E14;&#x0E39;&#x0E41;&#x0E25;&#x0E23;&#x0E30;&#x0E1A;&#x0E1A;</button>
+      <button class="btn-add" onclick="openModal()">+ &#x0E40;&#x0E1E;&#x0E34;&#x0E48;&#x0E21;&#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;</button>
+      <div class="user-badge">
+        <div class="user-avatar">W</div>
+        <span>&#x0E1C;&#x0E39;&#x0E49;&#x0E14;&#x0E39;&#x0E41;&#x0E25;</span>
+      </div>
+    </div>
+  </div>
+  <div class="date-bar" id="date-bar">
+    <span class="date-range" id="date-range-text">&#x0E40;&#x0E14;&#x0E37;&#x0E2D;&#x0E19;&#x0E19;&#x0E35;&#x0E49;</span>
+    <div class="period-btns">
+      <button class="period-btn" onclick="setPeriod('today',this)">&#x0E27;&#x0E31;&#x0E19;&#x0E19;&#x0E35;&#x0E49;</button>
+      <button class="period-btn active" onclick="setPeriod('month',this)">&#x0E40;&#x0E14;&#x0E37;&#x0E2D;&#x0E19;&#x0E19;&#x0E35;&#x0E49;</button>
+      <button class="period-btn" onclick="setPeriod('quarter',this)">&#x0E44;&#x0E15;&#x0E23;&#x0E21;&#x0E32;&#x0E2A;&#x0E19;&#x0E35;&#x0E49;</button>
+      <button class="period-btn" onclick="setPeriod('year',this)">&#x0E1B;&#x0E35;&#x0E19;&#x0E35;&#x0E49;</button>
     </div>
   </div>
   <div class="content">
@@ -127,11 +251,14 @@ tr:hover td{background:#fafbfc;}
 </div>
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal-box">
-    <h3 id="modal-title">&#x0E40;&#x0E1E;&#x0E34;&#x0E48;&#x0E21;&#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;</h3>
-    <div id="modal-body"></div>
+    <div class="modal-header">
+      <span id="modal-title">&#x0E40;&#x0E1E;&#x0E34;&#x0E48;&#x0E21;&#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;</span>
+      <span class="modal-close" onclick="closeModal()">&#x2715;</span>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">&#x0E22;&#x0E01;&#x0E40;&#x0E25;&#x0E34;&#x0E01;</button>
-      <button class="btn-primary" onclick="saveModal()">&#x1F4BE; &#x0E1A;&#x0E31;&#x0E19;&#x0E17;&#x0E36;&#x0E01;</button>
+      <button class="btn-save" onclick="saveModal()">&#x1F4BE; &#x0E1A;&#x0E31;&#x0E19;&#x0E17;&#x0E36;&#x0E01;</button>
     </div>
   </div>
 </div>
@@ -140,150 +267,331 @@ var currentPage='dashboard';
 var db={customers:[],activities:[],leads:[],quotations:[],saleorders:[],projects:[]};
 function load(){try{var d=localStorage.getItem('wpg_crm');if(d)db=JSON.parse(d);}catch(e){}}
 function save(){localStorage.setItem('wpg_crm',JSON.stringify(db));}
-function showPage(page,el){
+function fmt(n){return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtN(n){return Number(n||0).toLocaleString('th-TH');}
+function el(id){return document.getElementById(id);}
+function setPeriod(p,btn){
+  document.querySelectorAll('.period-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  renderDash();
+}
+function showPage(page,navEl){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   var p=document.getElementById('page-'+page);
   if(p)p.classList.add('active');
-  if(el)el.classList.add('active');
+  if(navEl)navEl.classList.add('active');
   currentPage=page;
-  var titles={dashboard:'แผงบริหาร',activity:'งานติดตาม',customer:'ลูกค้า',project:'โครงการ',lead:'โอกาส (Pipeline)',quotation:'ใบเสนอราคา',saleorder:'ใบสั่งขาย',forecast:'คาดการณ์',report:'รายงาน',setting:'ตั้งค่า'};
-  document.getElementById('page-title').textContent=titles[page]||page;
+  var titles={dashboard:'&#x0E41;&#x0E1C;&#x0E07;&#x0E1A;&#x0E23;&#x0E34;&#x0E2B;&#x0E32;&#x0E23;',activity:'&#x0E07;&#x0E32;&#x0E19;&#x0E15;&#x0E34;&#x0E14;&#x0E15;&#x0E32;&#x0E21;',customer:'&#x0E25;&#x0E39;&#x0E01;&#x0E04;&#x0E49;&#x0E32;',project:'&#x0E42;&#x0E04;&#x0E23;&#x0E07;&#x0E01;&#x0E32;&#x0E23;',lead:'&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A; (Pipeline)',quotation:'&#x0E43;&#x0E1A;&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;',saleorder:'&#x0E43;&#x0E1A;&#x0E2A;&#x0E31;&#x0E48;&#x0E07;&#x0E02;&#x0E32;&#x0E22;',forecast:'&#x0E04;&#x0E32;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E13;&#x0E4C;',report:'&#x0E23;&#x0E32;&#x0E22;&#x0E07;&#x0E32;&#x0E19;',setting:'&#x0E15;&#x0E31;&#x0E49;&#x0E07;&#x0E04;&#x0E48;&#x0E32;'};
+  el('page-title').innerHTML=titles[page]||page;
+  var dateBar=el('date-bar');
+  if(dateBar)dateBar.style.display=page==='dashboard'?'flex':'none';
   renderPage(page);
 }
 function renderPage(page){
   if(page==='dashboard')renderDash();
-  if(page==='customer')renderCustomers();
-  if(page==='activity')renderActivities();
-  if(page==='lead')renderLeads();
-  if(page==='quotation')renderQuot();
-  if(page==='saleorder')renderSO();
-  if(page==='project')renderProj();
-  if(page==='forecast')renderForecast();
-  if(page==='report')renderReport();
+  else if(page==='customer')renderCustomers();
+  else if(page==='activity')renderActivities();
+  else if(page==='lead')renderLeads();
+  else if(page==='quotation')renderQuot();
+  else if(page==='saleorder')renderSO();
+  else if(page==='project')renderProj();
+  else if(page==='forecast')renderForecast();
+  else if(page==='report')renderReport();
 }
-function fmt(n){return Number(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fmtN(n){return Number(n||0).toLocaleString('th-TH');}
-function el(id){return document.getElementById(id);}
 function renderDash(){
   var totalSale=db.saleorders.reduce(function(a,b){return a+Number(b.amount||0);},0);
-  if(el('s-cust'))el('s-cust').textContent=fmtN(db.customers.length);
-  if(el('s-act'))el('s-act').textContent=fmtN(db.activities.length);
-  if(el('s-sale'))el('s-sale').textContent=fmt(totalSale);
-  if(el('s-so'))el('s-so').textContent=fmtN(db.saleorders.filter(function(s){return s.status==='รอส่ง';}).length);
-  if(el('s-lead'))el('s-lead').textContent=fmtN(db.leads.length);
-  if(el('s-quot'))el('s-quot').textContent=fmtN(db.quotations.length);
-  var cp=Math.min(100,Math.round(db.customers.length/20*100));
-  var lp=Math.min(100,Math.round(db.leads.length/10*100));
-  var sp=Math.min(100,Math.round(totalSale/100000*100));
-  if(el('g-cust'))el('g-cust').style.width=cp+'%';
-  if(el('gv-cust'))el('gv-cust').textContent=db.customers.length+'/20';
-  if(el('g-lead'))el('g-lead').style.width=lp+'%';
-  if(el('gv-lead'))el('gv-lead').textContent=db.leads.length+'/10';
-  if(el('g-sale'))el('g-sale').style.width=sp+'%';
-  if(el('gv-sale'))el('gv-sale').textContent=fmtN(totalSale)+'/100,000';
-  var tbody=el('dash-act-table');
-  if(tbody){
-    if(db.activities.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-row">ยังไม่มีกิจกรรม</td></tr>';}
-    else{tbody.innerHTML=db.activities.slice(-5).reverse().map(function(a){return '<tr><td>'+a.customer+'</td><td>'+a.type+'</td><td>'+a.date+'</td><td><span class="tag tag-blue">'+a.status+'</span></td><td>'+a.owner+'</td></tr>';}).join('');}
-  }
+  var pending=db.saleorders.filter(function(s){return s.status==='&#x0E23;&#x0E2D;&#x0E2A;&#x0E48;&#x0E07;';}).length;
+  var winLeads=db.leads.filter(function(l){return l.stage==='&#x0E1B;&#x0E34;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E02;&#x0E32;&#x0E22;';}).length;
+  var winVal=db.leads.filter(function(l){return l.stage==='&#x0E1B;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E02;&#x0E32;&#x0E22;';}).reduce(function(a,b){return a+Number(b.value||0);},0);
+  var goalCustPct=Math.min(100,Math.round(db.customers.length/20*100));
+  var goalLeadPct=Math.min(100,Math.round(db.leads.length/10*100));
+  var goalSalePct=Math.min(100,Math.round(totalSale/100000*100));
+  var goalProfitPct=Math.min(100,Math.round(totalSale/80000*100));
+  var totalLeads=db.leads.length;
+  var newLeads=db.leads.filter(function(l){return l.stage==='&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;';}).length;
+  var propLeads=db.leads.filter(function(l){return l.stage==='&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;';}).length;
+  var lostLeads=db.leads.filter(function(l){return l.stage==='lost';}).length;
+
+  el('page-dashboard').innerHTML =
+    '<div class="kpi-row">' +
+      kpiCard('&#x0E08;&#x0E33;&#x0E19;&#x0E27;&#x0E19;&#x0E25;&#x0E39;&#x0E01;&#x0E04;&#x0E49;&#x0E32;','',db.customers.length,'','blue',db.customers.length+' / 20') +
+      kpiCard('&#x0E01;&#x0E34;&#x0E08;&#x0E01;&#x0E23;&#x0E23;&#x0E21;','',db.activities.length,'','gray','&#x0E17;&#x0E31;&#x0E49;&#x0E07;&#x0E2B;&#x0E21;&#x0E14; '+db.activities.length) +
+      kpiCard('&#x0E22;&#x0E2D;&#x0E14;&#x0E02;&#x0E32;&#x0E22; ('+db.saleorders.length+')','THB',totalSale,'','green','&#x0E40;&#x0E09;&#x0E25;&#x0E35;&#x0E48;&#x0E22; 0.00') +
+      kpiCard('&#x0E22;&#x0E2D;&#x0E14;&#x0E02;&#x0E32;&#x0E22;&#x0E23;&#x0E2D;&#x0E2A;&#x0E48;&#x0E07; ('+pending+')','THB',0,'','yellow','&#x0E23;&#x0E2D;&#x0E2A;&#x0E48;&#x0E07; '+pending+'%') +
+      kpiCard('&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A; Win ('+winLeads+')','THB',winVal,'','green','Win '+winLeads+' &#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;') +
+      kpiCard('&#x0E43;&#x0E1A;&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32; ('+db.quotations.length+')','THB',db.quotations.reduce(function(a,b){return a+Number(b.amount||0);},0),'','blue','&#x0E23;&#x0E2D;&#x0E2D;&#x0E19;&#x0E38;&#x0E21;&#x0E31;&#x0E15;&#x0E34; '+db.quotations.length) +
+    '</div>' +
+    '<div class="dash-row2">' +
+      '<div class="card">' +
+        '<div class="card-header"><span class="ch-icon">&#x1F3C6;</span> &#x0E40;&#x0E1B;&#x0E49;&#x0E32;&#x0E2B;&#x0E21;&#x0E32;&#x0E22;</div>' +
+        goalRow('&#x0E25;&#x0E39;&#x0E01;&#x0E04;&#x0E49;&#x0E32;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;',goalCustPct,db.customers.length+' / 20') +
+        goalRow('&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;',goalLeadPct,db.leads.length+' / 10') +
+        goalRow('&#x0E22;&#x0E2D;&#x0E14;&#x0E02;&#x0E32;&#x0E22; (&#x0E23;&#x0E32;&#x0E22;&#x0E44;&#x0E14;&#x0E49;)',goalSalePct,fmtN(totalSale)+' / 100,000') +
+        goalRow('&#x0E01;&#x0E33;&#x0E44;&#x0E23;(%)',goalProfitPct,fmtN(totalSale)+' / 80,000') +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-header"><span class="ch-icon">&#x1F4CA;</span> &#x0E2A;&#x0E16;&#x0E32;&#x0E19;&#x0E30;&#x0E07;&#x0E32;&#x0E19;</div>' +
+        '<div class="status-grid">' +
+          '<div>' +
+            donutSVG(totalLeads,newLeads,propLeads,winLeads,lostLeads) +
+            '<div class="status-legend">' +
+              '<div class="leg-item"><div class="leg-dot" style="background:#f0c040"></div>&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;</div>' +
+              '<div class="leg-item"><div class="leg-dot" style="background:#3b82f6"></div>&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;</div>' +
+              '<div class="leg-item"><div class="leg-dot" style="background:#22c55e"></div>Win</div>' +
+              '<div class="leg-item"><div class="leg-dot" style="background:#ef4444"></div>Lost</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="status-table">' +
+            '<table><thead><tr><th>&#x0E0A;&#x0E37;&#x0E48;&#x0E2D;</th><th>&#x0E01;&#x0E34;&#x0E08;&#x0E01;&#x0E23;&#x0E23;&#x0E21;</th><th>&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;</th><th>&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;</th><th>Win</th></tr></thead><tbody>' +
+            statusTableRows() +
+            '<tr class="total-row"><td>&#x0E17;&#x0E31;&#x0E49;&#x0E07;&#x0E2B;&#x0E21;&#x0E14;</td><td>'+db.activities.length+'</td><td>'+newLeads+'</td><td>'+propLeads+'</td><td class="win-cell">'+winLeads+'</td></tr>' +
+            '</tbody></table>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="dash-row3">' +
+      '<div class="card">' +
+        '<div class="card-header"><span class="ch-icon">&#x25BC;</span> &#x0E01;&#x0E23;&#x0E30;&#x0E1A;&#x0E27;&#x0E19;&#x0E01;&#x0E32;&#x0E23;&#x0E02;&#x0E32;&#x0E22;</div>' +
+        funnelHTML() +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-header"><span class="ch-icon">&#x1F4C9;</span> &#x0E04;&#x0E27;&#x0E32;&#x0E21;&#x0E40;&#x0E04;&#x0E25;&#x0E37;&#x0E48;&#x0E2D;&#x0E19;&#x0E44;&#x0E2B;&#x0E27;</div>' +
+        lineChartHTML() +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-header"><span class="ch-icon">&#x1F4CC;</span> &#x0E23;&#x0E39;&#x0E1B;&#x0E20;&#x0E32;&#x0E1E;&#x0E01;&#x0E34;&#x0E08;&#x0E01;&#x0E23;&#x0E23;&#x0E21;&#x0E25;&#x0E48;&#x0E32;&#x0E2A;&#x0E38;&#x0E14;</div>' +
+        recentActHTML() +
+      '</div>' +
+    '</div>';
 }
-function renderCustomers(){
-  var tbody=el('cust-table');if(!tbody)return;
-  if(db.customers.length===0){tbody.innerHTML='<tr><td colspan="6" class="empty-row">ยังไม่มีลูกค้า</td></tr>';return;}
-  tbody.innerHTML=db.customers.map(function(c){return '<tr><td>'+c.name+'</td><td>'+c.company+'</td><td>'+c.phone+'</td><td>'+c.email+'</td><td>'+c.type+'</td><td><span class="tag tag-green">'+c.status+'</span></td></tr>';}).join('');
+function kpiCard(label,unit,num,sub,color,badge){
+  return '<div class="kpi-card">' +
+    (unit?'<div class="kpi-unit">'+unit+'</div>':'')+
+    '<div class="kpi-label">'+label+'</div>' +
+    '<div class="kpi-num">'+(unit==='THB'?fmt(num):fmtN(num))+'</div>' +
+    '<div class="kpi-badge '+color+'">'+badge+'</div>' +
+  '</div>';
 }
-function renderActivities(){
-  var tbody=el('act-table');if(!tbody)return;
-  if(db.activities.length===0){tbody.innerHTML='<tr><td colspan="6" class="empty-row">ยังไม่มีกิจกรรม</td></tr>';return;}
-  tbody.innerHTML=db.activities.map(function(a){return '<tr><td>'+a.customer+'</td><td>'+a.type+'</td><td>'+a.detail+'</td><td>'+a.date+'</td><td><span class="tag tag-blue">'+a.status+'</span></td><td>'+a.owner+'</td></tr>';}).join('');
+function goalRow(name,pct,sub){
+  return '<div class="goal-item">' +
+    '<div class="goal-name">'+name+'</div>' +
+    '<div class="goal-pct">'+(pct||0).toFixed(2)+'%</div>' +
+    '<div class="goal-sub">'+sub+'</div>' +
+    '<div class="goal-bar-bg"><div class="goal-bar-fill" style="width:'+pct+'%"></div></div>' +
+  '</div>';
 }
-function renderLeads(){
-  var statuses=['โอกาสใหม่','ติดต่อแล้ว','เสนอราคา','ปิดการขาย'];
-  var ids=['new','contacted','proposed','won'];
-  statuses.forEach(function(st,i){
-    var filtered=db.leads.filter(function(l){return l.stage===st;});
-    var cnt=el('cnt-'+ids[i]);var col=el('pipe-'+ids[i]);
-    if(cnt)cnt.textContent=filtered.length;
-    if(col){col.innerHTML=filtered.length===0?'<div style="color:#b0bec5;font-size:12px;text-align:center;padding:10px">ไม่มีรายการ</div>':filtered.map(function(l){return '<div class="pipe-card"><div class="pname">'+l.customer+'</div><div class="pmeta">฿'+fmtN(l.value)+' · '+l.date+'</div></div>';}).join('');}
+function donutSVG(total,a,b,c,d){
+  var r=70,cx=90,cy=90,circ=2*Math.PI*r;
+  var vals=[a,b,c,d];
+  var colors=['#f0c040','#3b82f6','#22c55e','#ef4444'];
+  if(total===0){vals=[1,1,1,1];total=4;}
+  var off=0;
+  var segs='';
+  vals.forEach(function(v,i){
+    var pct=v/total;
+    var dash=pct*circ;
+    segs+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+colors[i]+'" stroke-width="22" stroke-dasharray="'+dash+' '+(circ-dash)+'" stroke-dashoffset="'+(-off*circ/total*total)+'"/>';
+    off+=v;
   });
+  return '<div class="donut-wrap"><svg width="180" height="180" viewBox="0 0 180 180" style="transform:rotate(-90deg)"><circle cx="90" cy="90" r="70" fill="none" stroke="#f0f2f5" stroke-width="22"/>'+segs+'</svg><div class="donut-center"><div class="dc-num">'+total+'</div><div class="dc-lbl">&#x0E17;&#x0E31;&#x0E49;&#x0E07;&#x0E2B;&#x0E21;&#x0E14;</div></div></div>';
 }
-function renderQuot(){
-  var tbody=el('quot-table');if(!tbody)return;
-  if(db.quotations.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-row">ยังไม่มีใบเสนอราคา</td></tr>';return;}
-  tbody.innerHTML=db.quotations.map(function(q,i){return '<tr><td>QT-'+String(i+1).padStart(4,'0')+'</td><td>'+q.customer+'</td><td>฿'+fmt(q.amount)+'</td><td>'+q.date+'</td><td><span class="tag tag-orange">'+q.status+'</span></td></tr>';}).join('');
-}
-function renderSO(){
-  var tbody=el('so-table');if(!tbody)return;
-  if(db.saleorders.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-row">ยังไม่มีใบสั่งขาย</td></tr>';return;}
-  tbody.innerHTML=db.saleorders.map(function(s,i){return '<tr><td>SO-'+String(i+1).padStart(4,'0')+'</td><td>'+s.customer+'</td><td>฿'+fmt(s.amount)+'</td><td>'+s.date+'</td><td><span class="tag '+(s.status==='เสร็จสิ้น'?'tag-green':'tag-orange')+'">'+s.status+'</span></td></tr>';}).join('');
-}
-function renderProj(){
-  var tbody=el('proj-table');if(!tbody)return;
-  if(db.projects.length===0){tbody.innerHTML='<tr><td colspan="6" class="empty-row">ยังไม่มีโครงการ</td></tr>';return;}
-  tbody.innerHTML=db.projects.map(function(p){return '<tr><td>'+p.name+'</td><td>'+p.customer+'</td><td>฿'+fmt(p.budget)+'</td><td>'+p.start+'</td><td>'+p.end+'</td><td><span class="tag tag-blue">'+p.status+'</span></td></tr>';}).join('');
-}
-function renderForecast(){
-  var total=db.saleorders.reduce(function(a,b){return a+Number(b.amount||0);},0);
-  if(el('fc-month'))el('fc-month').textContent='฿'+fmt(total);
-  if(el('fc-q'))el('fc-q').textContent='฿'+fmt(total);
-  if(el('fc-y'))el('fc-y').textContent='฿'+fmt(total);
-  var tbody=el('fc-table');
-  if(tbody){if(db.leads.length===0){tbody.innerHTML='<tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr>';}else{tbody.innerHTML=db.leads.map(function(l){return '<tr><td>'+l.customer+'</td><td>฿'+fmtN(l.value)+'</td><td>'+l.probability+'%</td><td>'+l.date+'</td></tr>';}).join('');}}
-}
-function renderReport(){
-  var totalSale=db.saleorders.reduce(function(a,b){return a+Number(b.amount||0);},0);
-  if(el('r-cust'))el('r-cust').textContent=db.customers.length;
-  if(el('r-sale'))el('r-sale').textContent='฿'+fmt(totalSale);
-  if(el('r-quot'))el('r-quot').textContent=db.quotations.length;
-  if(el('r-so'))el('r-so').textContent=db.saleorders.length;
-  if(el('r-lead'))el('r-lead').textContent=db.leads.length;
-  if(el('r-act'))el('r-act').textContent=db.activities.length;
-}
-var modalForms={
-  customer:{title:'เพิ่มลูกค้าใหม่',fields:[{n:'name',l:'ชื่อลูกค้า',t:'text'},{n:'company',l:'บริษัท',t:'text'},{n:'phone',l:'เบอร์โทร',t:'text'},{n:'email',l:'อีเมล',t:'email'},{n:'type',l:'ประเภท',t:'select',opts:['บุคคล','นิติบุคคล','ตัวแทน']},{n:'status',l:'สถานะ',t:'select',opts:['ใหม่','กำลังดูแล','ปิดแล้ว']}]},
-  activity:{title:'เพิ่มกิจกรรม',fields:[{n:'customer',l:'ลูกค้า',t:'text'},{n:'type',l:'ประเภท',t:'select',opts:['โทรหา','นัดหมาย','ส่งอีเมล','เยี่ยมชม']},{n:'detail',l:'รายละเอียด',t:'textarea'},{n:'date',l:'วันที่',t:'date'},{n:'status',l:'สถานะ',t:'select',opts:['กำหนดการ','เสร็จสิ้น','ยกเลิก']},{n:'owner',l:'ผู้รับผิดชอบ',t:'text'}]},
-  lead:{title:'เพิ่มโอกาสการขาย',fields:[{n:'customer',l:'ลูกค้า',t:'text'},{n:'value',l:'มูลค่าโอกาส (THB)',t:'number'},{n:'probability',l:'ความน่าจะเป็น (%)',t:'number'},{n:'stage',l:'ขั้นตอน',t:'select',opts:['โอกาสใหม่','ติดต่อแล้ว','เสนอราคา','ปิดการขาย']},{n:'date',l:'คาดว่าจะปิด',t:'date'}]},
-  quotation:{title:'สร้างใบเสนอราคา',fields:[{n:'customer',l:'ลูกค้า',t:'text'},{n:'amount',l:'มูลค่า (THB)',t:'number'},{n:'date',l:'วันที่',t:'date'},{n:'status',l:'สถานะ',t:'select',opts:['แบบร่าง','ส่งแล้ว','อนุมัติ','ยกเลิก']}]},
-  saleorder:{title:'สร้างใบสั่งขาย',fields:[{n:'customer',l:'ลูกค้า',t:'text'},{n:'amount',l:'มูลค่า (THB)',t:'number'},{n:'date',l:'วันที่',t:'date'},{n:'status',l:'สถานะ',t:'select',opts:['รอส่ง','กำลังดำเนินการ','เสร็จสิ้น','ยกเลิก']}]},
-  project:{title:'เพิ่มโครงการ',fields:[{n:'name',l:'ชื่อโครงการ',t:'text'},{n:'customer',l:'ลูกค้า',t:'text'},{n:'budget',l:'งบประมาณ (THB)',t:'number'},{n:'start',l:'วันที่เริ่มต้น',t:'date'},{n:'end',l:'วันที่สิ้นสุด',t:'date'},{n:'status',l:'สถานะ',t:'select',opts:['วางแผน','กำลังดำเนินการ','เสร็จสิ้น','หยุดชั่วคราว']}]}
-};
-function openModal(){
-  var page=currentPage==='dashboard'?'customer':currentPage;
-  var form=modalForms[page]||modalForms['customer'];
-  el('modal-title').textContent=form.title;
-  el('modal-body').innerHTML=form.fields.map(function(f){
-    var input;
-    if(f.t==='select'){input='<select name="'+f.n+'">'+f.opts.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select>';}
-    else if(f.t==='textarea'){input='<textarea name="'+f.n+'"></textarea>';}
-    else{input='<input type="'+f.t+'" name="'+f.n+'">';}
-    return '<div class="form-group"><label>'+f.l+'</label>'+input+'</div>';
+function statusTableRows(){
+  if(db.customers.length===0)return '<tr><td colspan="5" class="empty-row">-</td></tr>';
+  return db.customers.slice(0,3).map(function(c){
+    var cAct=db.activities.filter(function(a){return a.customer===c.name;}).length;
+    var cNew=db.leads.filter(function(l){return l.customer===c.name&&l.stage==='&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;';}).length;
+    var cProp=db.leads.filter(function(l){return l.customer===c.name&&l.stage==='&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;';}).length;
+    var cWin=db.leads.filter(function(l){return l.customer===c.name&&l.stage==='&#x0E1B;&#x0E34;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E02;&#x0E32;&#x0E22;';}).length;
+    return '<tr><td>'+c.name+'</td><td>'+cAct+'</td><td>'+cNew+'</td><td>'+cProp+'</td><td class="win-cell">'+cWin+'</td></tr>';
   }).join('');
-  el('modal-overlay').classList.add('open');
 }
-function closeModal(){el('modal-overlay').classList.remove('open');}
-function saveModal(){
-  var page=currentPage==='dashboard'?'customer':currentPage;
-  var inputs=el('modal-body').querySelectorAll('input,select,textarea');
-  var data={};inputs.forEach(function(inp){if(inp.name)data[inp.name]=inp.value;});
-  var map={customer:'customers',activity:'activities',lead:'leads',quotation:'quotations',saleorder:'saleorders',project:'projects'};
-  var key=map[page];if(key)db[key].push(data);
-  save();closeModal();renderPage(page);
-  if(page!=='dashboard')renderDash();
+function funnelHTML(){
+  var stages=[
+    {label:'&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;',val:db.leads.filter(function(l){return l.stage==='&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;&#x0E43;&#x0E2B;&#x0E21;&#x0E48;';}).length,color:'#f0c040'},
+    {label:'&#x0E15;&#x0E34;&#x0E14;&#x0E15;&#x0E48;&#x0E2D;&#x0E41;&#x0E25;&#x0E49;&#x0E27;',val:db.leads.filter(function(l){return l.stage==='&#x0E15;&#x0E34;&#x0E14;&#x0E15;&#x0E48;&#x0E2D;&#x0E41;&#x0E25;&#x0E49;&#x0E27;';}).length,color:'#3b82f6'},
+    {label:'&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;',val:db.leads.filter(function(l){return l.stage==='&#x0E40;&#x0E2A;&#x0E19;&#x0E2D;&#x0E23;&#x0E32;&#x0E04;&#x0E32;';}).length,color:'#f97316'},
+    {label:'&#x0E1B;&#x0E34;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E02;&#x0E32;&#x0E22;',val:db.leads.filter(function(l){return l.stage==='&#x0E1B;&#x0E34;&#x0E14;&#x0E01;&#x0E32;&#x0E23;&#x0E02;&#x0E32;&#x0E22;';}).length,color:'#22c55e'}
+  ];
+  var maxV=Math.max.apply(null,stages.map(function(s){return s.val;}));
+  if(maxV===0)maxV=1;
+  return '<div class="funnel-wrap">'+stages.map(function(s,i){
+    var w=Math.max(30,Math.round((1-(i*0.15))*100))+'%';
+    var pct=Math.round(s.val/maxV*100);
+    return '<div style="width:'+w+';background:'+s.color+';height:36px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;border-radius:4px;">'+s.label+' '+s.val+'</div>';
+  }).join('')+'</div>';
 }
-function initPages(){
-  el('page-dashboard').innerHTML='<div class="stat-grid"><div class="stat-card"><div class="lbl">ลูกค้าทั้งหมด</div><div class="num" id="s-cust">0</div><div class="sub"><span class="tag tag-blue">ราย ลูกค้า</span></div></div><div class="stat-card"><div class="lbl">กิจกรรม</div><div class="num" id="s-act">0</div><div class="sub"><span class="tag tag-orange">งาน ติดตาม</span></div></div><div class="stat-card"><div class="lbl">ยอดขาย (THB)</div><div class="num" id="s-sale">0.00</div><div class="sub"><span class="tag tag-green">เดือนนี้ ยอดขาย</span></div></div><div class="stat-card"><div class="lbl">รอส่ง</div><div class="num" id="s-so">0</div><div class="sub"><span class="tag tag-red">รายการ รอส่ง</span></div></div><div class="stat-card"><div class="lbl">โอกาส</div><div class="num" id="s-lead">0</div><div class="sub"><span class="tag tag-blue">รายการ Lead</span></div></div><div class="stat-card"><div class="lbl">ใบเสนอราคา</div><div class="num" id="s-quot">0</div><div class="sub"><span class="tag tag-orange">รายการ Quotation</span></div></div></div><div class="dash-row2"><div class="card"><h3>&#x1F3C6; เป้าหมาย</h3><div class="goal-row"><span class="glabel">ลูกค้าใหม่</span><div class="bar-bg"><div class="bar-fill" id="g-cust" style="width:0%"></div></div><span class="gval" id="gv-cust">0/20</span></div><div class="goal-row"><span class="glabel">โอกาสการขาย</span><div class="bar-bg"><div class="bar-fill" id="g-lead" style="width:0%"></div></div><span class="gval" id="gv-lead">0/10</span></div><div class="goal-row"><span class="glabel">ยอดขาย</span><div class="bar-bg"><div class="bar-fill" id="g-sale" style="width:0%;background:#27ae60"></div></div><span class="gval" id="gv-sale">0/100,000</span></div></div><div class="card"><h3>&#x1F4CA; สถานะงาน</h3><div class="donut-wrap"><div class="donut"><svg width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="40" fill="none" stroke="#eef1f5" stroke-width="18"/><circle cx="55" cy="55" r="40" fill="none" stroke="#27ae60" stroke-width="18" stroke-dasharray="251" stroke-dashoffset="188"/><circle cx="55" cy="55" r="40" fill="none" stroke="#4a90e2" stroke-width="18" stroke-dasharray="251" stroke-dashoffset="125"/><circle cx="55" cy="55" r="40" fill="none" stroke="#e67e22" stroke-width="18" stroke-dasharray="251" stroke-dashoffset="63"/></svg><div class="center-text">สถานะ<br>การขาย</div></div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div>Win</div><div class="legend-item"><div class="legend-dot" style="background:#4a90e2"></div>โอกาสใหม่</div><div class="legend-item"><div class="legend-dot" style="background:#e67e22"></div>เสนอราคา</div><div class="legend-item"><div class="legend-dot" style="background:#e74c3c"></div>Lost</div></div></div></div></div><div class="card-table"><h3>&#x1F4CC; กิจกรรมล่าสุด</h3><table><thead><tr><th>ลูกค้า</th><th>กิจกรรม</th><th>วันที่</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody id="dash-act-table"><tr><td colspan="5" class="empty-row">ยังไม่มีกิจกรรม</td></tr></tbody></table></div>';
-  el('page-activity').innerHTML='<div class="page-header"><span class="page-title">&#x2705; งานติดตาม</span></div><div class="card-table"><table><thead><tr><th>ลูกค้า</th><th>ประเภท</th><th>รายละเอียด</th><th>วันที่</th><th>สถานะ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody id="act-table"><tr><td colspan="6" class="empty-row">ยังไม่มีกิจกรรม</td></tr></tbody></table></div>';
-  el('page-customer').innerHTML='<div class="page-header"><span class="page-title">&#x1F465; ลูกค้า</span></div><div class="card-table"><table><thead><tr><th>ชื่อ</th><th>บริษัท</th><th>เบอร์โทร</th><th>อีเมล</th><th>ประเภท</th><th>สถานะ</th></tr></thead><tbody id="cust-table"><tr><td colspan="6" class="empty-row">ยังไม่มีลูกค้า</td></tr></tbody></table></div>';
-  el('page-project').innerHTML='<div class="page-header"><span class="page-title">&#x1F4C1; โครงการ</span></div><div class="card-table"><table><thead><tr><th>ชื่อโครงการ</th><th>ลูกค้า</th><th>งบประมาณ</th><th>เริ่มต้น</th><th>สิ้นสุด</th><th>สถานะ</th></tr></thead><tbody id="proj-table"><tr><td colspan="6" class="empty-row">ยังไม่มีโครงการ</td></tr></tbody></table></div>';
-  el('page-lead').innerHTML='<div class="page-header"><span class="page-title">&#x1F3AF; โอกาสการขาย (Pipeline)</span></div><div class="pipeline"><div class="pipe-col"><h4>โอกาสใหม่ <span id="cnt-new">0</span></h4><div id="pipe-new"></div></div><div class="pipe-col"><h4>ติดต่อแล้ว <span id="cnt-contacted">0</span></h4><div id="pipe-contacted"></div></div><div class="pipe-col"><h4>เสนอราคา <span id="cnt-proposed">0</span></h4><div id="pipe-proposed"></div></div><div class="pipe-col"><h4>ปิดการขาย <span id="cnt-won">0</span></h4><div id="pipe-won"></div></div></div>';
-  el('page-quotation').innerHTML='<div class="page-header"><span class="page-title">&#x1F4C4; ใบเสนอราคา</span></div><div class="card-table"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>มูลค่า (THB)</th><th>วันที่</th><th>สถานะ</th></tr></thead><tbody id="quot-table"><tr><td colspan="5" class="empty-row">ยังไม่มีใบเสนอราคา</td></tr></tbody></table></div>';
-  el('page-saleorder').innerHTML='<div class="page-header"><span class="page-title">&#x1F6D2; ใบสั่งขาย</span></div><div class="card-table"><table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>มูลค่า (THB)</th><th>วันที่</th><th>สถานะ</th></tr></thead><tbody id="so-table"><tr><td colspan="5" class="empty-row">ยังไม่มีใบสั่งขาย</td></tr></tbody></table></div>';
-  el('page-forecast').innerHTML='<div class="page-header"><span class="page-title">&#x1F4C8; คาดการณ์ยอดขาย</span></div><div class="forecast-grid"><div class="card"><h3>เดือนนี้</h3><div class="num" id="fc-month">฿0</div></div><div class="card"><h3>ไตรมาสนี้</h3><div class="num" id="fc-q">฿0</div></div><div class="card"><h3>ปีนี้</h3><div class="num" id="fc-y">฿0</div></div></div><div class="card-table"><h3>โอกาสที่คาดว่าจะปิด</h3><table><thead><tr><th>ลูกค้า</th><th>มูลค่า</th><th>ความน่าจะเป็น</th><th>คาดปิด</th></tr></thead><tbody id="fc-table"><tr><td colspan="4" class="empty-row">ยังไม่มีข้อมูล</td></tr></tbody></table></div>';
-  el('page-report').innerHTML='<div class="page-header"><span class="page-title">&#x1F4CB; รายงาน</span></div><div class="stat-grid"><div class="stat-card"><div class="lbl">ลูกค้าทั้งหมด</div><div class="num" id="r-cust">0</div></div><div class="stat-card"><div class="lbl">ยอดขายรวม</div><div class="num" id="r-sale">0</div></div><div class="stat-card"><div class="lbl">ใบเสนอราคา</div><div class="num" id="r-quot">0</div></div><div class="stat-card"><div class="lbl">ใบสั่งขาย</div><div class="num" id="r-so">0</div></div><div class="stat-card"><div class="lbl">โอกาสใหม่</div><div class="num" id="r-lead">0</div></div><div class="stat-card"><div class="lbl">กิจกรรม</div><div class="num" id="r-act">0</div></div></div>';
-  el('page-setting').innerHTML='<div class="page-header"><span class="page-title">&#x2699;&#xFE0F; ตั้งค่า</span></div><div class="setting-section"><h3>ข้อมูลบริษัท</h3><div class="setting-row"><span class="setting-label">ชื่อบริษัท</span><span class="setting-val">Wiseplusgrow</span></div><div class="setting-row"><span class="setting-label">ประเภทธุรกิจ</span><span class="setting-val">โรงงานอุตสาหกรรม</span></div><div class="setting-row"><span class="setting-label">สกุลเงิน</span><span class="setting-val">THB (บาท)</span></div></div><div class="setting-section"><h3>เป้าหมายการขาย</h3><div class="setting-row"><span class="setting-label">เป้าลูกค้าใหม่/เดือน</span><span class="setting-val">20 ราย</span></div><div class="setting-row"><span class="setting-label">เป้ายอดขาย/เดือน</span><span class="setting-val">100,000 บาท</span></div><div class="setting-row"><span class="setting-label">เป้าโอกาสการขาย/เดือน</span><span class="setting-val">10 รายการ</span></div></div>';
+function lineChartHTML(){
+  return '<div style="padding:12px 0;text-align:center;color:#8fa3b8;font-size:12px;">'+
+    '<svg width="100%" height="100" viewBox="0 0 300 100">'+
+    '<line x1="0" y1="80" x2="300" y2="80" stroke="#f0f2f5" stroke-width="1"/>'+
+    '<line x1="0" y1="50" x2="300" y2="50" stroke="#f0f2f5" stroke-width="1"/>'+
+    '<line x1="0" y1="20" x2="300" y2="20" stroke="#f0f2f5" stroke-width="1"/>'+
+    '<polyline points="0,80 50,75 100,65 150,60 200,55 250,45 300,40" fill="none" stroke="#f0c040" stroke-width="2"/>'+
+    '<polyline points="0,80 50,78 100,75 150,72 200,68 250,60 300,55" fill="none" stroke="#3b82f6" stroke-width="2"/>'+
+    '<polyline points="0,80 50,80 100,78 150,75 200,72 250,68 300,62" fill="none" stroke="#22c55e" stroke-width="2"/>'+
+    '</svg>'+
+    '<div style="display:flex;gap:16px;justify-content:center;margin-top:6px;">'+
+    '<span style="display:flex;align-items:center;gap:4px;"><span style="width:20px;height:2px;background:#f0c040;display:inline-block;"></span>&#x0E01;&#x0E34;&#x0E08;&#x0E01;&#x0E23;&#x0E23;&#x0E21;</span>'+
+    '<span style="display:flex;align-items:center;gap:4px;"><span style="width:20px;height:2px;background:#3b82f6;display:inline-block;"></span>&#x0E42;&#x0E2D;&#x0E01;&#x0E32;&#x0E2A;</span>'+
+    '<span style="display:flex;align-items:center;gap:4px;"><span style="width:20px;height:2px;background:#22c55e;display:inline-block;"></span>Win</span>'+
+    '</div></div>';
 }
-load();initPages();renderDash();
+function recentActHTML(){
+  if(db.activities.length===0){
+    return '<div style="text-align:center;color:#b0bec5;padding:20px;font-size:12px;">&#x0E22;&#x0E31;&#x0E07;&#x0E44;&#x0E21;&#x0E48;&#x0E21;&#x0E35;&#x0E01;&#x0E34;&#x0E08;&#x0E01;&#x0E23;&#x0E23;&#x0E21;</div>';
+  }
+  return '<div class="act-list">'+db.activities.slice(-4).reverse().map(function(a){
+    var icons={&#x0E42;&#x0E17;&#x0E23;&#x0E2B;&#x0E32;:'&#x1F4DE;',&#x0E19;&#x0E31;&#x0E14;&#x0E2B;&#x0E21;&#x0E32;&#x0E22;:'&#x1F4C5;',&#x0E2A;&#x0E48;&#x0E07;&#x0E2D;&#x0E35;&#x0E40;&#x0E21;&#x0E25;:'&#x2709;&#xFE0F;',&#x0E40;&#x0E22;&#x0E35;&#x0E48;&#x0E22;&#x0E21;&#x0E0A;&#x0E21;:'&#x1F3E2;'};
+    var bgColors={&#x0E42;&#x0E17;&#x0E23;&#x0E2B;&#x0E32;:'#e8f0fb',&#x0E19;&#x0E31;&#x0E14;&#x0E2B;&#x0E21;&#x0E32;&#x0E22;:'#fef9e7',&#x0E2A;&#x0E48;&#x0E07;&#x0E2D;&#x0E35;&#x0E40;&#x0E21;&#x0E25;:'#e8f9f0',&#x0E40;&#x0E22;&#x0E35;&#x0E48;&#x0E22;&#x0E21;&#x0E0A;&#x0E21;:'#fdecea'};
+    var icon=icons[a.type]||'&#x1F4CB;';
+    var bg=bgColors[a.type]||'#f4f5f7';
+    return '<div class="act-item"><div class="act-icon" style="background:'+bg+'">'+icon+'</div><div class="act-text"><div class="act-title">'+a.customer+' - '+a.type+'</div><div class="act-meta">'+a.date+' &#x2022; '+a.owner+'</div></div></div>';
+  }).join('')+'</div>';
+}
+
+
+// Initialize application
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById(id);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    if (n.dataset.page === id) n.classList.add('active');
+  });
+  if (id === 'dashboard') renderDash();
+}
+
+function init() {
+  // Render dashboard on load
+  renderDash();
+  
+  // Sidebar navigation
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      showPage(this.dataset.page);
+    });
+  });
+  
+  // Date filter buttons
+  document.querySelectorAll('.date-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      renderDash();
+    });
+  });
+  
+  // Customer form
+  const custForm = document.getElementById('custForm');
+  if (custForm) custForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('custName').value;
+    const phone = document.getElementById('custPhone').value;
+    const email = document.getElementById('custEmail').value;
+    const type = document.getElementById('custType').value;
+    db.customers.push({ id: Date.now(), name, phone, email, type });
+    saveDB();
+    renderCustomers();
+    document.getElementById('customerModal').style.display = 'none';
+    custForm.reset();
+  });
+  
+  renderCustomers();
+  renderActivities();
+  renderLeads();
+  renderQuotes();
+  renderOrders();
+}
+
+function renderCustomers() {
+  const tbody = document.getElementById('custTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = db.customers.map((c,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${c.name}</td>
+      <td>${c.phone || '-'}</td>
+      <td>${c.email || '-'}</td>
+      <td><span class="badge" style="background:#e8f5e9;color:#2e7d32;">${c.type || 'ลูกค้า'}</span></td>
+      <td><button class="btn btn-sm" onclick="deleteCustomer(${c.id})">ลบ</button></td>
+    </tr>
+  `).join('');
+}
+
+function deleteCustomer(id) {
+  db.customers = db.customers.filter(c => c.id !== id);
+  saveDB();
+  renderCustomers();
+  renderDash();
+}
+
+function renderActivities() {
+  const tbody = document.getElementById('actTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = db.activities.map((a,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${a.date}</td>
+      <td>${a.customer}</td>
+      <td>${a.type}</td>
+      <td>${a.owner}</td>
+      <td>${a.note || '-'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderLeads() {
+  const cont = document.getElementById('leadsContainer');
+  if (!cont) return;
+  const stages = ['ติดต่อ','นำเสนอ','เจรจา','ปิดการขาย'];
+  cont.innerHTML = stages.map(stage => {
+    const items = db.leads.filter(l => l.stage === stage);
+    return `<div class="kanban-col">
+      <div class="kanban-header">${stage} (${items.length})</div>
+      ${items.map(l => `<div class="kanban-card">
+        <div style="font-weight:600;">${l.name}</div>
+        <div style="font-size:12px;color:#666;">${l.customer}</div>
+        <div style="font-size:13px;color:#f0c040;margin-top:4px;">฿${l.value.toLocaleString()}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderQuotes() {
+  const tbody = document.getElementById('quoteTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = db.quotes.map((q,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${q.code}</td>
+      <td>${q.customer}</td>
+      <td>฿${q.amount.toLocaleString()}</td>
+      <td>${q.date}</td>
+      <td><span class="badge" style="background:#fff3e0;color:#e65100;">${q.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('orderTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = db.orders.map((o,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${o.code}</td>
+      <td>${o.customer}</td>
+      <td>฿${o.amount.toLocaleString()}</td>
+      <td>${o.date}</td>
+      <td><span class="badge" style="background:#e8f5e9;color:#2e7d32;">${o.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+// Start app
+init();
 </script>
 </body>
 </html>
