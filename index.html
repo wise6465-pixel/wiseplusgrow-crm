@@ -1034,7 +1034,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
 
       <!-- Bottom Row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
         <!-- Recent Activities -->
         <div class="card">
           <div class="card-header">
@@ -1061,6 +1061,33 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               <div class="empty-icon" style="font-size:32px;">✅</div>
               <p>ไม่มีงานค้างอยู่</p>
             </div>
+          </div>
+        </div>
+      </div>
+      <!-- Staff Table (แบบ Jubili) -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">👥 สถานะพนักงาน</span>
+          <span style="font-size:12px;color:var(--text-muted);" id="db-staff-period">เดือนนี้</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table id="db-staff-table">
+              <thead>
+                <tr>
+                  <th>ชื่อพนักงาน</th>
+                  <th style="text-align:center;">กิจกรรม</th>
+                  <th style="text-align:center;">โอกาสใหม่</th>
+                  <th style="text-align:center;">เสนอราคา</th>
+                  <th style="text-align:center;">ปิดได้ (Win)</th>
+                  <th style="text-align:center;">Lost</th>
+                  <th style="text-align:right;">ยอดขาย</th>
+                </tr>
+              </thead>
+              <tbody id="db-staff-tbody">
+                <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีข้อมูลพนักงาน — เพิ่มพนักงานในตั้งค่า</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1121,25 +1148,35 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
     </div>
 
-    <!-- ===== PAGE: LEADS (KANBAN) ===== -->
+    <!-- ===== PAGE: LEADS (KANBAN + LIST) ===== -->
     <div class="page" id="page-leads">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
         <div>
           <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">โอกาส</h2>
           <p style="font-size:13px;color:var(--text-muted);">ติดตาม pipeline การขาย</p>
         </div>
-        <button class="btn btn-primary" onclick="openLeadModal()">+ เพิ่มโอกาส</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <!-- View toggle -->
+          <div style="display:flex;background:var(--bg);border-radius:6px;padding:3px;gap:2px;">
+            <button class="btn btn-xs" id="leads-view-kanban" onclick="setLeadsView('kanban')" style="background:white;color:var(--sidebar-bg);box-shadow:var(--shadow);">📋 Kanban</button>
+            <button class="btn btn-xs" id="leads-view-list" onclick="setLeadsView('list')" style="background:transparent;color:var(--text-muted);">☰ รายการ</button>
+          </div>
+          <button class="btn btn-primary" onclick="openLeadModal()">+ เพิ่มโอกาส</button>
+        </div>
       </div>
       <!-- Pipeline summary -->
-      <div class="stats-grid" id="leads-stats" style="grid-template-columns:repeat(5,1fr);">
+      <div class="stats-grid" id="leads-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:16px;">
         <div class="stat-card" style="border-top:3px solid #94a3b8;"><div class="stat-label">🔍 ค้นหา</div><div class="stat-value" id="ls-prospect">0</div></div>
         <div class="stat-card" style="border-top:3px solid #3b82f6;"><div class="stat-label">📞 ติดต่อ</div><div class="stat-value" id="ls-contact">0</div></div>
         <div class="stat-card" style="border-top:3px solid #f59e0b;"><div class="stat-label">📄 เสนอราคา</div><div class="stat-value" id="ls-quote">0</div></div>
         <div class="stat-card" style="border-top:3px solid #8b5cf6;"><div class="stat-label">🤝 เจรจา</div><div class="stat-value" id="ls-nego">0</div></div>
         <div class="stat-card" style="border-top:3px solid #22c55e;"><div class="stat-label">✅ ปิดได้</div><div class="stat-value" id="ls-won">0</div></div>
+        <div class="stat-card" style="border-top:3px solid #ef4444;"><div class="stat-label">❌ ปิดไม่ได้</div><div class="stat-value" id="ls-lost">0</div></div>
       </div>
-      <!-- Kanban board -->
-      <div id="kanban-board" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;">
+
+      <!-- KANBAN VIEW -->
+      <div id="leads-kanban-view">
+        <div id="kanban-board" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;">
         <div class="kanban-col" data-stage="prospect">
           <div class="kanban-col-header" style="border-top-color:#94a3b8;">
             <span>🔍 ค้นหาลูกค้า</span><span class="tab-count" id="kc-prospect">0</span>
@@ -1175,6 +1212,54 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <span>❌ ปิดไม่ได้</span><span class="tab-count" id="kc-lost">0</span>
           </div>
           <div class="kanban-cards" id="kboard-lost" ondragover="allowDrop(event)" ondrop="dropLead(event,'lost')"></div>
+        </div>
+      </div>
+      </div><!-- end kanban-board -->
+      </div><!-- end leads-kanban-view -->
+
+      <!-- LIST VIEW -->
+      <div id="leads-list-view" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="filter-bar">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="ค้นหาโอกาส..." id="lead-list-search" oninput="renderLeadList()">
+              </div>
+              <select class="form-control" style="width:auto;" id="lead-list-stage" onchange="renderLeadList()">
+                <option value="">ทุก Stage</option>
+                <option value="prospect">🔍 ค้นหาลูกค้า</option>
+                <option value="contact">📞 ติดต่อแล้ว</option>
+                <option value="quote">📄 เสนอราคา</option>
+                <option value="negotiate">🤝 เจรจา</option>
+                <option value="won">✅ ปิดได้</option>
+                <option value="lost">❌ ปิดไม่ได้</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>เลขที่</th>
+                    <th>ชื่อโอกาส</th>
+                    <th>ลูกค้า</th>
+                    <th>Stage</th>
+                    <th>มูลค่า</th>
+                    <th>โอกาส%</th>
+                    <th>คาดปิด</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="lead-list-tbody"></tbody>
+              </table>
+              <div id="lead-list-empty" class="empty-state" style="display:none;">
+                <div class="empty-icon">🎯</div>
+                <p>ยังไม่มีโอกาส</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1380,6 +1465,46 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
           <div class="form-group"><label class="form-label">ที่อยู่</label><textarea class="form-control" id="set-address" rows="2"></textarea></div>
           <button class="btn btn-primary" onclick="saveSettings()">💾 บันทึก</button>
+        </div>
+      </div>
+      <div class="card" style="max-width:560px;">
+        <div class="card-header"><span class="card-title">🏆 ตั้งค่าเป้าหมาย</span></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">กำหนดเป้าหมายรายวันสำหรับทีมขาย</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">👥 ลูกค้าใหม่ (ราย/วัน)</label>
+              <input class="form-control" id="set-goal-cust" type="number" min="1" placeholder="5">
+            </div>
+            <div class="form-group">
+              <label class="form-label">🎯 โอกาสใหม่ (รายการ/วัน)</label>
+              <input class="form-control" id="set-goal-lead" type="number" min="1" placeholder="3">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">💰 ยอดขาย (บาท/วัน)</label>
+              <input class="form-control" id="set-goal-revenue" type="number" min="0" placeholder="50000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">📋 กิจกรรม (ครั้ง/วัน)</label>
+              <input class="form-control" id="set-goal-act" type="number" min="1" placeholder="10">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveGoalSettings()">💾 บันทึกเป้าหมาย</button>
+        </div>
+      </div>
+      <div class="card" style="max-width:560px;">
+        <div class="card-header">
+          <span class="card-title">👤 จัดการพนักงาน</span>
+          <button class="btn btn-primary btn-sm" onclick="openMemberModal()">+ เพิ่มพนักงาน</button>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div id="member-list" style="padding:8px 0;"></div>
+          <div id="member-empty" class="empty-state" style="padding:24px;display:none;">
+            <div class="empty-icon">👤</div>
+            <p>ยังไม่มีพนักงาน<br>กด "เพิ่มพนักงาน" เพื่อเริ่มต้น</p>
+          </div>
         </div>
       </div>
       <div class="card" style="max-width:560px;">
@@ -1977,6 +2102,53 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <!-- ===== LIGHTBOX ===== -->
 <div id="lightbox" onclick="this.classList.remove('open')">
   <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- ===== MODAL: MEMBER ===== -->
+<div class="modal-overlay" id="modal-member">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="member-modal-title">เพิ่มพนักงาน</h3>
+      <button class="modal-close" onclick="closeModal('modal-member')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="member-edit-id">
+      <div class="form-group">
+        <label class="form-label">ชื่อพนักงาน <span>*</span></label>
+        <input class="form-control" id="member-name" placeholder="เช่น Watcharee">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ตำแหน่ง</label>
+        <input class="form-control" id="member-role" placeholder="เช่น Sale Manager">
+      </div>
+      <div class="form-group">
+        <label class="form-label">อีเมล</label>
+        <input class="form-control" id="member-email" type="email" placeholder="name@company.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">โทรศัพท์</label>
+        <input class="form-control" id="member-phone" placeholder="08x-xxx-xxxx">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-member')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMember()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ACTIVITY DETAIL ===== -->
+<div class="modal-overlay" id="modal-act-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>รายละเอียดกิจกรรม</h3>
+      <button class="modal-close" onclick="closeModal('modal-act-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="act-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-act-detail')">ปิด</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===== TOAST ===== -->
@@ -3812,4 +3984,293 @@ function renderDetailActivities() {
 // Init Phase 4
 populateMemberFilter();
 updateGoalBar();
+
+// ============================================================
+//  PHASE 5 — NEW FEATURES
+// ============================================================
+
+// --- DATA ---
+let members = DB.get('members', []);
+
+// --- 1. LEADS LIST VIEW ---
+function setLeadsView(view) {
+  const kanbanView = document.getElementById('leads-kanban-view');
+  const listView = document.getElementById('leads-list-view');
+  const btnKanban = document.getElementById('leads-view-kanban');
+  const btnList = document.getElementById('leads-view-list');
+  if (view === 'kanban') {
+    kanbanView.style.display = 'block';
+    listView.style.display = 'none';
+    btnKanban.style.background = 'white';
+    btnKanban.style.color = 'var(--sidebar-bg)';
+    btnKanban.style.boxShadow = 'var(--shadow)';
+    btnList.style.background = 'transparent';
+    btnList.style.color = 'var(--text-muted)';
+    btnList.style.boxShadow = 'none';
+    renderKanban();
+  } else {
+    kanbanView.style.display = 'none';
+    listView.style.display = 'block';
+    btnList.style.background = 'white';
+    btnList.style.color = 'var(--sidebar-bg)';
+    btnList.style.boxShadow = 'var(--shadow)';
+    btnKanban.style.background = 'transparent';
+    btnKanban.style.color = 'var(--text-muted)';
+    btnKanban.style.boxShadow = 'none';
+    renderLeadList();
+  }
+}
+
+function renderLeadList() {
+  const q = (document.getElementById('lead-list-search')?.value||'').toLowerCase();
+  const sf = document.getElementById('lead-list-stage')?.value||'';
+  const stageLabel = {prospect:'🔍 ค้นหา',contact:'📞 ติดต่อ',quote:'📄 เสนอราคา',negotiate:'🤝 เจรจา',won:'✅ ปิดได้',lost:'❌ ปิดไม่ได้'};
+  const stageColor = {prospect:'#94a3b8',contact:'#3b82f6',quote:'#f59e0b',negotiate:'#8b5cf6',won:'#22c55e',lost:'#ef4444'};
+  let list = leads.filter(l => {
+    const c = customers.find(x=>x.id===l.customerId);
+    const matchQ = !q || l.name?.toLowerCase().includes(q) || (c?.name||'').toLowerCase().includes(q);
+    const matchS = !sf || l.stage===sf;
+    return matchQ && matchS;
+  }).sort((a,b)=>(b.value||0)-(a.value||0));
+  const tbody = document.getElementById('lead-list-tbody');
+  const empty = document.getElementById('lead-list-empty');
+  if (!list.length) { if(tbody) tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  if(tbody) tbody.innerHTML = list.map((l,i) => {
+    const c = customers.find(x=>x.id===l.customerId);
+    const color = stageColor[l.stage]||'#94a3b8';
+    return `<tr onclick="openLeadModal('${l.id}')" style="cursor:pointer;">
+      <td style="font-size:12px;color:var(--text-muted);">LD-${String(i+1).padStart(4,'0')}</td>
+      <td><strong>${l.name}</strong></td>
+      <td>${c?.name||'-'}</td>
+      <td><span style="background:${color}20;color:${color};padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;">${stageLabel[l.stage]||l.stage}</span></td>
+      <td>${fmtMoney(l.value)}</td>
+      <td>${l.prob||0}%</td>
+      <td>${fmtDate(l.closeDate)}</td>
+    </tr>`;
+  }).join('');
+  // update ls-lost stat
+  const lostEl = document.getElementById('ls-lost');
+  if (lostEl) lostEl.textContent = leads.filter(x=>x.stage==='lost').length;
+}
+
+// --- 2. ACTIVITY DETAIL POPUP ---
+function openActDetail(actId) {
+  const act = activities.find(a=>a.id===actId);
+  if (!act) return;
+  const c = customers.find(x=>x.id===act.customerId);
+  const typeIcon = {'ขาออก':'📤','ขาเข้า':'📥','หาข้อมูล':'🔍'};
+  const body = document.getElementById('act-detail-body');
+  if (!body) return;
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:#f0f9ff;display:flex;align-items:center;justify-content:center;font-size:22px;">${typeIcon[act.type]||'📞'}</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;">${c?.name||'ลูกค้า'}</div>
+        <div style="font-size:13px;color:var(--text-muted);">${act.type} · ${act.channel}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="background:#f8fafc;border-radius:8px;padding:12px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">วันที่</div>
+        <div style="font-size:14px;font-weight:600;">${fmtDate(act.date)}</div>
+      </div>
+      <div style="background:#f8fafc;border-radius:8px;padding:12px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">ความสำคัญ</div>
+        <div>${hotnessStars(act.hotness,'fire')}</div>
+      </div>
+      ${act.member?`<div style="background:#f8fafc;border-radius:8px;padding:12px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">พนักงาน</div>
+        <div style="font-size:14px;font-weight:600;">👤 ${act.member}</div>
+      </div>`:''}
+    </div>
+    ${act.note?`<div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">บันทึก</div>
+      <div style="background:#f8fafc;padding:12px;border-radius:8px;border-left:3px solid var(--accent);font-size:14px;">${act.note}</div>
+    </div>`:''}
+    ${(act.images||[]).length?`<div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">รูปภาพ</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">${(act.images||[]).map(src=>`<img src="${src}" style="width:100px;height:100px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--border);" onclick="openLightbox('${src}')">`).join('')}</div>
+    </div>`:''}
+  `;
+  openModal('modal-act-detail');
+}
+
+// Patch task card click to show detail popup
+(function() {
+  const _origRenderTasks = window.renderTasks;
+  window.renderTasks = function() {
+    _origRenderTasks();
+    // Patch task cards to open activity detail on click
+  };
+})();
+
+// --- 3. MEMBER MANAGEMENT ---
+function openMemberModal(id=null) {
+  const isEdit = !!id;
+  document.getElementById('member-modal-title').textContent = isEdit?'แก้ไขพนักงาน':'เพิ่มพนักงาน';
+  document.getElementById('member-edit-id').value = id||'';
+  if (isEdit) {
+    const m = members.find(x=>x.id===id);
+    if (!m) return;
+    document.getElementById('member-name').value = m.name||'';
+    document.getElementById('member-role').value = m.role||'';
+    document.getElementById('member-email').value = m.email||'';
+    document.getElementById('member-phone').value = m.phone||'';
+  } else {
+    ['member-name','member-role','member-email','member-phone'].forEach(x=>document.getElementById(x).value='');
+  }
+  openModal('modal-member');
+}
+function saveMember() {
+  const name = document.getElementById('member-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อพนักงาน'); return; }
+  const id = document.getElementById('member-edit-id').value || genId();
+  const isEdit = members.some(x=>x.id===id);
+  const m = { id, name,
+    role: document.getElementById('member-role').value.trim(),
+    email: document.getElementById('member-email').value.trim(),
+    phone: document.getElementById('member-phone').value.trim(),
+    createdAt: isEdit ? members.find(x=>x.id===id)?.createdAt : today(),
+  };
+  if (isEdit) members = members.map(x=>x.id===id?m:x);
+  else members.push(m);
+  DB.set('members', members);
+  closeModal('modal-member');
+  renderMemberList();
+  populateMemberFilter();
+  renderStaffTable();
+  toast(isEdit?'✅ แก้ไขพนักงานแล้ว':'✅ เพิ่มพนักงานแล้ว');
+}
+function deleteMember(id) {
+  if (!confirm('ลบพนักงานนี้?')) return;
+  members = members.filter(x=>x.id!==id);
+  DB.set('members', members);
+  renderMemberList();
+  populateMemberFilter();
+  renderStaffTable();
+  toast('🗑️ ลบพนักงานแล้ว');
+}
+function renderMemberList() {
+  const el = document.getElementById('member-list');
+  const empty = document.getElementById('member-empty');
+  if (!members.length) { if(el) el.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  if(el) el.innerHTML = members.map(m => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--border);">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--sidebar-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">${m.name.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;">${m.name}</div>
+        <div style="font-size:12px;color:var(--text-muted);">${m.role||''}${m.role&&m.email?' · ':''}${m.email||''}</div>
+      </div>
+      <button class="btn btn-xs btn-ghost" onclick="openMemberModal('${m.id}')">✏️</button>
+      <button class="btn btn-xs btn-danger" onclick="deleteMember('${m.id}')">✕</button>
+    </div>`).join('');
+}
+
+// Override populateMemberFilter to include members from DB
+(function() {
+  window.populateMemberFilter = function() {
+    const sel = document.getElementById('act-filter-member');
+    if (!sel) return;
+    const fromActs = [...new Set(activities.map(a=>a.member).filter(Boolean))];
+    const fromMembers = members.map(m=>m.name);
+    const allMembers = [...new Set([...fromMembers, ...fromActs])];
+    sel.innerHTML = '<option value="">👤 พนักงาน: ทั้งหมด</option>' +
+      allMembers.map(m=>`<option value="${m}">${m}</option>`).join('');
+  };
+})();
+
+// --- 4. GOAL SETTINGS ---
+function saveGoalSettings() {
+  goals.cust = parseInt(document.getElementById('set-goal-cust').value)||5;
+  goals.lead = parseInt(document.getElementById('set-goal-lead').value)||3;
+  goals.revenue = parseInt(document.getElementById('set-goal-revenue').value)||50000;
+  goals.act = parseInt(document.getElementById('set-goal-act').value)||10;
+  DB.set('goals', goals);
+  updateGoalBar();
+  toast('✅ บันทึกเป้าหมายแล้ว');
+}
+function loadGoalSettings() {
+  const saved = DB.get('goals', null);
+  if (saved) { Object.assign(goals, saved); }
+  const g1 = document.getElementById('set-goal-cust');
+  const g2 = document.getElementById('set-goal-lead');
+  const g3 = document.getElementById('set-goal-revenue');
+  const g4 = document.getElementById('set-goal-act');
+  if(g1) g1.value = goals.cust;
+  if(g2) g2.value = goals.lead;
+  if(g3) g3.value = goals.revenue;
+  if(g4) g4.value = goals.act;
+}
+
+// --- 5. STAFF TABLE (Dashboard แบบ Jubili) ---
+function renderStaffTable() {
+  const tbody = document.getElementById('db-staff-tbody');
+  if (!tbody) return;
+  const thisMonth = today().substring(0,7);
+  if (!members.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีข้อมูลพนักงาน — <a href="#" onclick="navTo(\'settings\')" style="color:var(--accent);">เพิ่มพนักงานในตั้งค่า</a></td></tr>';
+    return;
+  }
+  tbody.innerHTML = members.map(m => {
+    const memberActs = activities.filter(a=>a.member===m.name&&a.date?.startsWith(thisMonth));
+    const memberLeads = leads.filter(l=>l.member===m.name&&l.createdAt?.startsWith(thisMonth));
+    const memberQuotes = quotes.filter(q=>q.member===m.name&&q.date?.startsWith(thisMonth));
+    const memberWon = leads.filter(l=>l.member===m.name&&l.stage==='won');
+    const memberLost = leads.filter(l=>l.member===m.name&&l.stage==='lost');
+    const memberRev = orders.filter(o=>o.member===m.name&&o.status==='completed'&&o.date?.startsWith(thisMonth)).reduce((s,o)=>s+(o.total||0),0);
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--sidebar-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">${m.name.charAt(0).toUpperCase()}</div>
+          <strong>${m.name}</strong>
+        </div>
+      </td>
+      <td style="text-align:center;"><span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:10px;font-weight:600;">${memberActs.length}</span></td>
+      <td style="text-align:center;"><span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:10px;font-weight:600;">${memberLeads.length}</span></td>
+      <td style="text-align:center;"><span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-weight:600;">${memberQuotes.length}</span></td>
+      <td style="text-align:center;"><span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:10px;font-weight:600;">${memberWon.length}</span></td>
+      <td style="text-align:center;"><span style="background:#fef2f2;color:#991b1b;padding:2px 8px;border-radius:10px;font-weight:600;">${memberLost.length}</span></td>
+      <td style="text-align:right;font-weight:600;">${fmtMoney(memberRev)}</td>
+    </tr>`;
+  }).join('');
+  // Total row
+  const totalActs = activities.filter(a=>a.date?.startsWith(thisMonth)).length;
+  tbody.innerHTML += `<tr style="background:#f8fafc;font-weight:700;">
+    <td>รวมทั้งหมด</td>
+    <td style="text-align:center;">${totalActs}</td>
+    <td style="text-align:center;">${leads.filter(l=>l.createdAt?.startsWith(thisMonth)).length}</td>
+    <td style="text-align:center;">${quotes.filter(q=>q.date?.startsWith(thisMonth)).length}</td>
+    <td style="text-align:center;">${leads.filter(l=>l.stage==='won').length}</td>
+    <td style="text-align:center;">${leads.filter(l=>l.stage==='lost').length}</td>
+    <td style="text-align:right;">${fmtMoney(orders.filter(o=>o.status==='completed'&&o.date?.startsWith(thisMonth)).reduce((s,o)=>s+(o.total||0),0))}</td>
+  </tr>`;
+}
+
+// Patch navTo for phase5
+(function() {
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page==='settings') { renderMemberList(); loadGoalSettings(); }
+    if (page==='leads') { setLeadsView('kanban'); }
+    if (page==='dashboard') { renderStaffTable(); }
+  };
+})();
+
+// Patch updateDashboard for staff table
+(function() {
+  const _orig = window.updateDashboard;
+  window.updateDashboard = function() {
+    _orig();
+    renderStaffTable();
+  };
+})();
+
+// Init Phase 5
+members = DB.get('members', []);
+const savedGoals = DB.get('goals', null);
+if (savedGoals) Object.assign(goals, savedGoals);
+renderStaffTable();
 </script>
