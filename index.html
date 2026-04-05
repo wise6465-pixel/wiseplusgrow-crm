@@ -711,8 +711,15 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 <!-- ===== MAIN ===== -->
 <div id="main">
   <div id="topbar">
-    <span class="topbar-title" id="topbar-title">งานติดตาม</span>
+    <span class="topbar-title" id="topbar-title">แผงบริหาร</span>
     <div class="topbar-right">
+      <!-- Global Search -->
+      <div style="position:relative;">
+        <input type="text" id="global-search" placeholder="🔍 ค้นหาทั่วระบบ..." 
+          style="width:220px;padding:7px 12px;border:1px solid var(--border);border-radius:20px;font-family:'Sarabun',sans-serif;font-size:13px;background:#f8fafc;outline:none;"
+          oninput="globalSearch(this.value)" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)';setTimeout(()=>document.getElementById('search-results').style.display='none',200)">
+        <div id="search-results" style="display:none;position:absolute;top:36px;right:0;width:320px;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);z-index:500;max-height:300px;overflow-y:auto;"></div>
+      </div>
       <span style="font-size:13px;color:var(--text-muted)">💎 Wiseplusgrow CRM</span>
       <div class="topbar-user">W</div>
     </div>
@@ -872,21 +879,110 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ===== PAGE: DASHBOARD ===== -->
     <div class="page" id="page-dashboard">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
         <div>
           <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">แผงบริหาร</h2>
-          <p style="font-size:13px;color:var(--text-muted);">ภาพรวมผลงานการขาย</p>
+          <p style="font-size:13px;color:var(--text-muted);" id="db-date-label">ภาพรวมผลงานการขาย</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="navTo('activities')">➕ เพิ่มกิจกรรม</button>
+          <button class="btn btn-primary btn-sm" onclick="navTo('leads')">🎯 ดู Pipeline</button>
         </div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">ลูกค้าทั้งหมด</div><div class="stat-value" id="db-cust">0</div></div>
-        <div class="stat-card"><div class="stat-label">งานติดตามวันนี้</div><div class="stat-value" id="db-tasks">0</div></div>
-        <div class="stat-card"><div class="stat-label">โอกาสเปิดอยู่</div><div class="stat-value" id="db-leads">0</div></div>
-        <div class="stat-card"><div class="stat-label">ใบเสนอราคา</div><div class="stat-value" id="db-quotes">0</div></div>
+
+      <!-- KPI Row 1: Sales -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
+        <div class="stat-card" style="border-left:4px solid var(--accent);">
+          <div class="stat-label">💰 ยอดขาย (สำเร็จ)</div>
+          <div class="stat-value" id="db-revenue" style="font-size:22px;color:var(--sidebar-bg)">฿0</div>
+          <div class="stat-sub" id="db-revenue-count">0 ออเดอร์</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid var(--info);">
+          <div class="stat-label">🎯 Pipeline รวม</div>
+          <div class="stat-value" id="db-pipeline" style="font-size:22px;color:var(--info)">฿0</div>
+          <div class="stat-sub" id="db-pipeline-count">0 โอกาส</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid var(--warning);">
+          <div class="stat-label">📄 ใบเสนอราคา</div>
+          <div class="stat-value" id="db-quotes">0</div>
+          <div class="stat-sub" id="db-quotes-val">รอตอบรับ 0 ใบ</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid var(--success);">
+          <div class="stat-label">📈 Win Rate</div>
+          <div class="stat-value" id="db-winrate" style="color:var(--success)">0%</div>
+          <div class="stat-sub" id="db-winrate-sub">โอกาสที่ปิดได้</div>
+        </div>
       </div>
-      <div class="card"><div class="card-body">
-        <div class="empty-state"><div class="empty-icon">📊</div><p>เชื่อมต่อข้อมูลจากโมดูลอื่นเพื่อดูกราฟ</p></div>
-      </div></div>
+
+      <!-- KPI Row 2: Activity -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-label">👥 ลูกค้าทั้งหมด</div>
+          <div class="stat-value" id="db-cust">0</div>
+          <div class="stat-sub" id="db-cust-new">ใหม่เดือนนี้ 0 ราย</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">✅ งานวันนี้</div>
+          <div class="stat-value" id="db-tasks" style="color:var(--success)">0</div>
+          <div class="stat-sub" id="db-tasks-overdue" style="color:var(--danger)">เกินกำหนด 0 รายการ</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🎯 โอกาสเปิดอยู่</div>
+          <div class="stat-value" id="db-leads">0</div>
+          <div class="stat-sub" id="db-leads-hot">Hot leads 0 รายการ</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📁 โครงการ</div>
+          <div class="stat-value" id="db-projects">0</div>
+          <div class="stat-sub" id="db-projects-active">กำลังดำเนินการ 0 โครงการ</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <!-- Pipeline by Stage -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">🎯 Pipeline ตาม Stage</span></div>
+          <div class="card-body" id="db-pipeline-chart" style="min-height:160px;"></div>
+        </div>
+        <!-- Customer by Status -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">👥 ลูกค้าตามสถานะ</span></div>
+          <div class="card-body" id="db-cust-chart" style="min-height:160px;"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- Recent Activities -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📝 กิจกรรมล่าสุด</span>
+            <button class="btn btn-ghost btn-sm" onclick="navTo('activities')">ดูทั้งหมด</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="db-recent-acts" class="activity-list" style="padding:0 16px;"></div>
+            <div id="db-acts-empty" class="empty-state" style="padding:24px;display:none;">
+              <div class="empty-icon" style="font-size:32px;">📝</div>
+              <p>ยังไม่มีกิจกรรม</p>
+            </div>
+          </div>
+        </div>
+        <!-- Upcoming Tasks -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📅 งานที่ต้องทำ</span>
+            <button class="btn btn-ghost btn-sm" onclick="navTo('activities')">ดูทั้งหมด</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="db-upcoming-tasks" style="padding:8px 12px;"></div>
+            <div id="db-tasks-empty" class="empty-state" style="padding:24px;display:none;">
+              <div class="empty-icon" style="font-size:32px;">✅</div>
+              <p>ไม่มีงานค้างอยู่</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== PAGE: PROJECTS ===== -->
@@ -2811,6 +2907,7 @@ function renderQuotes() {
       <td><span class="badge badge-${x.status}">${statusLabel[x.status]||x.status}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-xs btn-ghost" onclick="openQuoteModal('${x.id}')">✏️</button>
+        <button class="btn btn-xs btn-ghost" onclick="printQuote('${x.id}')" title="พิมพ์">🖨️</button>
         <button class="btn btn-xs btn-ghost" onclick="convertToOrder('${x.id}')" title="แปลงเป็นใบสั่งขาย">🛒</button>
         <button class="btn btn-xs btn-danger" onclick="deleteQuote('${x.id}')">✕</button>
       </td>
@@ -3078,10 +3175,154 @@ function renderReports() {
 //  DASHBOARD UPDATE (enhanced)
 // ============================================================
 function updateDashboard() {
-  document.getElementById('db-cust').textContent = customers.length;
-  document.getElementById('db-tasks').textContent = tasks.filter(t=>!t.done && t.dueDate===today()).length;
-  document.getElementById('db-leads').textContent = leads.filter(l=>l.stage!=='won'&&l.stage!=='lost').length;
+  const td = today();
+  const thisMonth = td.substring(0,7);
+
+  // --- KPI Row 1 ---
+  const completedOrders = orders.filter(o=>o.status==='completed');
+  const revenue = completedOrders.reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('db-revenue').textContent = fmtMoney(revenue);
+  document.getElementById('db-revenue-count').textContent = completedOrders.length + ' ออเดอร์';
+
+  const activeLeads = leads.filter(l=>l.stage!=='won'&&l.stage!=='lost');
+  const pipeline = activeLeads.reduce((s,l)=>s+(l.value||0),0);
+  document.getElementById('db-pipeline').textContent = fmtMoney(pipeline);
+  document.getElementById('db-pipeline-count').textContent = activeLeads.length + ' โอกาส';
+
   document.getElementById('db-quotes').textContent = quotes.length;
+  const pendingQt = quotes.filter(q=>q.status==='sent').length;
+  document.getElementById('db-quotes-val').textContent = 'รอตอบรับ ' + pendingQt + ' ใบ';
+
+  const wonLeads = leads.filter(l=>l.stage==='won').length;
+  const closedLeads = leads.filter(l=>l.stage==='won'||l.stage==='lost').length;
+  const winRate = closedLeads>0 ? Math.round(wonLeads/closedLeads*100) : 0;
+  document.getElementById('db-winrate').textContent = winRate + '%';
+  document.getElementById('db-winrate-sub').textContent = wonLeads + '/' + closedLeads + ' โอกาส';
+
+  // --- KPI Row 2 ---
+  document.getElementById('db-cust').textContent = customers.length;
+  const newCust = customers.filter(c=>c.createdAt?.startsWith(thisMonth)).length;
+  document.getElementById('db-cust-new').textContent = 'ใหม่เดือนนี้ ' + newCust + ' ราย';
+
+  const todayTasks = tasks.filter(t=>!t.done&&t.dueDate===td).length;
+  document.getElementById('db-tasks').textContent = todayTasks;
+  const overdueTasks = tasks.filter(t=>!t.done&&t.dueDate<td).length;
+  document.getElementById('db-tasks-overdue').textContent = 'เกินกำหนด ' + overdueTasks + ' รายการ';
+  document.getElementById('db-tasks-overdue').style.color = overdueTasks>0 ? 'var(--danger)' : 'var(--text-light)';
+
+  document.getElementById('db-leads').textContent = activeLeads.length;
+  const hotLeads = leads.filter(l=>l.prob>=70&&l.stage!=='won'&&l.stage!=='lost').length;
+  document.getElementById('db-leads-hot').textContent = 'Hot leads ' + hotLeads + ' รายการ';
+
+  document.getElementById('db-projects').textContent = projects.length;
+  const activeProj = projects.filter(p=>p.status==='open').length;
+  document.getElementById('db-projects-active').textContent = 'กำลังดำเนินการ ' + activeProj + ' โครงการ';
+
+  // --- Date label ---
+  const dt = new Date();
+  document.getElementById('db-date-label').textContent = 'อัปเดต: ' + dt.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // --- Pipeline chart ---
+  const stages = [
+    {stage:'prospect',label:'🔍 ค้นหา',color:'#94a3b8'},
+    {stage:'contact',label:'📞 ติดต่อ',color:'#3b82f6'},
+    {stage:'quote',label:'📄 เสนอราคา',color:'#f59e0b'},
+    {stage:'negotiate',label:'🤝 เจรจา',color:'#8b5cf6'},
+    {stage:'won',label:'✅ ปิดได้',color:'#22c55e'},
+  ];
+  const maxPipelineVal = Math.max(...stages.map(s=>leads.filter(l=>l.stage===s.stage).reduce((sum,l)=>sum+(l.value||0),0)),1);
+  const pipelineChartEl = document.getElementById('db-pipeline-chart');
+  if (pipelineChartEl) {
+    pipelineChartEl.innerHTML = stages.map(s => {
+      const stageLeads = leads.filter(l=>l.stage===s.stage);
+      const val = stageLeads.reduce((sum,l)=>sum+(l.value||0),0);
+      const pct = Math.max(Math.round(val/maxPipelineVal*100),val>0?3:0);
+      return `<div class="mini-bar" style="margin-bottom:10px;">
+        <span class="mini-bar-label" style="width:110px;font-size:12px;">${s.label}</span>
+        <div class="mini-bar-track" style="flex:1;background:#f1f5f9;border-radius:6px;height:12px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${s.color};border-radius:6px;transition:width 0.4s;"></div>
+        </div>
+        <span style="font-size:12px;font-weight:600;width:80px;text-align:right;color:var(--text-main);">${fmtMoney(val)}</span>
+        <span style="font-size:11px;color:var(--text-light);width:30px;text-align:right;">${stageLeads.length}</span>
+      </div>`;
+    }).join('') || '<div class="empty-state" style="padding:16px;"><p>ยังไม่มีข้อมูล</p></div>';
+  }
+
+  // --- Customer status chart ---
+  const custStatuses = [
+    {status:'prospect',label:'🎯 เป้าหมาย',color:'#3b82f6'},
+    {status:'fresh',label:'🆕 ใหม่',color:'#22c55e'},
+    {status:'existing',label:'⭐ ประจำ',color:'#f59e0b'},
+    {status:'lapse',label:'😴 ห่างหาย',color:'#ef4444'},
+  ];
+  const maxCustVal = Math.max(...custStatuses.map(s=>customers.filter(c=>c.status===s.status).length),1);
+  const custChartEl = document.getElementById('db-cust-chart');
+  if (custChartEl) {
+    custChartEl.innerHTML = custStatuses.map(s => {
+      const cnt = customers.filter(c=>c.status===s.status).length;
+      const pct = Math.max(Math.round(cnt/maxCustVal*100),cnt>0?3:0);
+      return `<div class="mini-bar" style="margin-bottom:10px;">
+        <span class="mini-bar-label" style="width:110px;font-size:12px;">${s.label}</span>
+        <div class="mini-bar-track" style="flex:1;background:#f1f5f9;border-radius:6px;height:12px;overflow:hidden;">
+          <div style="width:${pct}%;height:100%;background:${s.color};border-radius:6px;transition:width 0.4s;"></div>
+        </div>
+        <span style="font-size:12px;font-weight:600;width:50px;text-align:right;color:var(--text-main);">${cnt} ราย</span>
+      </div>`;
+    }).join('') || '<div class="empty-state" style="padding:16px;"><p>ยังไม่มีข้อมูล</p></div>';
+  }
+
+  // --- Recent activities (last 5) ---
+  const recentActs = [...activities].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const actsEl = document.getElementById('db-recent-acts');
+  const actsEmpty = document.getElementById('db-acts-empty');
+  if (!recentActs.length) {
+    if(actsEl) actsEl.innerHTML='';
+    if(actsEmpty) actsEmpty.style.display='block';
+  } else {
+    if(actsEmpty) actsEmpty.style.display='none';
+    const typeIcon = {'ขาเข้า':'📥','ขาออก':'📤','หาข้อมูล':'🔍'};
+    const typeCls = {'ขาเข้า':'in','ขาออก':'out','หาข้อมูล':'info'};
+    if(actsEl) actsEl.innerHTML = recentActs.map(a => {
+      const c = customers.find(x=>x.id===a.customerId);
+      return `<div class="activity-item">
+        <div class="activity-icon ${typeCls[a.type]||'out'}">${typeIcon[a.type]||'📞'}</div>
+        <div class="activity-body">
+          <div class="activity-title">${c?.name||'ไม่ระบุ'} — ${a.type} · ${a.channel}</div>
+          <div class="activity-meta">${fmtDate(a.date)} ${a.note?'· '+a.note.substring(0,30)+(a.note.length>30?'...':''):''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- Upcoming + overdue tasks (top 5) ---
+  const urgentTasks = [...tasks]
+    .filter(t=>!t.done)
+    .sort((a,b)=>a.dueDate.localeCompare(b.dueDate))
+    .slice(0,5);
+  const tasksEl = document.getElementById('db-upcoming-tasks');
+  const tasksEmpty = document.getElementById('db-tasks-empty');
+  if (!urgentTasks.length) {
+    if(tasksEl) tasksEl.innerHTML='';
+    if(tasksEmpty) tasksEmpty.style.display='block';
+  } else {
+    if(tasksEmpty) tasksEmpty.style.display='none';
+    if(tasksEl) tasksEl.innerHTML = urgentTasks.map(t => {
+      const c = customers.find(x=>x.id===t.customerId);
+      const diff = daysDiff(t.dueDate);
+      const isOverdue = diff < 0;
+      const isToday = diff === 0;
+      const color = isOverdue ? 'var(--danger)' : isToday ? 'var(--success)' : 'var(--info)';
+      const label = isOverdue ? `เกิน ${Math.abs(diff)} วัน` : isToday ? 'วันนี้' : `อีก ${diff} วัน`;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;">${c?.name||'ไม่ระบุ'}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${t.note||'ติดตาม'}</div>
+        </div>
+        <span style="font-size:12px;color:${color};font-weight:600;white-space:nowrap;">${label}</span>
+      </div>`;
+    }).join('');
+  }
 }
 
 // Override navTo to handle phase2 pages
@@ -3115,10 +3356,104 @@ function navTo(page) {
   leads = DB.get('leads', []);
   quotes = DB.get('quotes', []);
   orders = DB.get('orders', []);
-  // Go to activities page
-  navTo('activities');
+  // Go to dashboard first
+  navTo('dashboard');
   updateCustStats();
 })();
+
+// ============================================================
+//  GLOBAL SEARCH
+// ============================================================
+function globalSearch(q) {
+  const el = document.getElementById('search-results');
+  if (!q || q.length < 2) { el.style.display='none'; return; }
+  const lq = q.toLowerCase();
+  const results = [];
+  customers.filter(c=>c.name.toLowerCase().includes(lq)||(c.phone||'').includes(lq)).slice(0,3).forEach(c=>{
+    results.push({icon:'👤',label:c.name,sub:c.phone||c.email||'',action:()=>{navTo('customers');setTimeout(()=>openCustomerDetail(c.id),200);}});
+  });
+  leads.filter(l=>l.name.toLowerCase().includes(lq)).slice(0,2).forEach(l=>{
+    const c=customers.find(x=>x.id===l.customerId);
+    results.push({icon:'🎯',label:l.name,sub:c?.name||'',action:()=>navTo('leads')});
+  });
+  quotes.filter(qt=>(qt.docNo||'').toLowerCase().includes(lq)).slice(0,2).forEach(qt=>{
+    const c=customers.find(x=>x.id===qt.customerId);
+    results.push({icon:'📄',label:qt.docNo,sub:c?.name||'',action:()=>navTo('quotes')});
+  });
+  orders.filter(o=>(o.docNo||'').toLowerCase().includes(lq)).slice(0,2).forEach(o=>{
+    const c=customers.find(x=>x.id===o.customerId);
+    results.push({icon:'🛒',label:o.docNo,sub:c?.name||'',action:()=>navTo('orders')});
+  });
+  if (!results.length) {
+    el.innerHTML='<div style="padding:16px;text-align:center;font-size:13px;color:var(--text-muted);">ไม่พบผลลัพธ์</div>';
+  } else {
+    window._sr = results.map(r=>()=>{ r.action(); el.style.display='none'; document.getElementById('global-search').value=''; });
+    el.innerHTML = results.map((r,i)=>`
+      <div onclick="window._sr[${i}]()" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+        <span style="font-size:18px;">${r.icon}</span>
+        <div><div style="font-size:13px;font-weight:600;">${r.label}</div><div style="font-size:12px;color:var(--text-muted);">${r.sub}</div></div>
+      </div>`).join('');
+  }
+  el.style.display='block';
+}
+
+// ============================================================
+//  PRINT QUOTE
+// ============================================================
+function printQuote(id) {
+  const q = quotes.find(x=>x.id===id);
+  if (!q) return;
+  const c = customers.find(x=>x.id===q.customerId);
+  const statusLabel = {draft:'ร่าง',sent:'ส่งแล้ว',approved:'อนุมัติ',rejected:'ปฏิเสธ'};
+  const rows = (q.items||[]).map((item,i)=>`
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">${i+1}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">${item.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">${item.qty}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center;">${item.unit}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtMoney(item.price)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtMoney(item.qty*item.price)}</td>
+    </tr>`).join('');
+  const pw = window.open('','_blank','width=820,height=900');
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>body{font-family:'Sarabun',sans-serif;margin:0;padding:40px;color:#1a2332;font-size:14px;}
+  .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:3px solid #f0c040;}
+  table{width:100%;border-collapse:collapse;margin-top:20px;}
+  th{background:#f8fafc;padding:10px 12px;text-align:left;font-size:13px;color:#64748b;border-bottom:2px solid #e2e8f0;}
+  .grand{background:#1a2332;color:#f0c040;font-size:16px;font-weight:700;}
+  @media print{button{display:none!important;}}</style></head><body>
+  <button onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:8px 20px;background:#1a2332;color:#f0c040;border:none;border-radius:6px;font-family:Sarabun;cursor:pointer;">🖨️ พิมพ์</button>
+  <div class="hdr">
+    <div><div style="font-size:20px;font-weight:700;">💎 ${settings.company||'Wiseplusgrow'}</div>
+    <div style="font-size:12px;color:#64748b;margin-top:4px;">${settings.phone||''} ${settings.email?'| '+settings.email:''}</div></div>
+    <div style="text-align:right;"><div style="font-size:22px;font-weight:700;">ใบเสนอราคา</div>
+    <div style="font-size:13px;color:#64748b;">เลขที่: ${q.docNo||'-'}</div>
+    <div style="font-size:13px;color:#64748b;">วันที่: ${fmtDate(q.date)} | หมดอายุ: ${fmtDate(q.expireDate)||'-'}</div></div>
+  </div>
+  <div style="background:#f8fafc;padding:14px 18px;border-radius:8px;margin-bottom:20px;">
+    <div style="font-size:13px;color:#64748b;margin-bottom:2px;">เรียน</div>
+    <div style="font-size:16px;font-weight:700;">${c?.name||'-'}</div>
+    <div style="font-size:13px;color:#64748b;">${c?.phone||''} ${c?.email?'| '+c.email:''}</div>
+  </div>
+  <table><thead><tr>
+    <th style="width:36px;">#</th><th>รายการ</th>
+    <th style="text-align:right;width:70px;">จำนวน</th><th style="text-align:center;width:60px;">หน่วย</th>
+    <th style="text-align:right;width:110px;">ราคา/หน่วย</th><th style="text-align:right;width:110px;">รวม</th>
+  </tr></thead><tbody>${rows}</tbody>
+  <tfoot>
+    <tr><td colspan="5" style="padding:8px 12px;text-align:right;font-weight:600;">รวมก่อน VAT</td><td style="padding:8px 12px;text-align:right;font-weight:600;">${fmtMoney(q.subtotal)}</td></tr>
+    <tr><td colspan="5" style="padding:8px 12px;text-align:right;">VAT 7%</td><td style="padding:8px 12px;text-align:right;">${fmtMoney(q.vat)}</td></tr>
+    <tr class="grand"><td colspan="5" style="padding:10px 12px;text-align:right;">รวมทั้งสิ้น</td><td style="padding:10px 12px;text-align:right;">${fmtMoney(q.total)}</td></tr>
+  </tfoot></table>
+  ${q.note?`<div style="margin-top:16px;padding:12px 16px;background:#fefce8;border-radius:8px;border-left:3px solid #f0c040;"><strong>หมายเหตุ:</strong> ${q.note}</div>`:''}
+  <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+    <div style="text-align:center;padding-top:60px;border-top:1px solid #94a3b8;font-size:13px;color:#64748b;">ผู้เสนอราคา<br><small>${settings.company||'Wiseplusgrow'}</small></div>
+    <div style="text-align:center;padding-top:60px;border-top:1px solid #94a3b8;font-size:13px;color:#64748b;">ผู้อนุมัติ / ลูกค้า<br><small>${c?.name||'-'}</small></div>
+  </div>
+  </body></html>`);
+  pw.document.close();
+}
 </script>
 </body>
 </html>
