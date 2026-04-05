@@ -3791,19 +3791,23 @@ function renderDetailActivities() {
 }
 
 // Override navTo to call new functions
-const _p4OrigNavTo = navTo;
-function navTo(page) {
-  _p4OrigNavTo(page);
-  if (page==='activities') { updateGoalBar(); populateMemberFilter(); }
-  if (page==='dashboard') { renderFunnelChart(); }
-}
+(function() {
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page==='activities') { updateGoalBar(); populateMemberFilter(); }
+    if (page==='dashboard') { renderFunnelChart(); }
+  };
+})();
 
 // Override updateDashboard to also render funnel
-const _p4OrigUpdateDashboard = updateDashboard;
-function updateDashboard() {
-  _p4OrigUpdateDashboard();
-  renderFunnelChart();
-}
+(function() {
+  const _orig = window.updateDashboard;
+  window.updateDashboard = function() {
+    _orig();
+    renderFunnelChart();
+  };
+})();
 
 // Init Phase 4
 populateMemberFilter();
