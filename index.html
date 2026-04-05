@@ -1983,8 +1983,26 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label class="form-label">ประเภทโครงการ</label>
+          <select class="form-control" id="pj-type">
+            <option value="OEM">OEM</option>
+            <option value="ODM">ODM</option>
+            <option value="เจ้านายบวน">เจ้านายบวน</option>
+            <option value="พัฒนาสูตร">พัฒนาสูตร</option>
+            <option value="สั่งทดสอบ">สั่งทดสอบ</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label">มูลค่า (บาท)</label>
           <input class="form-control" id="pj-value" type="number" placeholder="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ผู้รับผิดชอบ</label>
+          <select class="form-control" id="pj-member">
+            <option value="">-- เลือกพนักงาน --</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">สถานะ</label>
@@ -2061,6 +2079,22 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="form-group">
           <label class="form-label">คาดปิดภายใน</label>
           <input class="form-control" id="lead-close-date" type="date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ผู้รับผิดชอบ</label>
+          <select class="form-control" id="lead-member">
+            <option value="">-- เลือกพนักงาน --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hotness</label>
+          <div class="hotness fire" id="lead-hotness-stars" style="margin-top:8px;">
+            <span onclick="setLeadHotness(1)">🔥</span><span onclick="setLeadHotness(2)">🔥</span>
+            <span onclick="setLeadHotness(3)">🔥</span><span onclick="setLeadHotness(4)">🔥</span>
+            <span onclick="setLeadHotness(5)">🔥</span>
+          </div>
         </div>
       </div>
       <div class="form-group">
@@ -2165,9 +2199,28 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <select class="form-control" id="od-customer"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">อ้างอิงใบเสนอราคา</label>
-          <select class="form-control" id="od-quote-ref">
-            <option value="">-- ไม่อ้างอิง --</option>
+          <label class="form-label">ประเภทเอกสาร</label>
+          <select class="form-control" id="od-type">
+            <option value="SO">SO — ใบสั่งขาย</option>
+            <option value="SOD">SOD — ใบสั่งขายจัดส่ง</option>
+            <option value="SOP">SOP — ใบสั่งขายแบ่งส่ง</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ผู้รับผิดชอบ</label>
+          <select class="form-control" id="od-member">
+            <option value="">-- เลือกพนักงาน --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">วิธีชำระเงิน</label>
+          <select class="form-control" id="od-payment-type">
+            <option value="โอน">โอน</option>
+            <option value="เงินสด">เงินสด</option>
+            <option value="เครดิต">เครดิต</option>
+            <option value="อื่นๆ">อื่นๆ</option>
           </select>
         </div>
       </div>
@@ -2180,6 +2233,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <label class="form-label">กำหนดส่ง</label>
           <input class="form-control" id="od-due" type="date">
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">อ้างอิงใบเสนอราคา</label>
+        <select class="form-control" id="od-quote-ref">
+          <option value="">-- ไม่อ้างอิง --</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">รายการสินค้า/บริการ</label>
@@ -3024,18 +3083,25 @@ function openProjectModal(id=null) {
   // populate customer
   const sel = document.getElementById('pj-customer');
   sel.innerHTML = '<option value="">-- เลือกลูกค้า --</option>' + customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  // populate member
+  const mSel = document.getElementById('pj-member');
+  const mems = DB.get('members',[]);
+  mSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' + mems.map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
   if (isEdit) {
     const p = projects.find(x=>x.id===id);
     if (!p) return;
     document.getElementById('pj-name').value = p.name||'';
     sel.value = p.customerId||'';
+    document.getElementById('pj-type').value = p.type||'OEM';
     document.getElementById('pj-value').value = p.value||'';
     document.getElementById('pj-status').value = p.status||'open';
+    mSel.value = p.member||'';
     document.getElementById('pj-start').value = p.startDate||'';
     document.getElementById('pj-due').value = p.dueDate||'';
     document.getElementById('pj-note').value = p.note||'';
   } else {
     ['pj-name','pj-value','pj-note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('pj-type').value = 'OEM';
     document.getElementById('pj-status').value = 'open';
     document.getElementById('pj-start').value = today();
     document.getElementById('pj-due').value = '';
@@ -3050,8 +3116,10 @@ function saveProject() {
   const p = {
     id, name,
     customerId: document.getElementById('pj-customer').value,
+    type: document.getElementById('pj-type').value,
     value: parseFloat(document.getElementById('pj-value').value)||0,
     status: document.getElementById('pj-status').value,
+    member: document.getElementById('pj-member').value,
     startDate: document.getElementById('pj-start').value,
     dueDate: document.getElementById('pj-due').value,
     note: document.getElementById('pj-note').value.trim(),
@@ -3115,6 +3183,11 @@ function openLeadModal(id=null) {
   document.getElementById('lead-edit-id').value = id||'';
   const sel = document.getElementById('lead-customer');
   sel.innerHTML = '<option value="">-- เลือกลูกค้า --</option>' + customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  // populate member
+  const mSel = document.getElementById('lead-member');
+  const mems = DB.get('members',[]);
+  mSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' + mems.map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
+  leadHotness = 0;
   if (isEdit) {
     const l = leads.find(x=>x.id===id);
     if (!l) return;
@@ -3125,6 +3198,8 @@ function openLeadModal(id=null) {
     document.getElementById('lead-stage').value = l.stage||'prospect';
     document.getElementById('lead-close-date').value = l.closeDate||'';
     document.getElementById('lead-note').value = l.note||'';
+    mSel.value = l.member||'';
+    leadHotness = l.hotness||0;
   } else {
     ['lead-name','lead-note'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('lead-value').value='';
@@ -3132,6 +3207,7 @@ function openLeadModal(id=null) {
     document.getElementById('lead-stage').value='prospect';
     document.getElementById('lead-close-date').value='';
   }
+  setTimeout(()=>setLeadHotness(leadHotness),50);
   openModal('modal-lead');
 }
 function saveLead() {
@@ -3147,6 +3223,8 @@ function saveLead() {
     stage: document.getElementById('lead-stage').value,
     closeDate: document.getElementById('lead-close-date').value,
     note: document.getElementById('lead-note').value.trim(),
+    member: document.getElementById('lead-member').value,
+    hotness: leadHotness,
     createdAt: isEdit ? leads.find(x=>x.id===id)?.createdAt : today(),
   };
   if (isEdit) leads = leads.map(x=>x.id===id?l:x);
@@ -3352,22 +3430,31 @@ function openOrderModal(id=null) {
     const c = customers.find(x=>x.id===q.customerId);
     return `<option value="${q.id}">${q.docNo} - ${c?.name||''}</option>`;
   }).join('');
+  // populate member
+  const mSel = document.getElementById('od-member');
+  const mems = DB.get('members',[]);
+  mSel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' + mems.map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
   if (isEdit) {
     const o = orders.find(x=>x.id===id);
     if (!o) return;
     sel.value = o.customerId||'';
     qsel.value = o.quoteId||'';
+    document.getElementById('od-type').value = o.type||'SO';
     document.getElementById('od-date').value = o.date||today();
     document.getElementById('od-due').value = o.dueDate||'';
     document.getElementById('od-status').value = o.status||'pending';
     document.getElementById('od-note').value = o.note||'';
+    document.getElementById('od-payment-type').value = o.paymentType||'โอน';
+    mSel.value = o.member||'';
     orderItems = JSON.parse(JSON.stringify(o.items||[]));
   } else {
     sel.value=''; qsel.value='';
+    document.getElementById('od-type').value='SO';
     document.getElementById('od-date').value=today();
     document.getElementById('od-due').value='';
     document.getElementById('od-status').value='pending';
     document.getElementById('od-note').value='';
+    document.getElementById('od-payment-type').value='โอน';
     orderItems = [{id:genId(),name:'',qty:1,unit:'ชิ้น',price:0}];
   }
   renderOrderItems(); openModal('modal-order');
@@ -3398,14 +3485,20 @@ function saveOrder() {
   const id = document.getElementById('od-edit-id').value || genId();
   const isEdit = orders.some(x=>x.id===id);
   const sub = orderItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const type = document.getElementById('od-type').value;
+  // สร้าง docNo ตาม type
+  const prefix = type; // SO, SOD, SOP
   const o = {
-    id, docNo: isEdit ? orders.find(x=>x.id===id)?.docNo : genDocNo('SO'),
+    id, docNo: isEdit ? orders.find(x=>x.id===id)?.docNo : genDocNo(prefix),
     customerId: custId,
+    type,
     quoteId: document.getElementById('od-quote-ref').value,
     date: document.getElementById('od-date').value,
     dueDate: document.getElementById('od-due').value,
     status: document.getElementById('od-status').value,
     note: document.getElementById('od-note').value.trim(),
+    member: document.getElementById('od-member').value,
+    paymentType: document.getElementById('od-payment-type').value,
     items: JSON.parse(JSON.stringify(orderItems)),
     subtotal: sub, vat: sub*0.07, total: sub+(sub*0.07),
     createdAt: isEdit ? orders.find(x=>x.id===id)?.createdAt : today(),
@@ -3864,6 +3957,12 @@ function printQuote(id) {
 
 // --- 1. QUOTE HOTNESS ---
 let quoteHotness = 0;
+let leadHotness = 0;
+function setLeadHotness(v) {
+  leadHotness = v;
+  const stars = document.getElementById('lead-hotness-stars')?.children;
+  if (stars) for (let i=0;i<5;i++) stars[i].style.opacity = i<v?'1':'0.25';
+}
 function setQuoteHotness(v) {
   quoteHotness = v;
   const stars = document.getElementById('qt-hotness-stars')?.children;
