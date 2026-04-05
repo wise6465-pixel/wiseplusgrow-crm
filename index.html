@@ -1128,8 +1128,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- Bottom Row: กิจกรรมล่าสุด + งานที่ต้องทำ -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- Bottom Row: กิจกรรมล่าสุด + งานที่ต้องทำ (เก็บไว้แต่ย้ายไปด้านบน) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
             <span class="card-title">📝 กิจกรรมล่าสุด</span>
@@ -1149,6 +1149,71 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div id="db-upcoming-tasks" style="padding:8px 12px;"></div>
             <div id="db-tasks-empty" class="empty-state" style="padding:24px;display:none;"><div class="empty-icon" style="font-size:32px;">✅</div><p>ไม่มีงานค้างอยู่</p></div>
           </div>
+        </div>
+      </div>
+
+      <!-- ===== PHASE 7: Jubili-style bottom sections ===== -->
+
+      <!-- สถานะโครงการ (bar chart ตามประเภท) -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <span class="card-title">📁 สถานะโครงการ</span>
+          <button class="btn btn-ghost btn-sm" onclick="navTo('projects')">ดูทั้งหมด</button>
+        </div>
+        <div class="card-body" style="display:grid;grid-template-columns:1fr 260px;gap:20px;padding:16px;">
+          <div id="db-project-bar-chart" style="min-height:120px;"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;" id="db-project-stats">
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;">
+              <span>โครงการทั้งหมด</span><span id="dps-total" style="font-weight:700;">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;">
+              <span>ใบเสนอราคาโครงการ</span><span id="dps-quotes" style="font-weight:700;color:var(--warning);">0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;">
+              <span>ยอดขายโครงการ</span><span id="dps-revenue" style="font-weight:700;color:var(--success);">฿0</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 12px;font-size:13px;">
+              <span>โครงการเกินกำหนด</span><span id="dps-overdue" style="font-weight:700;color:var(--danger);">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ยอดขายแบ่งตามการชำระเงิน -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="card-title">💳 ยอดขายแบ่งตามการชำระเงิน</span></div>
+        <div class="card-body" style="display:grid;grid-template-columns:240px 1fr;gap:20px;padding:16px;">
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <canvas id="db-payment-donut" width="180" height="180"></canvas>
+            <div id="db-payment-legend" style="margin-top:10px;width:100%;"></div>
+          </div>
+          <div id="db-payment-bars" style="display:flex;flex-direction:column;justify-content:center;gap:12px;"></div>
+        </div>
+      </div>
+
+      <!-- อันดับยอดขาย + กลุ่มสินค้า (2 คอลัมน์ แบบ Jubili) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- อันดับยอดขายแบ่งตามพนักงาน -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">👤 อันดับยอดขายตามพนักงาน</span>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-xs" id="staff-rank-btn-person" onclick="setStaffRankView('person')" style="background:var(--sidebar-bg);color:var(--accent);">พนักงาน</button>
+              <button class="btn btn-xs" id="staff-rank-btn-team" onclick="setStaffRankView('team')" style="background:var(--bg);color:var(--text-muted);">ทีม</button>
+            </div>
+          </div>
+          <div class="card-body" id="db-staff-rank" style="padding:12px 16px;"></div>
+        </div>
+        <!-- ยอดขายแบ่งตามกลุ่มสินค้า -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📦 ยอดขายตามกลุ่มสินค้า</span>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-xs" id="prod-rank-btn-sales" onclick="setProdRankView('sales')" style="background:var(--sidebar-bg);color:var(--accent);">ยอดขาย</button>
+              <button class="btn btn-xs" id="prod-rank-btn-quotes" onclick="setProdRankView('quotes')" style="background:var(--bg);color:var(--text-muted);">ใบเสนอราคา</button>
+            </div>
+          </div>
+          <div class="card-body" id="db-prod-rank" style="padding:12px 16px;"></div>
         </div>
       </div>
     </div>
@@ -4553,4 +4618,229 @@ renderDonutChart();
 renderStaffTable();
 renderLineChart();
 renderRecentImages();
+
+// ============================================================
+//  PHASE 7 — สถานะโครงการ, ยอดขายชำระ, อันดับพนักงาน, กลุ่มสินค้า
+// ============================================================
+
+// --- 1. สถานะโครงการ (bar chart ตามประเภท) ---
+function renderProjectChart() {
+  const el = document.getElementById('db-project-bar-chart');
+  if (!el) return;
+  // ประเภทโครงการจาก Jubili
+  const types = ['เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ','OEM','ODM'];
+  const counts = types.map(t => ({
+    label: t,
+    count: projects.filter(p => p.type === t).length,
+    value: projects.filter(p => p.type === t).reduce((s,p) => s+(p.value||0), 0)
+  }));
+  const maxCount = Math.max(...counts.map(c=>c.count), 1);
+  const colors = ['#3b82f6','#f59e0b','#8b5cf6','#22c55e','#ef4444'];
+  el.innerHTML = counts.map((c,i) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--text-muted);width:80px;flex-shrink:0;">${c.label}</div>
+      <div style="flex:1;background:var(--bg);border-radius:4px;height:20px;overflow:hidden;">
+        <div style="height:100%;width:${Math.max(c.count/maxCount*100,c.count>0?5:0)}%;background:${colors[i]};border-radius:4px;transition:width 0.5s;display:flex;align-items:center;padding-left:6px;">
+          ${c.count>0?`<span style="font-size:11px;color:white;font-weight:600;">${c.count}</span>`:''}
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;width:80px;text-align:right;flex-shrink:0;">${c.value>0?fmtMoney(c.value):'-'}</div>
+    </div>`).join('');
+  // อัพเดต stats
+  const tot = projects.length;
+  const qts = quotes.filter(q => projects.some(p => p.id === q.projectId)).length;
+  const rev = orders.filter(o => o.status==='completed').reduce((s,o) => s+(o.total||0), 0);
+  const ovd = projects.filter(p => p.endDate && p.endDate < today() && p.status !== 'completed').length;
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('dps-total', tot);
+  set('dps-quotes', qts);
+  set('dps-revenue', fmtMoney(rev));
+  set('dps-overdue', ovd);
+}
+
+// --- 2. ยอดขายแบ่งตามการชำระเงิน ---
+function renderPaymentChart() {
+  const canvas = document.getElementById('db-payment-donut');
+  if (!canvas) return;
+  // จำลองข้อมูล payment types จาก orders
+  const payTypes = [
+    {label:'เงินสด', color:'#3b82f6'},
+    {label:'โอน',   color:'#22c55e'},
+    {label:'เครดิต',color:'#f59e0b'},
+    {label:'อื่นๆ', color:'#8b5cf6'},
+  ];
+  // ดึงจาก orders.paymentType หรือกระจายแบบ default
+  const data = payTypes.map(p => ({
+    ...p,
+    value: orders.filter(o=>o.paymentType===p.label&&o.status==='completed').reduce((s,o)=>s+(o.total||0),0)
+  }));
+  const totalRev = data.reduce((s,d)=>s+d.value, 0);
+  // ถ้าไม่มีข้อมูล paymentType ให้ใส่ทั้งหมดใน เงินสด
+  if (totalRev === 0) {
+    const allRev = orders.filter(o=>o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
+    data[0].value = allRev;
+  }
+  const total = data.reduce((s,d)=>s+d.value,0);
+  // draw donut
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, r=H/2-8, innerR=r*0.55;
+  const nonZero = data.filter(d=>d.value>0);
+  if (!nonZero.length) {
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=16; ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.font='11px Sarabun'; ctx.textAlign='center';
+    ctx.fillText('ไม่มีข้อมูล',cx,cy+4);
+  } else {
+    let ang=-Math.PI/2;
+    nonZero.forEach(d=>{
+      const s=(d.value/total)*Math.PI*2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,ang,ang+s);
+      ctx.closePath(); ctx.fillStyle=d.color; ctx.fill(); ang+=s;
+    });
+    ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+    ctx.fillStyle='#1a2332'; ctx.font='bold 13px Sarabun'; ctx.textAlign='center';
+    ctx.fillText(fmtMoney(total),cx,cy+4);
+    ctx.font='9px Sarabun'; ctx.fillStyle='#64748b'; ctx.fillText('ยอดรวม',cx,cy+16);
+  }
+  // legend
+  const leg = document.getElementById('db-payment-legend');
+  if(leg) leg.innerHTML = nonZero.map(d=>`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px;">
+      <div style="width:10px;height:10px;border-radius:2px;background:${d.color};flex-shrink:0;"></div>
+      <span style="flex:1;">${d.label}</span>
+      <span style="font-weight:600;">${Math.round(d.value/total*100)}%</span>
+    </div>`).join('');
+  // bars (พนักงาน)
+  const barsEl = document.getElementById('db-payment-bars');
+  if (!barsEl) return;
+  const memberList = DB.get('members',[]);
+  const memberRevs = memberList.map(m => ({
+    name: m.name,
+    value: orders.filter(o=>o.member===m.name&&o.status==='completed').reduce((s,o)=>s+(o.total||0),0)
+  })).filter(m=>m.value>0).sort((a,b)=>b.value-a.value);
+  const maxRev = Math.max(...memberRevs.map(m=>m.value), total, 1);
+  if (!memberRevs.length) {
+    barsEl.innerHTML = `<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">ยังไม่มีข้อมูลพนักงาน</div>`;
+    return;
+  }
+  barsEl.innerHTML = memberRevs.map(m => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="font-size:12px;width:100px;flex-shrink:0;font-weight:600;">${m.name}</div>
+      <div style="flex:1;background:var(--bg);border-radius:4px;height:22px;overflow:hidden;">
+        <div style="height:100%;width:${Math.round(m.value/maxRev*100)}%;background:#3b82f6;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;">
+          <span style="font-size:11px;color:white;font-weight:600;">${Math.round(m.value/total*100)}%</span>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;width:90px;text-align:right;flex-shrink:0;color:var(--success);">${fmtMoney(m.value)}</div>
+    </div>`).join('');
+}
+
+// --- 3. อันดับยอดขายตามพนักงาน ---
+let staffRankView = 'person';
+function setStaffRankView(view) {
+  staffRankView = view;
+  const bp = document.getElementById('staff-rank-btn-person');
+  const bt = document.getElementById('staff-rank-btn-team');
+  if(bp){bp.style.background=view==='person'?'var(--sidebar-bg)':'var(--bg)'; bp.style.color=view==='person'?'var(--accent)':'var(--text-muted)';}
+  if(bt){bt.style.background=view==='team'?'var(--sidebar-bg)':'var(--bg)'; bt.style.color=view==='team'?'var(--accent)':'var(--text-muted)';}
+  renderStaffRank();
+}
+function renderStaffRank() {
+  const el = document.getElementById('db-staff-rank');
+  if (!el) return;
+  const memberList = DB.get('members',[]);
+  if (!memberList.length) {
+    el.innerHTML=`<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px;">ยังไม่มีพนักงาน — <a href="#" onclick="navTo('settings')" style="color:var(--accent);">ตั้งค่า</a></div>`;
+    return;
+  }
+  const ranked = memberList.map(m => ({
+    name: m.name,
+    value: orders.filter(o=>o.member===m.name&&o.status==='completed').reduce((s,o)=>s+(o.total||0),0)
+  })).sort((a,b)=>b.value-a.value);
+  const totalRev = ranked.reduce((s,r)=>s+r.value,0)||1;
+  const maxVal = Math.max(...ranked.map(r=>r.value),1);
+  el.innerHTML = ranked.map(r => `
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span style="font-weight:600;">${r.name}</span>
+        <span style="color:var(--success);font-weight:600;">${Math.round(r.value/totalRev*100).toFixed(1)}% | ${fmtMoney(r.value)}</span>
+      </div>
+      <div style="background:var(--bg);border-radius:4px;height:18px;overflow:hidden;">
+        <div style="height:100%;width:${Math.round(r.value/maxVal*100)}%;background:linear-gradient(90deg,#3b82f6,#22c55e);border-radius:4px;"></div>
+      </div>
+    </div>`).join('') || `<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px;">ยังไม่มียอดขาย</div>`;
+}
+
+// --- 4. ยอดขายตามกลุ่มสินค้า ---
+let prodRankView = 'sales';
+function setProdRankView(view) {
+  prodRankView = view;
+  const bs = document.getElementById('prod-rank-btn-sales');
+  const bq = document.getElementById('prod-rank-btn-quotes');
+  if(bs){bs.style.background=view==='sales'?'var(--sidebar-bg)':'var(--bg)'; bs.style.color=view==='sales'?'var(--accent)':'var(--text-muted)';}
+  if(bq){bq.style.background=view==='quotes'?'var(--sidebar-bg)':'var(--bg)'; bq.style.color=view==='quotes'?'var(--accent)':'var(--text-muted)';}
+  renderProdRank();
+}
+function renderProdRank() {
+  const el = document.getElementById('db-prod-rank');
+  if (!el) return;
+  // รวบรวม items จาก orders หรือ quotes
+  const itemMap = {};
+  const source = prodRankView==='sales' ? orders.filter(o=>o.status==='completed') : quotes;
+  source.forEach(doc => {
+    (doc.items||[]).forEach(item => {
+      if (!item.name) return;
+      if (!itemMap[item.name]) itemMap[item.name] = 0;
+      itemMap[item.name] += (item.qty||1) * (item.price||0);
+    });
+  });
+  const sorted = Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if (!sorted.length) {
+    el.innerHTML=`<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px;">ยังไม่มีข้อมูลสินค้า</div>`;
+    return;
+  }
+  const maxVal = sorted[0][1]||1;
+  el.innerHTML = sorted.map(([name,val]) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="font-size:12px;width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</div>
+      <div style="flex:1;background:var(--bg);border-radius:4px;height:18px;overflow:hidden;">
+        <div style="height:100%;width:${Math.round(val/maxVal*100)}%;background:#22c55e;border-radius:4px;"></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;width:70px;text-align:right;flex-shrink:0;">${Math.round(val/maxVal*100)}%</div>
+    </div>`).join('');
+}
+
+// Patch updateDashboard for Phase 7
+(function(){
+  const _orig = window.updateDashboard;
+  window.updateDashboard = function(){
+    _orig();
+    renderProjectChart();
+    renderPaymentChart();
+    renderStaffRank();
+    renderProdRank();
+  };
+})();
+
+// Patch navTo for Phase 7
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page){
+    _orig(page);
+    if(page==='dashboard'){
+      renderProjectChart();
+      renderPaymentChart();
+      renderStaffRank();
+      renderProdRank();
+    }
+  };
+})();
+
+// Init Phase 7
+renderProjectChart();
+renderPaymentChart();
+renderStaffRank();
+renderProdRank();
 </script>
