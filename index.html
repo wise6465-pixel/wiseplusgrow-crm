@@ -1507,33 +1507,157 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ===== PAGE: FORECAST ===== -->
     <div class="page" id="page-forecast">
-      <div style="margin-bottom:20px;">
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">คาดการณ์</h2>
-        <p style="font-size:13px;color:var(--text-muted);">วิเคราะห์และคาดการณ์ยอดขาย</p>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Pipeline รวม</div><div class="stat-value" id="fc-pipeline" style="font-size:18px">฿0</div><div class="stat-sub">มูลค่าโอกาสทั้งหมด</div></div>
-        <div class="stat-card"><div class="stat-label">คาดปิดได้ (ถ่วงน้ำหนัก)</div><div class="stat-value" id="fc-weighted" style="font-size:18px;color:var(--info)">฿0</div><div class="stat-sub">จากความน่าจะเป็น</div></div>
-        <div class="stat-card"><div class="stat-label">ปิดได้แล้วเดือนนี้</div><div class="stat-value" id="fc-won-month" style="font-size:18px;color:var(--success)">฿0</div><div class="stat-sub">ใบสั่งขายที่เสร็จสิ้น</div></div>
-        <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value" id="fc-winrate">0%</div><div class="stat-sub">โอกาสที่ปิดได้</div></div>
-      </div>
-      <!-- Pipeline by stage -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">📊 Pipeline ตาม Stage</span></div>
-        <div class="card-body">
-          <div id="fc-stage-bars"></div>
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">คาดการณ์ยอดขาย</h2>
+          <p style="font-size:13px;color:var(--text-muted);">เปรียบเทียบเป้าหมายกับยอดจริงรายเดือน</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="font-size:13px;font-weight:600;">ประจำปี</label>
+          <input class="form-control" id="fc-year" type="number" value="2026" min="2020" max="2030" style="width:90px;" onchange="renderForecast()">
+          <button class="btn btn-primary btn-sm" onclick="openForecastGoalModal()">✏️ ปรับเป้าหมาย</button>
         </div>
       </div>
-      <!-- Top leads -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">🏆 Top 10 โอกาส (มูลค่าสูงสุด)</span></div>
-        <div class="card-body" style="padding:0;">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>โอกาส</th><th>ลูกค้า</th><th>Stage</th><th>มูลค่า</th><th>โอกาส%</th><th>คาดปิด</th></tr></thead>
-              <tbody id="fc-top-leads"></tbody>
+
+      <!-- 2 Tabs แบบ Jubili -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">
+        <button id="fc-tab-org" onclick="setForecastTab('org')" style="padding:10px 20px;border:none;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:600;color:var(--sidebar-bg);border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <span>👥</span> ระดับกิจการ
+        </button>
+        <button id="fc-tab-prod" onclick="setForecastTab('prod')" style="padding:10px 20px;border:none;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <span>📦</span> กลุ่มสินค้า
+        </button>
+      </div>
+
+      <!-- TAB 1: ระดับกิจการ -->
+      <div id="fc-view-org">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🏢 ระดับกิจการ</span>
+            <span style="font-size:12px;color:var(--text-muted);" id="fc-org-updated"></span>
+          </div>
+          <div class="card-body" style="padding:0;overflow-x:auto;">
+            <table id="fc-org-table" style="font-size:12px;min-width:1100px;">
+              <thead>
+                <tr style="background:#1a2332;color:white;">
+                  <th style="padding:10px 12px;width:160px;">เป้าหมายยอดขาย<br><small style="font-weight:400;opacity:0.7;">ระดับกิจการ</small></th>
+                  <th style="padding:10px 12px;text-align:right;background:#2a3342;">ทั้งปี <span id="fc-year-label">2026</span></th>
+                  <!-- Q1 -->
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q1/<span class="fc-yr"></span></th>
+                  <!-- Q2 -->
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q2/<span class="fc-yr"></span></th>
+                  <!-- Q3 -->
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q3/<span class="fc-yr"></span></th>
+                  <!-- Q4 -->
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q4/<span class="fc-yr"></span></th>
+                </tr>
+                <tr style="background:#f8fafc;">
+                  <th style="padding:8px 12px;"></th>
+                  <th style="padding:8px 12px;text-align:right;"></th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">ม.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">ก.พ.</th>
+                  <th style="padding:8px 12px;text-align:right;">มี.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">เม.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;">พ.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">มิ.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">ก.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">ส.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">ก.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">ต.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">พ.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;">ธ.ค.</th>
+                </tr>
+              </thead>
+              <tbody id="fc-org-tbody"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: กลุ่มสินค้า -->
+      <div id="fc-view-prod" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📦 กลุ่มสินค้า</span>
+            <div style="display:flex;gap:8px;">
+              <select class="form-control" style="width:auto;font-size:12px;" id="fc-prod-group" onchange="renderForecastProd()">
+                <option value="">กลุ่มสินค้าหลัก: ทั้งหมด</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;overflow-x:auto;">
+            <table id="fc-prod-table" style="font-size:12px;min-width:1100px;">
+              <thead>
+                <tr style="background:#1a2332;color:white;">
+                  <th style="padding:10px 12px;width:160px;">เป้าหมายยอดขาย<br><small style="font-weight:400;opacity:0.7;">กลุ่มสินค้าทั้งหมด</small></th>
+                  <th style="padding:10px 12px;text-align:right;background:#2a3342;">ทั้งปี</th>
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q1</th>
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q2</th>
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q3</th>
+                  <th colspan="3" style="padding:8px 12px;text-align:center;background:#3b4a5c;border-left:2px solid #f0c040;">Q4</th>
+                </tr>
+                <tr style="background:#f8fafc;">
+                  <th style="padding:8px 12px;"></th>
+                  <th style="padding:8px 12px;text-align:right;"></th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">ม.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">ก.พ.</th>
+                  <th style="padding:8px 12px;text-align:right;">มี.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">เม.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;">พ.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">มิ.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">ก.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">ส.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">ก.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;border-left:2px solid var(--accent);">ต.ค.</th>
+                  <th style="padding:8px 12px;text-align:right;">พ.ย.</th>
+                  <th style="padding:8px 12px;text-align:right;">ธ.ค.</th>
+                </tr>
+              </thead>
+              <tbody id="fc-prod-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: FORECAST GOAL ===== -->
+    <div class="modal-overlay" id="modal-fc-goal">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>✏️ ปรับเป้าหมายยอดขาย</h3>
+          <button class="modal-close" onclick="closeModal('modal-fc-goal')">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">กำหนดเป้าหมายยอดขายรายปีและรายไตรมาส</p>
+          <div class="form-group">
+            <label class="form-label">เป้าหมายทั้งปี (บาท)</label>
+            <input class="form-control" id="fc-goal-year" type="number" placeholder="1,285,714">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Q1 (ม.ค-มี.ค)</label>
+              <input class="form-control" id="fc-goal-q1" type="number" placeholder="428,571">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Q2 (เม.ย-มิ.ย)</label>
+              <input class="form-control" id="fc-goal-q2" type="number" placeholder="428,571">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Q3 (ก.ค-ก.ย)</label>
+              <input class="form-control" id="fc-goal-q3" type="number" placeholder="428,571">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Q4 (ต.ค-ธ.ค)</label>
+              <input class="form-control" id="fc-goal-q4" type="number" placeholder="428,571">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('modal-fc-goal')">ยกเลิก</button>
+          <button class="btn btn-primary" onclick="saveForecastGoal()">💾 บันทึก</button>
         </div>
       </div>
     </div>
@@ -3553,54 +3677,279 @@ function deleteOrder(id) {
 // ============================================================
 //  FORECAST
 // ============================================================
+// ============================================================
+//  PHASE 9 — FORECAST แบบ Jubili
+// ============================================================
+let fcTab = 'org';
+
+function setForecastTab(tab) {
+  fcTab = tab;
+  document.getElementById('fc-view-org').style.display = tab==='org' ? '' : 'none';
+  document.getElementById('fc-view-prod').style.display = tab==='prod' ? '' : 'none';
+  const btnOrg = document.getElementById('fc-tab-org');
+  const btnProd = document.getElementById('fc-tab-prod');
+  if (btnOrg) {
+    btnOrg.style.color = tab==='org' ? 'var(--sidebar-bg)' : 'var(--text-muted)';
+    btnOrg.style.borderBottomColor = tab==='org' ? 'var(--accent)' : 'transparent';
+    btnOrg.style.fontWeight = tab==='org' ? '600' : '500';
+  }
+  if (btnProd) {
+    btnProd.style.color = tab==='prod' ? 'var(--sidebar-bg)' : 'var(--text-muted)';
+    btnProd.style.borderBottomColor = tab==='prod' ? 'var(--accent)' : 'transparent';
+    btnProd.style.fontWeight = tab==='prod' ? '600' : '500';
+  }
+  if (tab==='org') renderForecastOrg();
+  else renderForecastProd();
+}
+
 function renderForecast() {
-  const pipeline = leads.reduce((s,l)=>s+(l.value||0),0);
-  const weighted = leads.reduce((s,l)=>s+((l.value||0)*(l.prob||0)/100),0);
-  const thisMonth = today().substring(0,7);
-  const wonMonth = orders.filter(o=>o.date?.startsWith(thisMonth)).reduce((s,o)=>s+(o.total||0),0);
-  const wonLeads = leads.filter(l=>l.stage==='won').length;
-  const totalLeadsClosed = leads.filter(l=>l.stage==='won'||l.stage==='lost').length;
-  const winRate = totalLeadsClosed>0 ? Math.round(wonLeads/totalLeadsClosed*100) : 0;
-  document.getElementById('fc-pipeline').textContent = fmtMoney(pipeline);
-  document.getElementById('fc-weighted').textContent = fmtMoney(weighted);
-  document.getElementById('fc-won-month').textContent = fmtMoney(wonMonth);
-  document.getElementById('fc-winrate').textContent = winRate + '%';
-  // Stage bars
-  const stages = [
-    {stage:'prospect',label:'🔍 ค้นหา',color:'#94a3b8'},
-    {stage:'contact',label:'📞 ติดต่อ',color:'#3b82f6'},
-    {stage:'quote',label:'📄 เสนอราคา',color:'#f59e0b'},
-    {stage:'negotiate',label:'🤝 เจรจา',color:'#8b5cf6'},
-    {stage:'won',label:'✅ ปิดได้',color:'#22c55e'},
-    {stage:'lost',label:'❌ ปิดไม่ได้',color:'#ef4444'},
+  const year = parseInt(document.getElementById('fc-year')?.value) || new Date().getFullYear();
+  // อัพเดต year labels
+  document.querySelectorAll('.fc-yr').forEach(el => el.textContent = year);
+  const yl = document.getElementById('fc-year-label');
+  if (yl) yl.textContent = year;
+  setForecastTab(fcTab);
+}
+
+// --- ดึงยอดขายจริงรายเดือน ---
+function getMonthSales(year, month) {
+  // month: 1-12
+  const prefix = year + '-' + String(month).padStart(2,'0');
+  return orders.filter(o => o.status==='completed' && (o.date||'').startsWith(prefix))
+    .reduce((s,o) => s+(o.total||0), 0);
+}
+
+// --- ดึงเป้าหมายจาก goals ---
+function getForecastGoals() {
+  const saved = DB.get('fc_goals', null);
+  if (saved) return saved;
+  const annualGoal = (goals.revenue||50000) * 365;
+  const q = annualGoal / 4;
+  return { year: annualGoal, q1: q, q2: q, q3: q, q4: q };
+}
+
+// --- คำนวณ % เทียบเป้า ---
+function pctCell(actual, target) {
+  if (!target) return '<td style="text-align:right;color:var(--text-muted);">-</td>';
+  const pct = Math.round(actual/target*100);
+  const color = pct >= 100 ? 'var(--success)' : pct >= 70 ? 'var(--warning)' : '#ef4444';
+  const bg = pct >= 100 ? '#f0fdf4' : pct >= 70 ? '#fef3c7' : '#fef2f2';
+  return `<td style="text-align:right;background:${bg};color:${color};font-weight:700;">${pct}%</td>`;
+}
+
+// --- Tab 1: ระดับกิจการ ---
+function renderForecastOrg() {
+  const year = parseInt(document.getElementById('fc-year')?.value) || new Date().getFullYear();
+  const goals_fc = getForecastGoals();
+  const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+  const mSales = months.map(m => getMonthSales(year, m));
+  const qSales = [
+    mSales[0]+mSales[1]+mSales[2],
+    mSales[3]+mSales[4]+mSales[5],
+    mSales[6]+mSales[7]+mSales[8],
+    mSales[9]+mSales[10]+mSales[11],
   ];
-  const maxVal = Math.max(...stages.map(s=>leads.filter(l=>l.stage===s.stage).reduce((sum,l)=>sum+(l.value||0),0)),1);
-  const barsEl = document.getElementById('fc-stage-bars');
-  barsEl.innerHTML = stages.map(s => {
-    const stageLeads = leads.filter(l=>l.stage===s.stage);
-    const val = stageLeads.reduce((sum,l)=>sum+(l.value||0),0);
-    const pct = Math.round(val/maxVal*100);
-    return `<div class="mini-bar">
-      <span class="mini-bar-label">${s.label}</span>
-      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${s.color};"></div></div>
-      <span class="mini-bar-val">${fmtMoney(val)}</span>
-      <span style="font-size:11px;color:var(--text-light);width:40px;text-align:right;">${stageLeads.length} รายการ</span>
-    </div>`;
-  }).join('');
-  // Top leads
-  const topLeads = [...leads].sort((a,b)=>(b.value||0)-(a.value||0)).slice(0,10);
-  document.getElementById('fc-top-leads').innerHTML = topLeads.map(l => {
-    const c = customers.find(x=>x.id===l.customerId);
-    const stageLabel = {prospect:'ค้นหา',contact:'ติดต่อ',quote:'เสนอราคา',negotiate:'เจรจา',won:'ปิดได้',lost:'ปิดไม่ได้'};
-    return `<tr>
-      <td>${l.name}</td>
-      <td>${c?.name||'-'}</td>
-      <td>${stageLabel[l.stage]||l.stage}</td>
-      <td>${fmtMoney(l.value)}</td>
-      <td>${l.prob||0}%</td>
-      <td>${fmtDate(l.closeDate)}</td>
+  const totalSales = mSales.reduce((s,v)=>s+v, 0);
+  const qGoals = [goals_fc.q1||0, goals_fc.q2||0, goals_fc.q3||0, goals_fc.q4||0];
+  const mGoals = qGoals.map(q => q/3);
+
+  const fmt = v => v > 0 ? fmtMoney(v) : '-';
+  const cell = v => `<td style="text-align:right;">${fmt(v)}</td>`;
+
+  // แถวข้อมูล
+  const rows = [
+    {
+      label: 'เป้าหมาย',
+      style: 'font-weight:700;',
+      vals: [goals_fc.year, ...mGoals],
+      qVals: qGoals,
+    },
+    {
+      label: 'ยอดขายจริง',
+      style: 'color:var(--sidebar-bg);',
+      vals: [totalSales, ...mSales],
+      qVals: qSales,
+    },
+  ];
+
+  const tbody = document.getElementById('fc-org-tbody');
+  if (!tbody) return;
+
+  let html = '';
+
+  // แถว เป้าหมาย
+  html += `<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:10px 12px;font-weight:700;">เป้าหมาย</td>
+    ${cell(goals_fc.year)}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mGoals[0])}</td>
+    ${[1,2].map(i=>`<td style="text-align:right;">${fmt(mGoals[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mGoals[3])}</td>
+    ${[4,5].map(i=>`<td style="text-align:right;">${fmt(mGoals[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mGoals[6])}</td>
+    ${[7,8].map(i=>`<td style="text-align:right;">${fmt(mGoals[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mGoals[9])}</td>
+    ${[10,11].map(i=>`<td style="text-align:right;">${fmt(mGoals[i])}</td>`).join('')}
+  </tr>`;
+
+  // แถว ยอดขายจริง
+  html += `<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:10px 12px;color:var(--sidebar-bg);font-weight:600;">ยอดขายจริง</td>
+    ${cell(totalSales)}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mSales[0])}</td>
+    ${[1,2].map(i=>`<td style="text-align:right;">${fmt(mSales[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mSales[3])}</td>
+    ${[4,5].map(i=>`<td style="text-align:right;">${fmt(mSales[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mSales[6])}</td>
+    ${[7,8].map(i=>`<td style="text-align:right;">${fmt(mSales[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mSales[9])}</td>
+    ${[10,11].map(i=>`<td style="text-align:right;">${fmt(mSales[i])}</td>`).join('')}
+  </tr>`;
+
+  // แถว % เทียบเป้าหมาย
+  const totalPct = goals_fc.year > 0 ? Math.round(totalSales/goals_fc.year*100) : 0;
+  const totalColor = totalPct>=100?'var(--success)':totalPct>=70?'var(--warning)':'#ef4444';
+  const totalBg = totalPct>=100?'#f0fdf4':totalPct>=70?'#fef3c7':'#fef2f2';
+  html += `<tr style="border-bottom:2px solid var(--border);">
+    <td style="padding:10px 12px;color:var(--text-muted);">% เทียบเป้าหมาย</td>
+    <td style="text-align:right;background:${totalBg};color:${totalColor};font-weight:700;">${totalPct}%</td>
+    <td style="border-left:2px solid var(--accent);">${pctCell(mSales[0],mGoals[0]).replace('<td','<td').replace('</td>','')}</td>
+    ${[1,2].map(i=>pctCell(mSales[i],mGoals[i])).join('')}
+    <td style="border-left:2px solid var(--accent);">${pctCell(mSales[3],mGoals[3]).replace('<td','<td').replace('</td>','')}</td>
+    ${[4,5].map(i=>pctCell(mSales[i],mGoals[i])).join('')}
+    <td style="border-left:2px solid var(--accent);">${pctCell(mSales[6],mGoals[6]).replace('<td','<td').replace('</td>','')}</td>
+    ${[7,8].map(i=>pctCell(mSales[i],mGoals[i])).join('')}
+    <td style="border-left:2px solid var(--accent);">${pctCell(mSales[9],mGoals[9]).replace('<td','<td').replace('</td>','')}</td>
+    ${[10,11].map(i=>pctCell(mSales[i],mGoals[i])).join('')}
+  </tr>`;
+
+  // แถว คาดการณ์จากโอกาส (weighted)
+  const mFcst = months.map(m => {
+    const mStr = year+'-'+String(m).padStart(2,'0');
+    return leads.filter(l=>l.stage!=='won'&&l.stage!=='lost'&&(l.closeDate||'').startsWith(mStr))
+      .reduce((s,l)=>s+((l.value||0)*(l.prob||0)/100),0);
+  });
+  const totalFcst = mFcst.reduce((s,v)=>s+v,0);
+  html += `<tr style="border-bottom:1px solid var(--border);background:#f8fafc;">
+    <td style="padding:10px 12px;color:var(--info);">คาดการณ์ยอดใหม่</td>
+    ${cell(totalFcst)}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mFcst[0])}</td>
+    ${[1,2].map(i=>`<td style="text-align:right;">${fmt(mFcst[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mFcst[3])}</td>
+    ${[4,5].map(i=>`<td style="text-align:right;">${fmt(mFcst[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mFcst[6])}</td>
+    ${[7,8].map(i=>`<td style="text-align:right;">${fmt(mFcst[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mFcst[9])}</td>
+    ${[10,11].map(i=>`<td style="text-align:right;">${fmt(mFcst[i])}</td>`).join('')}
+  </tr>`;
+
+  // แถว รวมคาดการณ์
+  const mTotal = months.map((m,i) => mSales[i] + mFcst[i]);
+  const grandTotal = mTotal.reduce((s,v)=>s+v,0);
+  html += `<tr style="border-bottom:1px solid var(--border);font-weight:700;">
+    <td style="padding:10px 12px;">รวมคาดการณ์</td>
+    ${cell(grandTotal)}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mTotal[0])}</td>
+    ${[1,2].map(i=>`<td style="text-align:right;">${fmt(mTotal[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mTotal[3])}</td>
+    ${[4,5].map(i=>`<td style="text-align:right;">${fmt(mTotal[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mTotal[6])}</td>
+    ${[7,8].map(i=>`<td style="text-align:right;">${fmt(mTotal[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(mTotal[9])}</td>
+    ${[10,11].map(i=>`<td style="text-align:right;">${fmt(mTotal[i])}</td>`).join('')}
+  </tr>`;
+
+  tbody.innerHTML = html;
+  const upd = document.getElementById('fc-org-updated');
+  if (upd) upd.textContent = 'อัพเดตล่าสุด: ' + fmtDate(today());
+}
+
+// --- Tab 2: กลุ่มสินค้า ---
+function renderForecastProd() {
+  const year = parseInt(document.getElementById('fc-year')?.value) || new Date().getFullYear();
+  const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+
+  // รวบรวมสินค้าจาก orders
+  const prodMap = {};
+  orders.filter(o=>o.status==='completed').forEach(o => {
+    (o.items||[]).forEach(item => {
+      if (!item.name) return;
+      if (!prodMap[item.name]) prodMap[item.name] = Array(12).fill(0);
+      const m = parseInt((o.date||'').substring(5,7));
+      const y = parseInt((o.date||'').substring(0,4));
+      if (y===year && m>=1 && m<=12) prodMap[item.name][m-1] += (item.qty||1)*(item.price||0);
+    });
+  });
+
+  const tbody = document.getElementById('fc-prod-tbody');
+  if (!tbody) return;
+
+  const fmt = v => v > 0 ? fmtMoney(v) : '-';
+
+  if (!Object.keys(prodMap).length) {
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:32px;color:var(--text-muted);">ยังไม่มีข้อมูลสินค้า<br><small>กรอกรายการสินค้าในใบสั่งขายก่อนครับ</small></td></tr>`;
+    return;
+  }
+
+  // แถวรวมทั้งหมดก่อน
+  const totalByMonth = months.map((_,i) => Object.values(prodMap).reduce((s,v)=>s+(v[i]||0),0));
+  const grandTotal = totalByMonth.reduce((s,v)=>s+v,0);
+
+  let html = `<tr style="font-weight:700;background:#f0fdf4;">
+    <td style="padding:10px 12px;">ยอดขายจริง (รวม)</td>
+    <td style="text-align:right;">${fmt(grandTotal)}</td>
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(totalByMonth[0])}</td>
+    ${[1,2].map(i=>`<td style="text-align:right;">${fmt(totalByMonth[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(totalByMonth[3])}</td>
+    ${[4,5].map(i=>`<td style="text-align:right;">${fmt(totalByMonth[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(totalByMonth[6])}</td>
+    ${[7,8].map(i=>`<td style="text-align:right;">${fmt(totalByMonth[i])}</td>`).join('')}
+    <td style="text-align:right;border-left:2px solid var(--accent);">${fmt(totalByMonth[9])}</td>
+    ${[10,11].map(i=>`<td style="text-align:right;">${fmt(totalByMonth[i])}</td>`).join('')}
+  </tr>`;
+
+  // แถวแต่ละสินค้า
+  Object.entries(prodMap).sort((a,b)=>b[1].reduce((s,v)=>s+v,0)-a[1].reduce((s,v)=>s+v,0)).forEach(([name, mVals]) => {
+    const prodTotal = mVals.reduce((s,v)=>s+v,0);
+    html += `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 12px;font-size:12px;">${name}</td>
+      <td style="text-align:right;font-size:12px;">${fmt(prodTotal)}</td>
+      <td style="text-align:right;font-size:12px;border-left:2px solid var(--accent);">${fmt(mVals[0])}</td>
+      ${[1,2].map(i=>`<td style="text-align:right;font-size:12px;">${fmt(mVals[i])}</td>`).join('')}
+      <td style="text-align:right;font-size:12px;border-left:2px solid var(--accent);">${fmt(mVals[3])}</td>
+      ${[4,5].map(i=>`<td style="text-align:right;font-size:12px;">${fmt(mVals[i])}</td>`).join('')}
+      <td style="text-align:right;font-size:12px;border-left:2px solid var(--accent);">${fmt(mVals[6])}</td>
+      ${[7,8].map(i=>`<td style="text-align:right;font-size:12px;">${fmt(mVals[i])}</td>`).join('')}
+      <td style="text-align:right;font-size:12px;border-left:2px solid var(--accent);">${fmt(mVals[9])}</td>
+      ${[10,11].map(i=>`<td style="text-align:right;font-size:12px;">${fmt(mVals[i])}</td>`).join('')}
     </tr>`;
-  }).join('');
+  });
+
+  tbody.innerHTML = html;
+}
+
+// --- Modal ปรับเป้าหมาย ---
+function openForecastGoalModal() {
+  const g = getForecastGoals();
+  document.getElementById('fc-goal-year').value = g.year||'';
+  document.getElementById('fc-goal-q1').value = g.q1||'';
+  document.getElementById('fc-goal-q2').value = g.q2||'';
+  document.getElementById('fc-goal-q3').value = g.q3||'';
+  document.getElementById('fc-goal-q4').value = g.q4||'';
+  openModal('modal-fc-goal');
+}
+
+function saveForecastGoal() {
+  const g = {
+    year: parseFloat(document.getElementById('fc-goal-year').value)||0,
+    q1: parseFloat(document.getElementById('fc-goal-q1').value)||0,
+    q2: parseFloat(document.getElementById('fc-goal-q2').value)||0,
+    q3: parseFloat(document.getElementById('fc-goal-q3').value)||0,
+    q4: parseFloat(document.getElementById('fc-goal-q4').value)||0,
+  };
+  DB.set('fc_goals', g);
+  closeModal('modal-fc-goal');
+  renderForecast();
+  toast('✅ บันทึกเป้าหมายแล้ว');
 }
 
 // ============================================================
