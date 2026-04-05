@@ -612,7 +612,28 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* ===== KANBAN ===== */
+/* ===== SETTINGS SIDEBAR (Jubili-style) ===== */
+.stg-grp { border-bottom: 1px solid var(--border); }
+.stg-grp-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; font-size: 13px; font-weight: 600;
+  color: var(--text-main); cursor: pointer; transition: background .15s; user-select: none;
+}
+.stg-grp-hdr:hover { background: #f1f5f9; }
+.stg-grp-hdr.stg-open { background: #f8fafc; }
+.stg-sub { background: #fafafa; }
+.stg-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px 9px 30px; font-size: 13px;
+  color: var(--text-muted); cursor: pointer; transition: all .15s;
+  border-left: 3px solid transparent;
+}
+.stg-item:hover { background: #f0f4ff; color: var(--text-main); }
+.stg-item.active { background: #eef2ff; color: var(--sidebar-bg); border-left-color: var(--accent); font-weight: 600; }
+.stg-ico { font-size: 14px; width: 18px; text-align: center; display: inline-block; }
+.stg-arr { font-size: 10px; color: var(--text-muted); }
+.stg-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+
 .kanban-col {
   min-width: 220px;
   flex-shrink: 0;
@@ -1660,279 +1681,520 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ===== PAGE: REPORTS ===== -->
     <div class="page" id="page-reports">
-
-      <!-- LIST VIEW: แสดงรายการรายงานแบบ Jubili -->
-      <div id="rp-list-view">
-        <div style="display:flex;align-items:center;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">
-          <button style="padding:10px 20px;border:none;border-bottom:3px solid var(--accent);margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:700;color:var(--sidebar-bg);cursor:default;">📋 รายงาน</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">รายงาน</h2>
+          <p style="font-size:13px;color:var(--text-muted);">วิเคราะห์และสรุปผลงานการขาย</p>
         </div>
-        <div class="card">
-          <div class="card-body" style="padding:0;">
-            <table style="font-size:13px;width:100%;">
-              <thead>
-                <tr style="background:#1a2332;color:white;">
-                  <th style="padding:12px 16px;width:80px;">รหัส</th>
-                  <th style="padding:12px 16px;">ชื่อรายงาน</th>
-                  <th style="padding:12px 16px;">คำอธิบาย</th>
-                  <th style="padding:12px 16px;width:120px;text-align:right;">เข้าชมล่าสุด</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="rp-list-row" onclick="openReport('r00')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-00</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">รายงานสรุปยอดขายประจำปี</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานสรุปยอดขายประจำปี แสดงรายเดือน นับจากต้นปี เทียบกับปีก่อนหน้า</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r00">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r01')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-01</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">สรุปยอดขายรายเดือนของกิจการ</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานสรุปยอดขายรายเดือนของกิจการ นับถึงสิ้นเดือน</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r01">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r02')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-02</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">รายละเอียดยอดขายรายเดือน</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานรายละเอียดยอดขาย ยอดชำระเงิน รายเดือน ของพนักงานรายบุคคล / ทีม / ทั้งกิจการ</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r02">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r03')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-03</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">รายละเอียดกิจกรรมการขาย</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานรายละเอียดกิจกรรมการขาย รายเดือน ของพนักงานรายบุคคล / ทีม / ทั้งกิจการ</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r03">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r04')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-04</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">สรุปสาเหตุที่ไม่ได้งาน</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานสรุปข้อมูลการขายที่ลูกค้าปฏิเสธ ตามช่วงเวลาที่กำหนด แยกตามกลุ่มสินค้า</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r04">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r05')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-05</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">วิเคราะห์รายลูกค้า</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานวิเคราะห์พฤติกรรมลูกค้า ย้อนหลัง 30/60/90/180 วัน</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r05">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r06')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-06</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">วิเคราะห์ตามแท็กลูกค้า</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานวิเคราะห์กิจกรรมการขาย และยอดขาย รายเดือน ตามแท็กลูกค้า</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r06">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r07')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-07</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">รายงานยอดคาดการณ์และยอดขายตามกลุ่มสินค้า</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานใบเสนอราคา ยอดคาดการณ์ และยอดขายจริง ตามกลุ่มสินค้า ในเดือนที่กำหนด</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r07">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r08')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-08</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">รายงานการขายโครงการ</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานติดตามสถานะการขายโครงการรายเดือน</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r08">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r09')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-09</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">รายงานยอดคาดการณ์และยอดขายรายบุคคล</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานเปรียบเทียบเป้ายอดขาย ยอดคาดการณ์ และยอดขายจริง รายบุคคล / ทีม / ทั้งกิจการ</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r09">-</td>
-                </tr>
-                <tr class="rp-list-row" onclick="openReport('r13')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
-                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-13</span></td>
-                  <td style="padding:14px 16px;font-weight:600;">แผนงานติดตาม</td>
-                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานแสดงแผนการทำงานขาย จากการบันทึกกำหนดตามครั้งที่ผ่านไป ภายในช่วงเวลาที่กำหนด</td>
-                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r13">-</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div style="display:flex;gap:8px;">
+          <select class="form-control" id="rp-year" style="width:90px;" onchange="renderReports()">
+          </select>
+          <select class="form-control" id="rp-month" style="width:120px;" onchange="renderReports()">
+            <option value="">ทุกเดือน</option>
+            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
+            <option value="03">มีนาคม</option><option value="04">เมษายน</option>
+            <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+            <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+            <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
+            <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+          </select>
+          <select class="form-control" id="rp-member-filter" style="width:auto;" onchange="renderReports()">
+            <option value="">พนักงาน: ทั้งหมด</option>
+          </select>
         </div>
       </div>
 
-      <!-- DETAIL VIEW: แสดงรายงานจริง -->
-      <div id="rp-detail-view" style="display:none;">
-        <!-- Header ด้านบน -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button onclick="closeReport()" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-family:Sarabun,sans-serif;font-size:13px;color:var(--text-muted);">← กลับ</button>
-            <div>
-              <span id="rp-detail-code" style="background:var(--accent);color:var(--sidebar-bg);padding:3px 10px;border-radius:4px;font-weight:700;font-size:13px;margin-right:8px;"></span>
-              <span id="rp-detail-title" style="font-size:18px;font-weight:700;"></span>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <select class="form-control" id="rp-year" style="width:90px;" onchange="renderRpContent()"></select>
-            <select class="form-control" id="rp-month" style="width:130px;" onchange="renderRpContent()">
-              <option value="">ทุกเดือน</option>
-              <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
-              <option value="03">มีนาคม</option><option value="04">เมษายน</option>
-              <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
-              <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
-              <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
-              <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
-            </select>
-            <select class="form-control" id="rp-member-filter" style="width:auto;" onchange="renderRpContent()">
-              <option value="">พนักงาน: ทั้งหมด</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- KPI Summary -->
-        <div class="stats-grid" style="margin-bottom:16px;">
-          <div class="stat-card"><div class="stat-label">💰 ยอดขายรวม</div><div class="stat-value" id="rp-revenue" style="font-size:20px;color:var(--sidebar-bg)">฿0</div><div class="stat-sub" id="rp-order-count">0 ออเดอร์</div></div>
-          <div class="stat-card"><div class="stat-label">📋 กิจกรรม</div><div class="stat-value" id="rp-acts">0</div><div class="stat-sub">ครั้ง</div></div>
-          <div class="stat-card"><div class="stat-label">👥 ลูกค้าใหม่</div><div class="stat-value" id="rp-new-cust" style="color:var(--success)">0</div><div class="stat-sub">ราย</div></div>
-          <div class="stat-card"><div class="stat-label">🎯 Win Rate</div><div class="stat-value" id="rp-winrate" style="color:var(--info)">0%</div><div class="stat-sub" id="rp-winrate-sub">โอกาส</div></div>
-        </div>
-
-        <!-- Report Content -->
-        <div id="rp-content"></div>
+      <!-- KPI Summary -->
+      <div class="stats-grid" style="margin-bottom:16px;">
+        <div class="stat-card"><div class="stat-label">💰 ยอดขายรวม</div><div class="stat-value" id="rp-revenue" style="font-size:20px;color:var(--sidebar-bg)">฿0</div><div class="stat-sub" id="rp-order-count">0 ออเดอร์</div></div>
+        <div class="stat-card"><div class="stat-label">📋 กิจกรรม</div><div class="stat-value" id="rp-acts">0</div><div class="stat-sub" id="rp-acts-sub">ครั้ง</div></div>
+        <div class="stat-card"><div class="stat-label">👥 ลูกค้าใหม่</div><div class="stat-value" id="rp-new-cust" style="color:var(--success)">0</div><div class="stat-sub">ราย</div></div>
+        <div class="stat-card"><div class="stat-label">🎯 Win Rate</div><div class="stat-value" id="rp-winrate" style="color:var(--info)">0%</div><div class="stat-sub" id="rp-winrate-sub">โอกาส</div></div>
       </div>
+
+      <!-- รายงานแบบ tabs -->
+      <div style="display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto;">
+        <button class="rp-tab-btn active" onclick="setRpTab('r00')" id="rp-tab-r00" style="padding:8px 14px;border:none;border-bottom:3px solid var(--accent);margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:600;color:var(--sidebar-bg);cursor:pointer;white-space:nowrap;">R-00 ยอดขายรายปี</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r01')" id="rp-tab-r01" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-01 ยอดขายรายเดือน</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r02')" id="rp-tab-r02" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-02 รายละเอียดยอดขาย</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r03')" id="rp-tab-r03" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-03 กิจกรรมการขาย</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r04')" id="rp-tab-r04" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-04 เหตุผล Lost</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r05')" id="rp-tab-r05" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-05 วิเคราะห์ลูกค้า</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r06')" id="rp-tab-r06" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-06 วิเคราะห์ Tag</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r07')" id="rp-tab-r07" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-07 คาดการณ์สินค้า</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r08')" id="rp-tab-r08" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-08 ยอดขายโครงการ</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r09')" id="rp-tab-r09" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-09 เปรียบเทียบเป้า</button>
+        <button class="rp-tab-btn" onclick="setRpTab('r13')" id="rp-tab-r13" style="padding:8px 14px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;">R-13 แผนงานติดตาม</button>
+      </div>
+
+      <!-- Report Content -->
+      <div id="rp-content"></div>
     </div>
 
     <!-- ===== PAGE: SETTINGS ===== -->
     <div class="page" id="page-settings">
-      <div style="margin-bottom:20px;"><h2 style="font-size:20px;font-weight:700;">ตั้งค่า</h2></div>
+      <div style="display:flex;height:calc(100vh - var(--topbar-h));">
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <!-- คอลัมน์ซ้าย -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <!-- ข้อมูลกิจการ -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">🏢 ข้อมูลกิจการ</span></div>
-            <div class="card-body">
-              <div class="form-group"><label class="form-label">ชื่อบริษัท</label><input class="form-control" id="set-company" placeholder="Wiseplusgrow"></div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">อีเมล</label><input class="form-control" id="set-email" type="email"></div>
-                <div class="form-group"><label class="form-label">โทรศัพท์</label><input class="form-control" id="set-phone"></div>
-              </div>
-              <div class="form-group"><label class="form-label">ที่อยู่</label><textarea class="form-control" id="set-address" rows="2"></textarea></div>
-              <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 บันทึก</button>
+        <!-- ====== SETTINGS LEFT SIDEBAR ====== -->
+        <div id="stg-sidebar" style="width:232px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);overflow-y:auto;">
+
+          <!-- 1. ตั้งค่ากิจการ -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr stg-open" onclick="stgToggle('sg1',this)">
+              <span><i class="stg-ico">🏛️</i>ตั้งค่ากิจการ</span><span class="stg-arr">▲</span>
+            </div>
+            <div class="stg-sub" id="sg1">
+              <div class="stg-item active" data-p="company"       onclick="stgGo('company')"><i class="stg-ico">ℹ️</i>ข้อมูลกิจการ</div>
+              <div class="stg-item"        data-p="proj-setting"  onclick="stgGo('proj-setting')"><i class="stg-ico">📁</i>ตั้งค่าโครงการ</div>
+              <div class="stg-item"        data-p="goal"          onclick="stgGo('goal')"><i class="stg-ico">🏆</i>ตั้งค่าเป้าหมาย</div>
+              <div class="stg-item"        data-p="employee"      onclick="stgGo('employee')"><i class="stg-ico">👥</i>ตั้งค่าพนักงาน</div>
+              <div class="stg-item"        data-p="sys-setting"   onclick="stgGo('sys-setting')"><i class="stg-ico">⚙️</i>ตั้งค่าระบบ</div>
+              <div class="stg-item"        data-p="notification"  onclick="stgGo('notification')"><i class="stg-ico">🔔</i>ตั้งค่าการแจ้งเตือน</div>
+              <div class="stg-item"        data-p="lostreason"    onclick="stgGo('lostreason')"><i class="stg-ico">❌</i>ตั้งค่าเหตุผลการ lost</div>
             </div>
           </div>
 
-          <!-- เป้าหมาย -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">🏆 เป้าหมายรายวัน</span></div>
-            <div class="card-body">
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">👥 ลูกค้าใหม่/วัน</label><input class="form-control" id="set-goal-cust" type="number" min="1" placeholder="5"></div>
-                <div class="form-group"><label class="form-label">🎯 โอกาสใหม่/วัน</label><input class="form-control" id="set-goal-lead" type="number" min="1" placeholder="3"></div>
-              </div>
-              <div class="form-row">
-                <div class="form-group"><label class="form-label">💰 ยอดขาย (บาท/วัน)</label><input class="form-control" id="set-goal-revenue" type="number" placeholder="50000"></div>
-                <div class="form-group"><label class="form-label">📋 กิจกรรม/วัน</label><input class="form-control" id="set-goal-act" type="number" placeholder="10"></div>
-              </div>
-              <button class="btn btn-primary btn-sm" onclick="saveGoalSettings()">💾 บันทึกเป้าหมาย</button>
+          <!-- 2. ตั้งค่าผู้ใช้งาน -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr" onclick="stgToggle('sg2',this)">
+              <span><i class="stg-ico">👤</i>ตั้งค่าผู้ใช้งาน</span><span class="stg-arr">▼</span>
+            </div>
+            <div class="stg-sub" id="sg2" style="display:none;">
+              <div class="stg-item" data-p="users" onclick="stgGo('users')"><i class="stg-ico">👤</i>ตั้งค่าผู้ใช้งาน</div>
             </div>
           </div>
 
-          <!-- พนักงาน -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">👤 จัดการพนักงาน</span>
-              <button class="btn btn-primary btn-sm" onclick="openMemberModal()">+ เพิ่ม</button>
+          <!-- 3. ตั้งค่าการอนุมัติ -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr" onclick="stgToggle('sg3',this)">
+              <span><i class="stg-ico">✅</i>ตั้งค่าการอนุมัติ</span><span class="stg-arr">▼</span>
             </div>
-            <div class="card-body" style="padding:0;">
-              <div id="member-list" style="padding:8px 0;"></div>
-              <div id="member-empty" class="empty-state" style="padding:24px;display:none;">
-                <div class="empty-icon">👤</div><p>ยังไม่มีพนักงาน</p>
-              </div>
+            <div class="stg-sub" id="sg3" style="display:none;">
+              <div class="stg-item" data-p="approve-role" onclick="stgGo('approve-role')"><i class="stg-ico">🎭</i>บทบาทผู้อนุมัติ</div>
+              <div class="stg-item" data-p="approve-cond" onclick="stgGo('approve-cond')"><i class="stg-ico">📋</i>เงื่อนไขการอนุมัติ</div>
+              <div class="stg-item" data-p="approve-step" onclick="stgGo('approve-step')"><i class="stg-ico">🔢</i>ขั้นตอนการอนุมัติ</div>
             </div>
           </div>
 
-          <!-- Tag ลูกค้า -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">🏷️ Tag ลูกค้า</span></div>
-            <div class="card-body">
-              <div style="display:flex;gap:8px;margin-bottom:12px;">
-                <input class="form-control" id="new-tag-name" placeholder="ชื่อ Tag เช่น VIP, โรงงาน">
-                <input type="color" id="new-tag-color" value="#3b82f6" style="width:44px;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;">
-                <button class="btn btn-primary btn-sm" onclick="addTagDef()">+ เพิ่ม</button>
-              </div>
-              <div id="tag-def-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          <!-- 4. จัดการสินค้า -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr" onclick="stgToggle('sg4',this)">
+              <span><i class="stg-ico">🛒</i>จัดการสินค้า</span><span class="stg-arr">▼</span>
+            </div>
+            <div class="stg-sub" id="sg4" style="display:none;">
+              <div class="stg-item" data-p="product"   onclick="stgGo('product')"><i class="stg-ico">📦</i>ตั้งค่าสินค้า</div>
+              <div class="stg-item" data-p="prodgroup" onclick="stgGo('prodgroup')"><i class="stg-ico">📂</i>ตั้งค่ากลุ่มสินค้า</div>
             </div>
           </div>
-        </div>
 
-        <!-- คอลัมน์ขวา -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <!-- จัดการสินค้า -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">📦 จัดการสินค้า</span>
-              <button class="btn btn-primary btn-sm" onclick="addProduct()">+ เพิ่มสินค้า</button>
+          <!-- 5. จัดการลูกค้า -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr" onclick="stgToggle('sg5',this)">
+              <span><i class="stg-ico">👥</i>จัดการลูกค้า</span><span class="stg-arr">▼</span>
             </div>
-            <div class="card-body" style="padding:0;">
-              <div id="product-add-form" style="display:none;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--border);">
+            <div class="stg-sub" id="sg5" style="display:none;">
+              <div class="stg-item" data-p="cust-owner" onclick="stgGo('cust-owner')"><i class="stg-ico">👤</i>ผู้รับผิดชอบลูกค้า</div>
+              <div class="stg-item" data-p="custtag"    onclick="stgGo('custtag')"><i class="stg-ico">🏷️</i>จัดการแท็กลูกค้า</div>
+            </div>
+          </div>
+
+          <!-- 6. จัดการกิจกรรม -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr" onclick="stgToggle('sg6',this)">
+              <span><i class="stg-ico">📣</i>จัดการกิจกรรม</span><span class="stg-arr">▼</span>
+            </div>
+            <div class="stg-sub" id="sg6" style="display:none;">
+              <div class="stg-item" data-p="acttag" onclick="stgGo('acttag')"><i class="stg-ico">🏷️</i>จัดการแท็กกิจกรรม</div>
+            </div>
+          </div>
+
+          <!-- 7. จัดการใบเสนอราคา -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr" onclick="stgToggle('sg7',this)">
+              <span><i class="stg-ico">📄</i>จัดการใบเสนอราคา</span><span class="stg-arr">▼</span>
+            </div>
+            <div class="stg-sub" id="sg7" style="display:none;">
+              <div class="stg-item" data-p="qt-priority" onclick="stgGo('qt-priority')"><i class="stg-ico">🔥</i>ความสำคัญใบเสนอราคา</div>
+              <div class="stg-item" data-p="qt-tracking" onclick="stgGo('qt-tracking')"><i class="stg-ico">📅</i>งานติดตามใบเสนอราคา</div>
+            </div>
+          </div>
+
+          <!-- 8. อัพโหลด/ดาวน์โหลด -->
+          <div class="stg-grp">
+            <div class="stg-grp-hdr stg-standalone" onclick="stgGo('import-export')">
+              <span><i class="stg-ico">☁️</i>อัพโหลด/ดาวน์โหลด</span>
+            </div>
+          </div>
+
+        </div><!-- /stg-sidebar -->
+
+        <!-- ====== SETTINGS PANELS (right) ====== -->
+        <div id="stg-content" style="flex:1;padding:24px;overflow-y:auto;">
+
+          <!-- PANEL: ข้อมูลกิจการ -->
+          <div class="stg-panel" id="sp-company">
+            <h3 class="stg-title">ℹ️ ข้อมูลกิจการ</h3>
+            <div class="card" style="max-width:640px;">
+              <div class="card-body">
+                <div class="form-group"><label class="form-label">ชื่อบริษัท</label><input class="form-control" id="set-company" placeholder="Wiseplusgrow"></div>
                 <div class="form-row">
-                  <div class="form-group"><label class="form-label">ชื่อสินค้า *</label><input class="form-control" id="prod-name" placeholder="เช่น น้ำยาซักผ้า OEM"></div>
-                  <div class="form-group"><label class="form-label">กลุ่มสินค้า</label><input class="form-control" id="prod-group" placeholder="เช่น น้ำยาซักผ้า"></div>
+                  <div class="form-group"><label class="form-label">อีเมล</label><input class="form-control" id="set-email" type="email"></div>
+                  <div class="form-group"><label class="form-label">โทรศัพท์</label><input class="form-control" id="set-phone"></div>
+                </div>
+                <div class="form-group"><label class="form-label">ที่อยู่</label><textarea class="form-control" id="set-address" rows="2"></textarea></div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">เลขประจำตัวผู้เสียภาษี</label><input class="form-control" id="set-taxid" placeholder="0105xxxxxxxxx"></div>
+                  <div class="form-group"><label class="form-label">หมายเลข Promptpay</label><input class="form-control" id="set-promptpay" placeholder="06x-xxx-xxxx"></div>
+                </div>
+                <div class="form-group"><label class="form-label">ชื่อบัญชี Promptpay</label><input class="form-control" id="set-promptpay-name" placeholder="บริษัท ไวส์พลัสโกร จำกัด"></div>
+                <button class="btn btn-primary" onclick="saveSettings()">💾 บันทึก</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: ตั้งค่าโครงการ -->
+          <div class="stg-panel" id="sp-proj-setting" style="display:none;">
+            <h3 class="stg-title">📁 ตั้งค่าโครงการ</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:780px;">
+              <div class="card">
+                <div class="card-header"><span class="card-title">ประเภทโครงการ</span><button class="btn btn-primary btn-sm" onclick="addProjType()">+ เพิ่ม</button></div>
+                <div class="card-body">
+                  <div id="proj-type-add" style="display:none;margin-bottom:10px;"><div style="display:flex;gap:6px;">
+                    <input class="form-control" id="new-proj-type" placeholder="เช่น OEM, ODM">
+                    <button class="btn btn-primary btn-sm" onclick="saveProjType()">บันทึก</button>
+                    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('proj-type-add').style.display='none'">ยกเลิก</button>
+                  </div></div>
+                  <div id="proj-type-list"></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><span class="card-title">สถานะโครงการ</span><button class="btn btn-primary btn-sm" onclick="addProjStatus()">+ เพิ่ม</button></div>
+                <div class="card-body">
+                  <div id="proj-status-add" style="display:none;margin-bottom:10px;"><div style="display:flex;gap:6px;">
+                    <input class="form-control" id="new-proj-status" placeholder="เช่น สร้างแบรนด์">
+                    <button class="btn btn-primary btn-sm" onclick="saveProjStatus()">บันทึก</button>
+                    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('proj-status-add').style.display='none'">ยกเลิก</button>
+                  </div></div>
+                  <div id="proj-status-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: ตั้งค่าเป้าหมาย -->
+          <div class="stg-panel" id="sp-goal" style="display:none;">
+            <h3 class="stg-title">🏆 ตั้งค่าเป้าหมาย</h3>
+            <div class="card" style="max-width:580px;">
+              <div class="card-body">
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">👥 ลูกค้าใหม่/เดือน</label><input class="form-control" id="set-goal-cust" type="number" min="1" placeholder="5"></div>
+                  <div class="form-group"><label class="form-label">🎯 โอกาสใหม่/เดือน</label><input class="form-control" id="set-goal-lead" type="number" min="1" placeholder="3"></div>
                 </div>
                 <div class="form-row">
-                  <div class="form-group"><label class="form-label">ราคาต่อหน่วย (บาท)</label><input class="form-control" id="prod-price" type="number" placeholder="0"></div>
-                  <div class="form-group"><label class="form-label">หน่วย</label><input class="form-control" id="prod-unit" placeholder="ชิ้น / ลิตร / กก."></div>
+                  <div class="form-group"><label class="form-label">💰 ยอดขาย (บาท/เดือน)</label><input class="form-control" id="set-goal-revenue" type="number" placeholder="50000"></div>
+                  <div class="form-group"><label class="form-label">📋 กิจกรรม/เดือน</label><input class="form-control" id="set-goal-act" type="number" placeholder="10"></div>
                 </div>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-primary btn-sm" onclick="saveProduct()">💾 บันทึก</button>
-                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('product-add-form').style.display='none'">ยกเลิก</button>
+                <div style="background:#f8fafc;border-radius:8px;padding:14px;margin:8px 0 16px;">
+                  <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">📊 สรุปเป้าหมาย</div>
+                  <table style="width:100%;font-size:12px;border-collapse:collapse;">
+                    <thead><tr style="background:var(--sidebar-bg);color:white;">
+                      <th style="padding:7px 12px;text-align:left;border-radius:4px 0 0 4px;">ชนิด</th>
+                      <th style="padding:7px 12px;text-align:center;">ต่อวัน</th>
+                      <th style="padding:7px 12px;text-align:center;">ต่อสัปดาห์</th>
+                      <th style="padding:7px 12px;text-align:center;border-radius:0 4px 4px 0;">ต่อเดือน</th>
+                    </tr></thead>
+                    <tbody id="goal-summary-tbody">
+                      <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:7px 12px;color:var(--text-muted);">ลูกค้าใหม่</td>
+                        <td style="text-align:center;padding:7px;" id="gs-cust-d">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-cust-w">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-cust-m">-</td>
+                      </tr>
+                      <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:7px 12px;color:var(--text-muted);">โอกาสใหม่</td>
+                        <td style="text-align:center;padding:7px;" id="gs-lead-d">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-lead-w">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-lead-m">-</td>
+                      </tr>
+                      <tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:7px 12px;color:var(--text-muted);">ยอดขาย</td>
+                        <td style="text-align:center;padding:7px;" id="gs-rev-d">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-rev-w">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-rev-m">-</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:7px 12px;color:var(--text-muted);">กิจกรรม</td>
+                        <td style="text-align:center;padding:7px;" id="gs-act-d">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-act-w">-</td>
+                        <td style="text-align:center;padding:7px;" id="gs-act-m">-</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-              <div class="table-wrap">
-                <table id="product-table">
-                  <thead><tr><th>ชื่อสินค้า</th><th>กลุ่ม</th><th style="text-align:right;">ราคา</th><th>หน่วย</th><th></th></tr></thead>
-                  <tbody id="product-tbody"></tbody>
-                </table>
-                <div id="product-empty" class="empty-state" style="padding:24px;display:none;">
-                  <div class="empty-icon">📦</div><p>ยังไม่มีสินค้า</p>
-                </div>
+                <button class="btn btn-primary" onclick="saveGoalSettings()">💾 บันทึกเป้าหมาย</button>
               </div>
             </div>
           </div>
 
-          <!-- ประเภทโครงการ -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">📁 ประเภทโครงการ</span>
-              <button class="btn btn-primary btn-sm" onclick="addProjType()">+ เพิ่ม</button>
-            </div>
-            <div class="card-body">
-              <div id="proj-type-add" style="display:none;margin-bottom:12px;">
-                <div style="display:flex;gap:8px;">
-                  <input class="form-control" id="new-proj-type" placeholder="เช่น OEM, ODM, พัฒนาสูตร">
-                  <button class="btn btn-primary btn-sm" onclick="saveProjType()">บันทึก</button>
-                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('proj-type-add').style.display='none'">ยกเลิก</button>
-                </div>
-              </div>
-              <div id="proj-type-list" style="display:flex;flex-wrap:wrap;gap:8px;">
+          <!-- PANEL: ตั้งค่าพนักงาน -->
+          <div class="stg-panel" id="sp-employee" style="display:none;">
+            <h3 class="stg-title">👥 ตั้งค่าพนักงาน</h3>
+            <div class="card">
+              <div class="card-header"><span class="card-title">พนักงานทั้งหมด</span><button class="btn btn-primary btn-sm" onclick="openMemberModal()">+ เพิ่มพนักงาน</button></div>
+              <div class="card-body" style="padding:0;">
+                <div id="member-list" style="padding:8px 0;"></div>
+                <div id="member-empty" class="empty-state" style="padding:24px;display:none;"><div class="empty-icon">👤</div><p>ยังไม่มีพนักงาน</p></div>
               </div>
             </div>
           </div>
 
-          <!-- เหตุผล Lost -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">❌ เหตุผล Lost</span>
-              <button class="btn btn-primary btn-sm" onclick="addLostReason()">+ เพิ่ม</button>
-            </div>
-            <div class="card-body">
-              <div id="lost-reason-add" style="display:none;margin-bottom:12px;">
-                <div style="display:flex;gap:8px;">
-                  <input class="form-control" id="new-lost-reason" placeholder="เช่น ราคาสูง, เลือกคู่แข่ง, งบประมาณไม่พอ">
+          <!-- PANEL: ตั้งค่าระบบ -->
+          <div class="stg-panel" id="sp-sys-setting" style="display:none;">
+            <h3 class="stg-title">⚙️ ตั้งค่าระบบ</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">⚙️</div><p>ตั้งค่าระบบทั่วไป<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: ตั้งค่าการแจ้งเตือน -->
+          <div class="stg-panel" id="sp-notification" style="display:none;">
+            <h3 class="stg-title">🔔 ตั้งค่าการแจ้งเตือน</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;">🏷️ ลูกค้าเป้าหมาย</div>
+                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการติดต่อกัน แต่ยังไปเป็นลูกค้าสั้งซื้อ ควรมีการติดตาม ประมาณ 1 ครั้งต่อเดือน</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;">🆕 ลูกค้าใหม่</div>
+                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อน้อยกว่า 3 ครั้ง ควรติดตามใกล้ชิด เพื่อเปลี่ยนเป็นลูกค้าประจำ ติดตาม 2 ครั้งต่อเดือน</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;">⭐ ลูกค้าประจำ</div>
+                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อครั้งที่ 3 ขึ้นไป ควรรักษาและเพิ่มความสัมพันธ์ ติดตามอย่างน้อยสม่ำเสมอ 1 ครั้งต่อเดือน</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;">😴 ลูกค้าห่างหาย</div>
+                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่ไม่มีการสั่งซื้อซ้ำภายในระยะเวลา 3 เดือน ควรติดตามให้กลับมาซื้ออีกครั้ง อย่างน้อย 1 ครั้งต่อเดือน</div>
+                  </div>
+                </div>
+              </div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: ตั้งค่าเหตุผลการ lost -->
+          <div class="stg-panel" id="sp-lostreason" style="display:none;">
+            <h3 class="stg-title">❌ ตั้งค่าเหตุผลการ lost</h3>
+            <div class="card" style="max-width:560px;">
+              <div class="card-header"><span class="card-title">ประเภทเหตุผล</span><button class="btn btn-primary btn-sm" onclick="addLostReason()">+ เพิ่มเหตุผล</button></div>
+              <div class="card-body">
+                <div id="lost-reason-add" style="display:none;margin-bottom:10px;"><div style="display:flex;gap:6px;">
+                  <input class="form-control" id="new-lost-reason" placeholder="เช่น ราคาสูง, เลือกคู่แข่ง">
                   <button class="btn btn-primary btn-sm" onclick="saveLostReason()">บันทึก</button>
                   <button class="btn btn-ghost btn-sm" onclick="document.getElementById('lost-reason-add').style.display='none'">ยกเลิก</button>
-                </div>
+                </div></div>
+                <div id="lost-reason-list"></div>
               </div>
-              <div id="lost-reason-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
             </div>
           </div>
-        </div>
+
+          <!-- PANEL: ตั้งค่าผู้ใช้งาน -->
+          <div class="stg-panel" id="sp-users" style="display:none;">
+            <h3 class="stg-title">👤 ตั้งค่าผู้ใช้งาน</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">👤</div><p>จัดการสิทธิ์ผู้ใช้งาน<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: บทบาทผู้อนุมัติ -->
+          <div class="stg-panel" id="sp-approve-role" style="display:none;">
+            <h3 class="stg-title">🎭 บทบาทผู้อนุมัติ</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">🎭</div><p>ตั้งค่าบทบาทผู้อนุมัติ<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: เงื่อนไขการอนุมัติ -->
+          <div class="stg-panel" id="sp-approve-cond" style="display:none;">
+            <h3 class="stg-title">📋 เงื่อนไขการอนุมัติ</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">📋</div><p>ตั้งค่าเงื่อนไขการอนุมัติ<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: ขั้นตอนการอนุมัติ -->
+          <div class="stg-panel" id="sp-approve-step" style="display:none;">
+            <h3 class="stg-title">🔢 ขั้นตอนการอนุมัติ</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">🔢</div><p>ตั้งค่าขั้นตอนการอนุมัติ<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: ตั้งค่าสินค้า -->
+          <div class="stg-panel" id="sp-product" style="display:none;">
+            <h3 class="stg-title">📦 ตั้งค่าสินค้า</h3>
+            <div class="card">
+              <div class="card-header"><span class="card-title">รายการสินค้า</span><button class="btn btn-primary btn-sm" onclick="addProduct()">+ เพิ่มสินค้า</button></div>
+              <div class="card-body" style="padding:0;">
+                <div id="product-add-form" style="display:none;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--border);">
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">ชื่อสินค้า *</label><input class="form-control" id="prod-name" placeholder="เช่น น้ำยาซักผ้า OEM"></div>
+                    <div class="form-group"><label class="form-label">รหัสสินค้า</label><input class="form-control" id="prod-code" placeholder="เช่น SKU-001"></div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">กลุ่มสินค้า</label>
+                      <select class="form-control" id="prod-group"><option value="">-- เลือกกลุ่ม --</option></select>
+                    </div>
+                    <div class="form-group"><label class="form-label">หน่วย</label><input class="form-control" id="prod-unit" placeholder="ชิ้น / ลิตร / กก."></div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">ราคาต่อหน่วย (บาท)</label><input class="form-control" id="prod-price" type="number" placeholder="0"></div>
+                    <div class="form-group"></div>
+                  </div>
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary btn-sm" onclick="saveProduct()">💾 บันทึก</button>
+                    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('product-add-form').style.display='none'">ยกเลิก</button>
+                  </div>
+                </div>
+                <div style="padding:8px 12px;border-bottom:1px solid var(--border);">
+                  <input class="form-control" id="prod-search" placeholder="🔍 ค้นหาจากชื่อ / รหัสสินค้า..." oninput="renderProducts()" style="font-size:13px;">
+                </div>
+                <div class="table-wrap">
+                  <table id="product-table">
+                    <thead><tr><th>ชื่อสินค้า</th><th>รหัส</th><th>กลุ่ม</th><th style="text-align:right;">ราคา</th><th>หน่วย</th><th></th></tr></thead>
+                    <tbody id="product-tbody"></tbody>
+                  </table>
+                  <div id="product-empty" class="empty-state" style="padding:32px;display:none;"><div class="empty-icon">📦</div><p>ยังไม่มีสินค้า</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: กลุ่มสินค้า -->
+          <div class="stg-panel" id="sp-prodgroup" style="display:none;">
+            <h3 class="stg-title">📂 ตั้งค่ากลุ่มสินค้า</h3>
+            <div class="card" style="max-width:560px;">
+              <div class="card-header"><span class="card-title">กลุ่มสินค้า</span><button class="btn btn-primary btn-sm" onclick="addProdGroup()">+ สร้างกลุ่มสินค้า</button></div>
+              <div class="card-body">
+                <div id="prod-group-add" style="display:none;margin-bottom:10px;"><div style="display:flex;gap:6px;">
+                  <input class="form-control" id="new-prod-group" placeholder="เช่น สกินแคร์, น้ำยาซักผ้า">
+                  <button class="btn btn-primary btn-sm" onclick="saveProdGroup()">บันทึก</button>
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('prod-group-add').style.display='none'">ยกเลิก</button>
+                </div></div>
+                <div id="prod-group-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: ผู้รับผิดชอบลูกค้า -->
+          <div class="stg-panel" id="sp-cust-owner" style="display:none;">
+            <h3 class="stg-title">👤 ผู้รับผิดชอบลูกค้า</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">👤</div><p>กำหนดผู้รับผิดชอบลูกค้า<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: แท็กลูกค้า -->
+          <div class="stg-panel" id="sp-custtag" style="display:none;">
+            <h3 class="stg-title">🏷️ จัดการแท็กลูกค้า</h3>
+            <div class="card" style="max-width:560px;">
+              <div class="card-header"><span class="card-title">แท็กลูกค้า</span></div>
+              <div class="card-body">
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                  <input class="form-control" id="new-tag-name" placeholder="ชื่อ Tag เช่น VIP, โรงงาน">
+                  <input type="color" id="new-tag-color" value="#3b82f6" style="width:44px;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;">
+                  <button class="btn btn-primary btn-sm" onclick="addTagDef()">+ เพิ่ม</button>
+                </div>
+                <div id="tag-def-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: แท็กกิจกรรม -->
+          <div class="stg-panel" id="sp-acttag" style="display:none;">
+            <h3 class="stg-title">🏷️ จัดการแท็กกิจกรรม</h3>
+            <div class="card">
+              <div class="card-header"><span class="card-title">แท็กกิจกรรม</span><button class="btn btn-primary btn-sm" onclick="addActTag()">+ สร้างแท็ก</button></div>
+              <div class="card-body">
+                <div id="act-tag-add-form" style="display:none;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:12px;">
+                  <div class="form-row">
+                    <div class="form-group"><label class="form-label">ชื่อแท็ก *</label><input class="form-control" id="new-act-tag-name" placeholder="เช่น ติดตามใบเสนอราคา"></div>
+                    <div class="form-group"><label class="form-label">สี</label><input type="color" id="new-act-tag-color" value="#3b82f6" style="width:100%;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;"></div>
+                  </div>
+                  <div class="form-group"><label class="form-label">คำอธิบาย</label><input class="form-control" id="new-act-tag-desc" placeholder="อธิบายการใช้งาน..."></div>
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary btn-sm" onclick="saveActTag()">💾 บันทึก</button>
+                    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('act-tag-add-form').style.display='none'">ยกเลิก</button>
+                  </div>
+                </div>
+                <div id="act-tag-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANEL: ความสำคัญใบเสนอราคา -->
+          <div class="stg-panel" id="sp-qt-priority" style="display:none;">
+            <h3 class="stg-title">🔥 ความสำคัญใบเสนอราคา</h3>
+            <div class="card" style="max-width:500px;"><div class="card-body">
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">แต่ละระดับ 🔥 สอดคล้องกับ % โอกาสปิดการขาย</p>
+              <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <thead><tr style="background:var(--sidebar-bg);color:white;">
+                  <th style="padding:10px 14px;text-align:left;">ความสำคัญ</th>
+                  <th style="padding:10px 14px;text-align:center;">ความน่าจะเป็น</th>
+                  <th style="padding:10px 14px;text-align:center;">ค่าเริ่มต้น</th>
+                </tr></thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;">🔥🔥🔥🔥🔥</td><td style="text-align:center;">100%</td><td style="text-align:center;"></td></tr>
+                  <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;">🔥🔥🔥🔥</td><td style="text-align:center;">80%</td><td style="text-align:center;"></td></tr>
+                  <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;">🔥🔥🔥</td><td style="text-align:center;">60%</td><td style="text-align:center;"></td></tr>
+                  <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;">🔥🔥</td><td style="text-align:center;">40%</td><td style="text-align:center;"></td></tr>
+                  <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;">🔥</td><td style="text-align:center;">20%</td><td style="text-align:center;"></td></tr>
+                  <tr><td style="padding:9px 14px;">ไม่กำหนด</td><td style="text-align:center;">0%</td><td style="text-align:center;">✅</td></tr>
+                </tbody>
+              </table>
+            </div></div>
+          </div>
+
+          <!-- PANEL: งานติดตามใบเสนอราคา -->
+          <div class="stg-panel" id="sp-qt-tracking" style="display:none;">
+            <h3 class="stg-title">📅 งานติดตามใบเสนอราคา</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:#f8fafc;border-radius:8px;">
+                <div>
+                  <div style="font-size:14px;font-weight:600;">สร้างงานติดตามอัตโนมัติ</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">สร้างงานติดตามเมื่อมีการสร้างใบเสนอราคาใหม่</div>
+                </div>
+                <span style="font-size:12px;color:var(--text-muted);">อยู่ระหว่างพัฒนา</span>
+              </div>
+            </div></div>
+          </div>
+
+          <!-- PANEL: อัพโหลด/ดาวน์โหลด -->
+          <div class="stg-panel" id="sp-import-export" style="display:none;">
+            <h3 class="stg-title">☁️ อัพโหลด/ดาวน์โหลด</h3>
+            <div class="card" style="max-width:560px;"><div class="card-body">
+              <div class="empty-state"><div class="empty-icon">☁️</div><p>Export / Import ข้อมูล<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
+            </div></div>
+          </div>
+
+        </div><!-- /stg-content -->
       </div>
     </div>
 
   </div><!-- /content -->
 </div><!-- /main -->
+
+
+</div><!-- /main -->
+
+/div><!-- /main -->
 
 <!-- ===== MODAL: ADD ACTIVITY ===== -->
 <div class="modal-overlay" id="modal-activity">
@@ -1978,6 +2240,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <div class="form-group">
         <label class="form-label">รายละเอียด</label>
         <textarea class="form-control" id="act-note" placeholder="สรุปการติดต่อ..."></textarea>
+      </div>
+      <div class="form-group" id="act-tag-group">
+        <label class="form-label">🏷️ แท็กกิจกรรม</label>
+        <div id="act-tag-chooser" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;min-height:28px;"></div>
       </div>
       <div class="form-group">
         <label class="form-label">📷 รูปภาพประกอบ (ไม่บังคับ)</label>
@@ -4118,9 +4384,71 @@ function saveForecastGoal() {
 // ============================================================
 //  REPORTS
 // ============================================================
+function renderReports() {
+  const thisMonth = today().substring(0,7);
+  const newCust = customers.filter(c=>c.createdAt?.startsWith(thisMonth)).length;
+  const revenue = orders.filter(o=>o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('rp-new-cust').textContent = newCust;
+  document.getElementById('rp-acts').textContent = activities.length;
+  document.getElementById('rp-quotes').textContent = quotes.length;
+  document.getElementById('rp-revenue').textContent = fmtMoney(revenue);
+  // Customer by status
+  const statusData = [
+    {label:'🎯 เป้าหมาย',status:'prospect',color:'#3b82f6'},
+    {label:'🆕 ใหม่',status:'fresh',color:'#22c55e'},
+    {label:'⭐ ประจำ',status:'existing',color:'#f59e0b'},
+    {label:'😴 ห่างหาย',status:'lapse',color:'#ef4444'},
+  ];
+  const maxCust = Math.max(...statusData.map(s=>customers.filter(c=>c.status===s.status).length),1);
+  document.getElementById('rp-cust-status').innerHTML = statusData.map(s => {
+    const cnt = customers.filter(c=>c.status===s.status).length;
+    const pct = Math.round(cnt/maxCust*100);
+    return `<div class="mini-bar">
+      <span class="mini-bar-label">${s.label}</span>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${s.color};"></div></div>
+      <span class="mini-bar-val">${cnt} ราย</span>
+    </div>`;
+  }).join('');
+  // Activity by type
+  const actTypes = [
+    {label:'📤 ขาออก',type:'ขาออก',color:'#3b82f6'},
+    {label:'📥 ขาเข้า',type:'ขาเข้า',color:'#22c55e'},
+    {label:'🔍 หาข้อมูล',type:'หาข้อมูล',color:'#f59e0b'},
+  ];
+  const maxAct = Math.max(...actTypes.map(a=>activities.filter(x=>x.type===a.type).length),1);
+  document.getElementById('rp-act-types').innerHTML = actTypes.map(a => {
+    const cnt = activities.filter(x=>x.type===a.type).length;
+    const pct = Math.round(cnt/maxAct*100);
+    return `<div class="mini-bar">
+      <span class="mini-bar-label">${a.label}</span>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${a.color};"></div></div>
+      <span class="mini-bar-val">${cnt} ครั้ง</span>
+    </div>`;
+  }).join('');
+  // Top customers by activity
+  const custActCount = customers.map(c => ({
+    name: c.name, count: activities.filter(a=>a.customerId===c.id).length, hotness: c.hotness||0
+  })).sort((a,b)=>b.count-a.count).slice(0,5);
+  document.getElementById('rp-top-cust').innerHTML = custActCount.map(x =>
+    `<tr><td>${x.name}</td><td>${x.count}</td><td>${hotnessStars(x.hotness)}</td></tr>`
+  ).join('');
+  // Tasks summary
+  const td = today();
+  const overdue = tasks.filter(t=>!t.done&&t.dueDate<td).length;
+  const todayT = tasks.filter(t=>!t.done&&t.dueDate===td).length;
+  const upcoming = tasks.filter(t=>!t.done&&t.dueDate>td).length;
+  const done = tasks.filter(t=>t.done).length;
+  document.getElementById('rp-tasks-summary').innerHTML = `
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🔴 เกินกำหนด</span><span style="font-size:20px;font-weight:700;color:var(--danger);">${overdue}</span></div>
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🟢 วันนี้</span><span style="font-size:20px;font-weight:700;color:var(--success);">${todayT}</span></div>
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🔵 เร็วๆนี้</span><span style="font-size:20px;font-weight:700;color:var(--info);">${upcoming}</span></div>
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">✅ เสร็จแล้ว</span><span style="font-size:20px;font-weight:700;color:var(--text-muted);">${done}</span></div>
+  `;
+}
 
-// old renderReports removed
-
+// ============================================================
+//  DASHBOARD UPDATE (enhanced)
+// ============================================================
 function updateDashboard() {
   const td = today();
   const thisMonth = td.substring(0,7);
@@ -5532,19 +5860,17 @@ function renderLostReasons() {
 // ============================================================
 
 let rpTab = 'r00';
-const rpMeta = {
-  r00: 'รายงานสรุปยอดขายประจำปี',
-  r01: 'สรุปยอดขายรายเดือนของกิจการ',
-  r02: 'รายละเอียดยอดขายรายเดือน',
-  r03: 'รายละเอียดกิจกรรมการขาย',
-  r04: 'สรุปสาเหตุที่ไม่ได้งาน',
-  r05: 'วิเคราะห์รายลูกค้า',
-  r06: 'วิเคราะห์ตามแท็กลูกค้า',
-  r07: 'รายงานยอดคาดการณ์และยอดขายตามกลุ่มสินค้า',
-  r08: 'รายงานการขายโครงการ',
-  r09: 'รายงานยอดคาดการณ์และยอดขายรายบุคคล',
-  r13: 'แผนงานติดตาม',
-};
+
+function setRpTab(tab) {
+  rpTab = tab;
+  document.querySelectorAll('.rp-tab-btn').forEach(btn => {
+    const isActive = btn.id === 'rp-tab-' + tab;
+    btn.style.color = isActive ? 'var(--sidebar-bg)' : 'var(--text-muted)';
+    btn.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
+    btn.style.fontWeight = isActive ? '600' : '500';
+  });
+  renderRpContent();
+}
 
 function getRpFiltered() {
   const year = document.getElementById('rp-year')?.value || new Date().getFullYear().toString();
@@ -5570,64 +5896,9 @@ function getRpFiltered() {
   return { filtOrders, filtActs, filtLeads, filtCust, year, month, member };
 }
 
-function openReport(tab) {
-  rpTab = tab;
-  // บันทึก last visited
-  const rpHistory = DB.get('rp_history',{});
-  rpHistory[tab] = today();
-  DB.set('rp_history', rpHistory);
-  const lastEl = document.getElementById('rp-last-'+tab);
-  if (lastEl) lastEl.textContent = fmtDate(today());
-  // แสดง detail view
-  document.getElementById('rp-list-view').style.display = 'none';
-  document.getElementById('rp-detail-view').style.display = 'block';
-  // ใส่ชื่อรายงาน
-  const codeEl = document.getElementById('rp-detail-code');
-  const titleEl = document.getElementById('rp-detail-title');
-  if(codeEl) codeEl.textContent = tab.toUpperCase().replace('R0','R-0').replace('R1','R-1');
-  if(titleEl) titleEl.textContent = rpMeta[tab]||'';
-  // init year options
-  const ySel = document.getElementById('rp-year');
-  if (ySel && !ySel.options.length) {
-    const curY = new Date().getFullYear();
-    for(let y=curY;y>=curY-3;y--) {
-      const opt = document.createElement('option');
-      opt.value=y; opt.textContent=y; if(y===curY) opt.selected=true;
-      ySel.appendChild(opt);
-    }
-  }
-  // populate member filter
-  const mSel = document.getElementById('rp-member-filter');
-  if (mSel) {
-    const mems = DB.get('members',[]);
-    mSel.innerHTML = '<option value="">พนักงาน: ทั้งหมด</option>' +
-      mems.map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
-  }
-  renderRpKpi();
-  renderRpContent();
-}
-
-function closeReport() {
-  document.getElementById('rp-list-view').style.display = '';
-  document.getElementById('rp-detail-view').style.display = 'none';
-}
-
 function renderReports() {
-  // โหลด last visited
-  const rpHistory = DB.get('rp_history',{});
-  Object.entries(rpHistory).forEach(([tab,date]) => {
-    const el = document.getElementById('rp-last-'+tab);
-    if(el) el.textContent = fmtDate(date);
-  });
-  // hover effect
-  document.querySelectorAll('.rp-list-row').forEach(row => {
-    row.addEventListener('mouseenter', ()=>row.style.background='#f8fafc');
-    row.addEventListener('mouseleave', ()=>row.style.background='');
-  });
-}
-
-function renderRpKpi() {
   const { filtOrders, filtActs, filtLeads, filtCust } = getRpFiltered();
+  // KPI
   const rev = filtOrders.reduce((s,o)=>s+(o.total||0),0);
   const wonL = filtLeads.filter(l=>l.stage==='won').length;
   const totalL = filtLeads.filter(l=>l.stage==='won'||l.stage==='lost').length;
@@ -5639,9 +5910,27 @@ function renderRpKpi() {
   setV('rp-new-cust', filtCust.length);
   setV('rp-winrate', wr+'%');
   setV('rp-winrate-sub', wonL+'/'+totalL+' โอกาส');
+  // member filter
+  const mSel = document.getElementById('rp-member-filter');
+  if (mSel) {
+    const mems = DB.get('members',[]);
+    const cur = mSel.value;
+    mSel.innerHTML = '<option value="">พนักงาน: ทั้งหมด</option>' +
+      mems.map(m=>`<option value="${m.name}" ${cur===m.name?'selected':''}>${m.name}</option>`).join('');
+  }
+  // year options
+  const ySel = document.getElementById('rp-year');
+  if (ySel && !ySel.options.length) {
+    const curY = new Date().getFullYear();
+    for(let y=curY;y>=curY-3;y--) {
+      const opt = document.createElement('option');
+      opt.value=y; opt.textContent=y;
+      ySel.appendChild(opt);
+    }
+    ySel.value = curY;
+  }
+  renderRpContent();
 }
-
-// renderReports v2 moved above
 
 function renderRpContent() {
   const el = document.getElementById('rp-content');
@@ -5941,4 +6230,655 @@ function renderRpContent() {
 products = DB.get('wpg_products', []);
 projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
+
+// ============================================================
+//  SETTINGS NAVIGATION — Jubili style (stg*)
+// ============================================================
+function stgToggle(groupId, hdr) {
+  const sub = document.getElementById(groupId);
+  if (!sub) return;
+  const isOpen = sub.style.display !== 'none';
+  sub.style.display = isOpen ? 'none' : '';
+  const arr = hdr.querySelector('.stg-arr');
+  if (arr) arr.textContent = isOpen ? '▼' : '▲';
+  hdr.classList.toggle('stg-open', !isOpen);
+}
+
+function stgGo(panel) {
+  // ซ่อน panels ทั้งหมด
+  document.querySelectorAll('.stg-panel').forEach(p => p.style.display = 'none');
+  // แสดง panel ที่เลือก
+  const el = document.getElementById('sp-' + panel);
+  if (el) el.style.display = 'block';
+  // active menu item
+  document.querySelectorAll('.stg-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.p === panel);
+  });
+  // scroll to top
+  const content = document.getElementById('stg-content');
+  if (content) content.scrollTop = 0;
+  // render content ของแต่ละ panel
+  if (panel === 'employee')     { renderMemberList && renderMemberList(); }
+  if (panel === 'goal')         { loadGoalForPanel(); }
+  if (panel === 'product')      { renderProducts(); syncProdGroupDropdown(); }
+  if (panel === 'prodgroup')    { renderProdGroups(); }
+  if (panel === 'custtag')      { renderTagDefList && renderTagDefList(); }
+  if (panel === 'acttag')       { renderActTagList(); }
+  if (panel === 'proj-setting') { renderProjTypes2(); renderProjStatuses(); }
+  if (panel === 'lostreason')   { renderLostReasons2(); }
+  if (panel === 'company')      { loadCompanyPanel(); }
+}
+
+function loadCompanyPanel() {
+  const v = id => document.getElementById(id);
+  if(v('set-company'))       v('set-company').value       = settings.company||'';
+  if(v('set-email'))         v('set-email').value         = settings.email||'';
+  if(v('set-phone'))         v('set-phone').value         = settings.phone||'';
+  if(v('set-address'))       v('set-address').value       = settings.address||'';
+  if(v('set-taxid'))         v('set-taxid').value         = settings.taxId||'';
+  if(v('set-promptpay'))     v('set-promptpay').value     = settings.promptpay||'';
+  if(v('set-promptpay-name'))v('set-promptpay-name').value= settings.promptpayName||'';
+}
+
+function loadGoalForPanel() {
+  const v = id => document.getElementById(id);
+  const g = goals;
+  if(v('set-goal-cust'))    v('set-goal-cust').value    = g.cust||0;
+  if(v('set-goal-lead'))    v('set-goal-lead').value    = g.lead||0;
+  if(v('set-goal-revenue')) v('set-goal-revenue').value = g.revenue||0;
+  if(v('set-goal-act'))     v('set-goal-act').value     = g.act||0;
+  updateGoalSummary();
+}
+
+function updateGoalSummary() {
+  const g = goals;
+  const wk = 5, mo = 22;
+  const rows = [
+    ['gs-cust', g.cust||0, ''],
+    ['gs-lead', g.lead||0, ''],
+    ['gs-rev',  g.revenue||0, 'บ.'],
+    ['gs-act',  g.act||0, ''],
+  ];
+  rows.forEach(([id, val, unit]) => {
+    const d = document.getElementById(id+'-d');
+    const w = document.getElementById(id+'-w');
+    const m = document.getElementById(id+'-m');
+    const dayVal = id==='gs-rev' ? Math.round(val/mo) : Math.round(val/mo);
+    if(d) d.textContent = (id==='gs-rev' ? fmtMoney(dayVal) : dayVal) + unit;
+    if(w) w.textContent = (id==='gs-rev' ? fmtMoney(Math.round(val/mo*wk)) : Math.round(val/mo*wk)) + unit;
+    if(m) m.textContent = (id==='gs-rev' ? fmtMoney(val) : val) + unit;
+  });
+}
+
+// render proj types แบบ list
+function renderProjTypes2() {
+  const el = document.getElementById('proj-type-list');
+  if (!el) return;
+  if (!projTypes.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีประเภท</span>'; return; }
+  el.innerHTML = projTypes.map((t,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">
+      <span style="width:22px;height:22px;background:var(--sidebar-bg);color:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;font-size:13px;">${t}</span>
+      <button class="btn btn-xs btn-danger" onclick="deleteProjType('${t}')">✕</button>
+    </div>`).join('');
+}
+
+function renderLostReasons2() {
+  const el = document.getElementById('lost-reason-list');
+  if (!el) return;
+  if (!lostReasons.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีเหตุผล</span>'; return; }
+  el.innerHTML = lostReasons.map((r,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">
+      <span style="width:22px;height:22px;background:#fef2f2;color:var(--danger);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;font-size:13px;">${r}</span>
+      <button class="btn btn-xs btn-danger" onclick="deleteLostReason2('${r}')">✕</button>
+    </div>`).join('');
+}
+function deleteLostReason2(val) {
+  lostReasons = lostReasons.filter(r=>r!==val);
+  DB.set('wpg_lostReasons', lostReasons);
+  renderLostReasons2();
+  toast('🗑️ ลบเหตุผลแล้ว');
+}
+
+// Patch addLostReason ให้ re-render แบบใหม่
+(function(){
+  const _orig = window.saveLostReason;
+  window.saveLostReason = function() {
+    const val = document.getElementById('new-lost-reason')?.value.trim();
+    if (!val) return;
+    if (!lostReasons.includes(val)) { lostReasons.push(val); DB.set('wpg_lostReasons', lostReasons); }
+    document.getElementById('lost-reason-add').style.display = 'none';
+    document.getElementById('new-lost-reason').value = '';
+    renderLostReasons2();
+    toast('✅ เพิ่มเหตุผลแล้ว');
+  };
+})();
+
+// Patch saveProjType ให้ re-render แบบใหม่
+(function(){
+  const _orig = window.saveProjType;
+  window.saveProjType = function() {
+    const val = document.getElementById('new-proj-type')?.value.trim();
+    if (!val) return;
+    if (!projTypes.includes(val)) { projTypes.push(val); DB.set('wpg_projTypes', projTypes); }
+    document.getElementById('proj-type-add').style.display = 'none';
+    document.getElementById('new-proj-type').value = '';
+    renderProjTypes2();
+    toast('✅ เพิ่มประเภทโครงการแล้ว');
+  };
+})();
+
+// Patch deleteProjType
+(function(){
+  window.deleteProjType = function(val) {
+    projTypes = projTypes.filter(t=>t!==val);
+    DB.set('wpg_projTypes', projTypes);
+    renderProjTypes2();
+    toast('🗑️ ลบแล้ว');
+  };
+})();
+
+// Patch saveGoalSettings
+(function(){
+  const _orig = window.saveGoalSettings;
+  window.saveGoalSettings = function() {
+    goals.cust    = parseInt(document.getElementById('set-goal-cust')?.value)||0;
+    goals.lead    = parseInt(document.getElementById('set-goal-lead')?.value)||0;
+    goals.revenue = parseInt(document.getElementById('set-goal-revenue')?.value)||0;
+    goals.act     = parseInt(document.getElementById('set-goal-act')?.value)||0;
+    DB.set('goals', goals);
+    updateGoalSummary();
+    updateGoalBar && updateGoalBar();
+    toast('✅ บันทึกเป้าหมายแล้ว');
+  };
+})();
+
+// Patch renderSettings ให้เปิด panel company เป็นค่าเริ่มต้น
+(function(){
+  window.renderSettings = function() {
+    loadCompanyPanel();
+    loadGoalForPanel();
+  };
+})();
+
+// Patch navTo ให้ trigger settings render
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page === 'settings') {
+      prodGroups   = DB.get('wpg_prodGroups', []);
+      actTagDefs   = DB.get('wpg_actTags', []);
+      projStatuses = DB.get('wpg_projStatuses', ['สร้างแบรนด์','พัฒนาสูตร','ซื้อเทสเตอร์','OEM','ODM']);
+      settings     = Object.assign({taxId:'',promptpay:'',promptpayName:''}, DB.get('settings',{}));
+      stgGo('company'); // เริ่มที่ข้อมูลกิจการเสมอ
+    }
+    if (page === 'reports') renderReports();
+  };
+})();
+
+
+
+// ============================================================
+//  SETTINGS NAVIGATION (แบบ Jubili)
+// ============================================================
+function setSettingPanel(panel) {
+  // ซ่อน panel ทั้งหมด
+  document.querySelectorAll('.set-panel').forEach(p => p.style.display = 'none');
+  // แสดง panel ที่เลือก
+  const el = document.getElementById('panel-'+panel);
+  if (el) el.style.display = 'block';
+  // active menu item
+  document.querySelectorAll('.set-menu-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.panel === panel);
+  });
+  // render content ของ panel นั้น
+  if (panel === 'member') { renderMemberList(); }
+  if (panel === 'goal') { loadGoalSettings(); updateGoalSummary(); }
+  if (panel === 'product') { renderProducts(); syncProdGroupDropdown(); }
+  if (panel === 'prodgroup') { renderProdGroups(); }
+  if (panel === 'custtag') { renderTagDefList(); }
+  if (panel === 'acttag') { renderActTagList(); }
+  if (panel === 'project-type') { renderProjTypes2(); renderProjStatuses(); }
+  if (panel === 'lostreason') { renderLostReasons2(); }
+  if (panel === 'company') { loadCompanySettings(); }
+}
+
+function toggleSetGroup(groupId) {
+  const el = document.getElementById(groupId);
+  const arrow = document.getElementById(groupId+'-arrow');
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : '';
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+}
+
+function loadCompanySettings() {
+  const el = id => document.getElementById(id);
+  if(el('set-company')) el('set-company').value = settings.company||'';
+  if(el('set-email')) el('set-email').value = settings.email||'';
+  if(el('set-phone')) el('set-phone').value = settings.phone||'';
+  if(el('set-address')) el('set-address').value = settings.address||'';
+  if(el('set-taxid')) el('set-taxid').value = settings.taxId||'';
+  if(el('set-promptpay')) el('set-promptpay').value = settings.promptpay||'';
+  if(el('set-promptpay-name')) el('set-promptpay-name').value = settings.promptpayName||'';
+}
+
+function updateGoalSummary() {
+  const g = goals;
+  const setV = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  setV('gs-cust-d', g.cust+' ราย');
+  setV('gs-cust-w', (g.cust*5)+' ราย');
+  setV('gs-cust-m', (g.cust*22)+' ราย');
+}
+
+// render proj types แบบ list (ไม่ใช่ pills)
+function renderProjTypes2() {
+  const el = document.getElementById('proj-type-list');
+  if (!el) return;
+  if (!projTypes.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีประเภท</span>'; return; }
+  el.innerHTML = projTypes.map((t,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">
+      <span style="width:22px;height:22px;background:var(--sidebar-bg);color:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;font-size:13px;">${t}</span>
+      <button class="btn btn-xs btn-danger" onclick="deleteProjType('${t}')">✕</button>
+    </div>`).join('');
+}
+
+// render lost reasons แบบ list
+function renderLostReasons2() {
+  const el = document.getElementById('lost-reason-list');
+  if (!el) return;
+  if (!lostReasons.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีเหตุผล</span>'; return; }
+  el.innerHTML = lostReasons.map((r,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">
+      <span style="width:22px;height:22px;background:#fef2f2;color:var(--danger);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;font-size:13px;">${r}</span>
+      <button class="btn btn-xs btn-danger" onclick="deleteLostReason2('${r}')">✕</button>
+    </div>`).join('');
+}
+function deleteLostReason2(val) {
+  lostReasons = lostReasons.filter(r => r !== val);
+  DB.set('wpg_lostReasons', lostReasons);
+  renderLostReasons2();
+  toast('🗑️ ลบเหตุผลแล้ว');
+}
+
+// Patch renderSettings ให้ใช้ sidebar navigation แทน
+(function(){
+  window.renderSettings = function() {
+    loadCompanySettings();
+    loadGoalSettings();
+    // render active panel (default: company)
+    const active = document.querySelector('.set-menu-item.active');
+    const panel = active?.dataset.panel || 'company';
+    setSettingPanel(panel);
+  };
+})();
+
+// Patch saveGoalSettings ให้ update summary
+(function(){
+  const _orig = window.saveGoalSettings;
+  window.saveGoalSettings = function() {
+    if(_orig) _orig();
+    updateGoalSummary();
+  };
+})();
+
+
+
+// ============================================================
+//  PHASE 11 — กลุ่มสินค้า, รหัสสินค้า, สถานะโครงการ,
+//             แท็กกิจกรรม, ข้อมูลกิจการเพิ่มเติม
+// ============================================================
+
+// --- กลุ่มสินค้า ---
+let prodGroups = DB.get('wpg_prodGroups', []);
+
+function addProdGroup() {
+  document.getElementById('prod-group-add').style.display = 'block';
+  document.getElementById('new-prod-group').value = '';
+  document.getElementById('new-prod-group').focus();
+}
+function saveProdGroup() {
+  const name = document.getElementById('new-prod-group').value.trim();
+  if (!name) return;
+  if (!prodGroups.find(g => g.name === name)) {
+    prodGroups.push({ id: genId(), name, createdAt: today() });
+    DB.set('wpg_prodGroups', prodGroups);
+    toast('✅ เพิ่มกลุ่มสินค้าแล้ว');
+  }
+  document.getElementById('prod-group-add').style.display = 'none';
+  renderProdGroups();
+  syncProdGroupDropdown();
+}
+function deleteProdGroup(id) {
+  prodGroups = prodGroups.filter(g => g.id !== id);
+  DB.set('wpg_prodGroups', prodGroups);
+  renderProdGroups();
+  syncProdGroupDropdown();
+  toast('🗑️ ลบกลุ่มสินค้าแล้ว');
+}
+function renderProdGroups() {
+  const el = document.getElementById('prod-group-list');
+  if (!el) return;
+  if (!prodGroups.length) { el.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีกลุ่มสินค้า — กดเพิ่มกลุ่มก่อนเพิ่มสินค้า</span>'; return; }
+  el.innerHTML = prodGroups.map(g => {
+    const cnt = products.filter(p => p.group === g.name).length;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;">
+      <span style="font-size:15px;">📂</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${g.name}</div><div style="font-size:11px;color:var(--text-muted);">${cnt} สินค้า</div></div>
+      <button class="btn btn-xs btn-danger" onclick="deleteProdGroup('${g.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function syncProdGroupDropdown() {
+  const sel = document.getElementById('prod-group');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกกลุ่ม --</option>' +
+    prodGroups.map(g => `<option value="${g.name}" ${g.name===cur?'selected':''}>${g.name}</option>`).join('');
+}
+
+// Patch saveProduct ให้รองรับ รหัสสินค้า
+(function(){
+  window.saveProduct = function() {
+    const name = document.getElementById('prod-name').value.trim();
+    if (!name) { alert('กรุณากรอกชื่อสินค้า'); return; }
+    const prod = {
+      id: genId(), name,
+      code: document.getElementById('prod-code')?.value.trim() || '',
+      group: document.getElementById('prod-group')?.value || '',
+      price: parseFloat(document.getElementById('prod-price').value)||0,
+      unit: document.getElementById('prod-unit').value.trim()||'ชิ้น',
+      createdAt: today(),
+    };
+    products.push(prod);
+    DB.set('wpg_products', products);
+    document.getElementById('product-add-form').style.display = 'none';
+    renderProducts();
+    toast('✅ เพิ่มสินค้าแล้ว');
+  };
+})();
+
+// Patch renderProducts ให้แสดง รหัส + ค้นหาได้
+(function(){
+  window.renderProducts = function() {
+    const q = (document.getElementById('prod-search')?.value||'').toLowerCase();
+    const tbody = document.getElementById('product-tbody');
+    const empty = document.getElementById('product-empty');
+    if (!tbody) return;
+    const list = products.filter(p =>
+      !q || p.name.toLowerCase().includes(q) || (p.code||'').toLowerCase().includes(q) || (p.group||'').toLowerCase().includes(q)
+    );
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    tbody.innerHTML = list.map(p => `<tr>
+      <td style="font-size:13px;font-weight:500;">${p.name}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${p.code||'-'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${p.group||'-'}</td>
+      <td style="text-align:right;font-size:13px;">${p.price>0?fmtMoney(p.price):'-'}</td>
+      <td style="font-size:12px;">${p.unit}</td>
+      <td><button class="btn btn-xs btn-danger" onclick="deleteProduct('${p.id}')">🗑️</button></td>
+    </tr>`).join('');
+  };
+})();
+
+// --- สถานะโครงการ ---
+let projStatuses = DB.get('wpg_projStatuses', ['สร้างแบรนด์','พัฒนาสูตร','ซื้อเทสเตอร์','OEM','ODM']);
+
+function addProjStatus() {
+  document.getElementById('proj-status-add').style.display = 'block';
+  document.getElementById('new-proj-status').value = '';
+  document.getElementById('new-proj-status').focus();
+}
+function saveProjStatus() {
+  const val = document.getElementById('new-proj-status').value.trim();
+  if (!val) return;
+  if (!projStatuses.includes(val)) {
+    projStatuses.push(val);
+    DB.set('wpg_projStatuses', projStatuses);
+  }
+  document.getElementById('proj-status-add').style.display = 'none';
+  renderProjStatuses();
+  syncProjStatusDropdown();
+  toast('✅ เพิ่มสถานะโครงการแล้ว');
+}
+function deleteProjStatus(val) {
+  projStatuses = projStatuses.filter(s => s !== val);
+  DB.set('wpg_projStatuses', projStatuses);
+  renderProjStatuses();
+  syncProjStatusDropdown();
+}
+function renderProjStatuses() {
+  const el = document.getElementById('proj-status-list');
+  if (!el) return;
+  if (!projStatuses.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีสถานะ</span>'; return; }
+  el.innerHTML = projStatuses.map(s => `
+    <div style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;">
+      ${s}<span onclick="deleteProjStatus('${s}')" style="cursor:pointer;opacity:0.7;font-size:10px;">✕</span>
+    </div>`).join('');
+}
+function syncProjStatusDropdown() {
+  const sel = document.getElementById('pj-status');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = projStatuses.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+}
+
+// Patch openProjectModal ให้ใช้ projStatuses
+(function(){
+  const _orig = window.openProjectModal;
+  window.openProjectModal = function(id=null) {
+    _orig(id);
+    // sync proj status dropdown
+    setTimeout(() => syncProjStatusDropdown(), 50);
+  };
+})();
+
+// --- แท็กกิจกรรม ---
+let actTagDefs = DB.get('wpg_actTags', []);
+let selectedActTags = [];
+
+function addActTag() {
+  document.getElementById('act-tag-add-form').style.display = 'block';
+  document.getElementById('new-act-tag-name').value = '';
+  document.getElementById('new-act-tag-desc').value = '';
+  document.getElementById('new-act-tag-color').value = '#3b82f6';
+  document.getElementById('new-act-tag-name').focus();
+}
+function saveActTag() {
+  const name = document.getElementById('new-act-tag-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อแท็ก'); return; }
+  actTagDefs.push({ id: genId(), name,
+    color: document.getElementById('new-act-tag-color').value,
+    desc: document.getElementById('new-act-tag-desc').value.trim(),
+    createdAt: today(),
+  });
+  DB.set('wpg_actTags', actTagDefs);
+  document.getElementById('act-tag-add-form').style.display = 'none';
+  renderActTagList();
+  toast('✅ เพิ่มแท็กกิจกรรมแล้ว');
+}
+function deleteActTag(id) {
+  actTagDefs = actTagDefs.filter(t => t.id !== id);
+  DB.set('wpg_actTags', actTagDefs);
+  renderActTagList();
+  toast('🗑️ ลบแท็กแล้ว');
+}
+function renderActTagList() {
+  const el = document.getElementById('act-tag-list');
+  if (!el) return;
+  if (!actTagDefs.length) { el.innerHTML='<div class="empty-state" style="padding:20px;"><div class="empty-icon" style="font-size:28px;">🏷️</div><p>ยังไม่มีแท็กกิจกรรม</p></div>'; return; }
+  el.innerHTML = `<table style="font-size:12px;width:100%;">
+    <thead><tr style="background:#f8fafc;">
+      <th style="padding:6px 10px;">ชื่อแท็ก</th>
+      <th style="padding:6px 8px;text-align:center;">สี</th>
+      <th style="padding:6px 10px;">คำอธิบาย</th>
+      <th style="padding:6px 8px;text-align:center;">ใช้งาน</th>
+      <th></th>
+    </tr></thead><tbody>
+    ${actTagDefs.map(t => {
+      const cnt = activities.filter(a => (a.actTags||[]).includes(t.id)).length;
+      return `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 10px;font-weight:600;">
+          <span style="display:inline-flex;align-items:center;gap:5px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${t.color};display:inline-block;flex-shrink:0;"></span>${t.name}
+          </span>
+        </td>
+        <td style="text-align:center;padding:7px 8px;"><div style="width:22px;height:22px;border-radius:4px;background:${t.color};margin:auto;"></div></td>
+        <td style="padding:7px 10px;color:var(--text-muted);">${t.desc||'-'}</td>
+        <td style="text-align:center;padding:7px 8px;font-weight:700;">${cnt}</td>
+        <td style="padding:7px 8px;"><button class="btn btn-xs btn-danger" onclick="deleteActTag('${t.id}')">✕</button></td>
+      </tr>`;
+    }).join('')}
+    </tbody></table>`;
+}
+function renderActTagChooser() {
+  const el = document.getElementById('act-tag-chooser');
+  if (!el) return;
+  if (!actTagDefs.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีแท็ก — เพิ่มได้ที่ตั้งค่า</span>'; return; }
+  el.innerHTML = actTagDefs.map(t => {
+    const on = selectedActTags.includes(t.id);
+    return `<span onclick="toggleActTag('${t.id}')"
+      style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;cursor:pointer;font-size:12px;font-weight:500;transition:all .15s;
+      background:${on?t.color:t.color+'22'};color:${on?'white':t.color};border:1px solid ${t.color}55;
+      ${on?'box-shadow:0 0 0 2px '+t.color+'44;':''}">
+      ${t.name}
+    </span>`;
+  }).join('');
+}
+function toggleActTag(id) {
+  selectedActTags = selectedActTags.includes(id) ? selectedActTags.filter(x=>x!==id) : [...selectedActTags, id];
+  renderActTagChooser();
+}
+function renderActTagBadges(tagIds) {
+  if (!tagIds?.length) return '';
+  return tagIds.map(id => {
+    const t = actTagDefs.find(x=>x.id===id);
+    if (!t) return '';
+    return `<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;background:${t.color}22;color:${t.color};border:1px solid ${t.color}44;">${t.name}</span>`;
+  }).join(' ');
+}
+
+// Patch openActivityModal — reset actTags
+(function(){
+  const _orig = window.openActivityModal;
+  window.openActivityModal = function(preCustId='') {
+    selectedActTags = [];
+    _orig(preCustId);
+    renderActTagChooser();
+  };
+})();
+
+// Patch saveActivityWithFollowup — บันทึก actTags
+(function(){
+  window.saveActivityWithFollowup = function() {
+    const custId = document.getElementById('act-customer').value;
+    const date = document.getElementById('act-date').value;
+    if (!custId) { alert('กรุณาเลือกลูกค้า'); return; }
+    if (!date) { alert('กรุณากรอกวันที่'); return; }
+    const act = {
+      id: genId(), customerId: custId,
+      type: document.getElementById('act-type').value,
+      channel: document.getElementById('act-channel').value,
+      date, note: document.getElementById('act-note').value.trim(),
+      hotness: actHotness, images: [...actImages],
+      member: document.getElementById('act-filter-member')?.value || '',
+      actTags: [...selectedActTags],
+      createdAt: today(),
+    };
+    activities.push(act);
+    const followDate = document.getElementById('act-followup-date').value;
+    const followNote = document.getElementById('act-followup-note').value.trim();
+    if (followDate) tasks.push({ id:genId(), customerId:custId, activityId:act.id, dueDate:followDate, note:followNote, hotness:actHotness, done:false, createdAt:today() });
+    actImages = []; selectedActTags = [];
+    saveAll(); closeModal('modal-activity'); renderTasks(); updateGoalBar();
+    toast('✅ บันทึกกิจกรรมแล้ว');
+  };
+})();
+
+// Patch renderDetailActivities — แสดง actTags
+(function(){
+  window.renderDetailActivities = function() {
+    const list = activities.filter(a=>a.customerId===currentDetailCustId).sort((a,b)=>b.date.localeCompare(a.date));
+    const el = document.getElementById('detail-activity-list');
+    const empty = document.getElementById('detail-act-empty');
+    if (!list.length) { if(el) el.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    const typeIcon={'ขาออก':'📤','ขาเข้า':'📥','หาข้อมูล':'🔍'};
+    const typeCls={'ขาออก':'out','ขาเข้า':'in','หาข้อมูล':'info'};
+    if(el) el.innerHTML = list.map(a=>`
+      <div class="activity-item">
+        <div class="activity-icon ${typeCls[a.type]||'out'}">${typeIcon[a.type]||'📞'}</div>
+        <div class="activity-body">
+          <div class="activity-title">${a.type} · ${a.channel} <span style="color:var(--text-light);font-weight:400;">${fmtDate(a.date)}</span></div>
+          <div class="activity-meta" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            ${hotnessStars(a.hotness,'fire')}${a.member?'<span style="font-size:11px;">👤 '+a.member+'</span>':''}
+            ${renderActTagBadges(a.actTags)}
+          </div>
+          ${a.note?`<div class="activity-note">${a.note}</div>`:''}
+          ${(a.images||[]).length?`<div style="display:flex;gap:6px;margin-top:6px;">${a.images.map(src=>`<img src="${src}" class="act-img-thumb" style="width:56px;height:56px;" onclick="openLightbox('${src}')">`).join('')}</div>`:''}
+        </div>
+      </div>`).join('');
+  };
+})();
+
+// --- ข้อมูลกิจการเพิ่มเติม (เลขภาษี + Promptpay) ---
+(function(){
+  const _orig = window.saveSettings;
+  window.saveSettings = function() {
+    settings.company = document.getElementById('set-company').value;
+    settings.email = document.getElementById('set-email').value;
+    settings.phone = document.getElementById('set-phone').value;
+    settings.address = document.getElementById('set-address').value;
+    settings.taxId = document.getElementById('set-taxid')?.value||'';
+    settings.promptpay = document.getElementById('set-promptpay')?.value||'';
+    settings.promptpayName = document.getElementById('set-promptpay-name')?.value||'';
+    DB.set('settings', settings);
+    toast('✅ บันทึกการตั้งค่าแล้ว');
+  };
+})();
+
+// Patch renderSettings
+(function(){
+  const _orig = window.renderSettings;
+  window.renderSettings = function() {
+    if(_orig) _orig();
+    const el = (id) => document.getElementById(id);
+    if(el('set-taxid')) el('set-taxid').value = settings.taxId||'';
+    if(el('set-promptpay')) el('set-promptpay').value = settings.promptpay||'';
+    if(el('set-promptpay-name')) el('set-promptpay-name').value = settings.promptpayName||'';
+    prodGroups = DB.get('wpg_prodGroups', []);
+    actTagDefs = DB.get('wpg_actTags', []);
+    projStatuses = DB.get('wpg_projStatuses', ['สร้างแบรนด์','พัฒนาสูตร','ซื้อเทสเตอร์','OEM','ODM']);
+    renderProdGroups();
+    renderActTagList();
+    renderProjStatuses();
+    syncProdGroupDropdown();
+  };
+})();
+
+// Patch navTo
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if(page==='settings'){
+      prodGroups = DB.get('wpg_prodGroups',[]);
+      actTagDefs = DB.get('wpg_actTags',[]);
+      projStatuses = DB.get('wpg_projStatuses',['สร้างแบรนด์','พัฒนาสูตร','ซื้อเทสเตอร์','OEM','ODM']);
+      renderProdGroups(); renderActTagList(); renderProjStatuses(); syncProdGroupDropdown();
+    }
+    if(page==='reports') renderReports();
+  };
+})();
+
+// Init Phase 11
+prodGroups = DB.get('wpg_prodGroups', []);
+actTagDefs = DB.get('wpg_actTags', []);
+projStatuses = DB.get('wpg_projStatuses', ['สร้างแบรนด์','พัฒนาสูตร','ซื้อเทสเตอร์','OEM','ODM']);
+settings = Object.assign({taxId:'',promptpay:'',promptpayName:''}, DB.get('settings', {}));
+
 </script>
