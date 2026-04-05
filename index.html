@@ -609,6 +609,80 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ===== KANBAN ===== */
+.kanban-col {
+  min-width: 220px;
+  flex-shrink: 0;
+  background: #f8fafc;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+.kanban-col-header {
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  border-top: 3px solid #94a3b8;
+  border-radius: var(--radius) var(--radius) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+}
+.kanban-cards {
+  padding: 10px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 80px;
+}
+.kanban-cards.drag-over { background: rgba(240,192,64,0.1); }
+.kanban-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: grab;
+  transition: box-shadow 0.15s;
+  border-left: 3px solid transparent;
+}
+.kanban-card:hover { box-shadow: var(--shadow-md); }
+.kanban-card.dragging { opacity: 0.5; }
+.kanban-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.kanban-card-customer { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.kanban-card-value { font-size: 12px; color: var(--sidebar-bg); font-weight: 600; }
+.kanban-card-prob { font-size: 11px; color: var(--text-light); }
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar-wrap { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; margin: 6px 0; }
+.progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+/* ===== STATUS BADGE COLORS ===== */
+.badge-draft { background: #f1f5f9; color: #475569; }
+.badge-sent { background: #eff6ff; color: #1d4ed8; }
+.badge-approved { background: #f0fdf4; color: #15803d; }
+.badge-rejected { background: #fef2f2; color: #991b1b; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-processing { background: #eff6ff; color: #1d4ed8; }
+.badge-shipped { background: #f0fdf4; color: #15803d; }
+.badge-completed { background: #f0fdf4; color: #15803d; }
+.badge-cancelled { background: #fef2f2; color: #991b1b; }
+.badge-open { background: #eff6ff; color: #1d4ed8; }
+.badge-done { background: #f0fdf4; color: #15803d; }
+.badge-hold { background: #fef3c7; color: #92400e; }
+
+/* ===== DASHBOARD CHARTS ===== */
+.db-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.mini-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.mini-bar-label { font-size: 12px; color: var(--text-muted); width: 80px; flex-shrink: 0; }
+.mini-bar-track { flex: 1; background: var(--bg); border-radius: 4px; height: 10px; overflow: hidden; }
+.mini-bar-fill { height: 100%; border-radius: 4px; }
+.mini-bar-val { font-size: 12px; font-weight: 600; width: 50px; text-align: right; }
 </style>
 </head>
 <body>
@@ -815,13 +889,305 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div></div>
     </div>
 
-    <!-- ===== OTHER PAGES (placeholder) ===== -->
-    <div class="page" id="page-projects"><div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">📁</div><p>โมดูลโครงการ — กำลังพัฒนา (เฟส 2)</p></div></div></div></div>
-    <div class="page" id="page-leads"><div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">🎯</div><p>โมดูลโอกาส — กำลังพัฒนา (เฟส 2)</p></div></div></div></div>
-    <div class="page" id="page-quotes"><div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">📄</div><p>ใบเสนอราคา — กำลังพัฒนา (เฟส 2)</p></div></div></div></div>
-    <div class="page" id="page-orders"><div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">🛒</div><p>ใบสั่งขาย — กำลังพัฒนา (เฟส 2)</p></div></div></div></div>
-    <div class="page" id="page-forecast"><div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">📉</div><p>คาดการณ์ยอดขาย — กำลังพัฒนา (เฟส 3)</p></div></div></div></div>
-    <div class="page" id="page-reports"><div class="card"><div class="card-body"><div class="empty-state"><div class="empty-icon">📑</div><p>รายงาน — กำลังพัฒนา (เฟส 3)</p></div></div></div></div>
+    <!-- ===== PAGE: PROJECTS ===== -->
+    <div class="page" id="page-projects">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">โครงการ</h2>
+          <p style="font-size:13px;color:var(--text-muted);">จัดการโครงการและงานที่เกี่ยวข้อง</p>
+        </div>
+        <button class="btn btn-primary" onclick="openProjectModal()">+ เพิ่มโครงการ</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">โครงการทั้งหมด</div><div class="stat-value" id="pj-total">0</div></div>
+        <div class="stat-card"><div class="stat-label">กำลังดำเนินการ</div><div class="stat-value" id="pj-active" style="color:var(--info)">0</div></div>
+        <div class="stat-card"><div class="stat-label">เสร็จสิ้น</div><div class="stat-value" id="pj-done" style="color:var(--success)">0</div></div>
+        <div class="stat-card"><div class="stat-label">มูลค่ารวม</div><div class="stat-value" id="pj-value" style="font-size:20px">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filter-bar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="ค้นหาโครงการ..." id="pj-search" oninput="renderProjects()">
+            </div>
+            <select class="form-control" style="width:auto;" id="pj-filter-status" onchange="renderProjects()">
+              <option value="">ทุกสถานะ</option>
+              <option value="open">กำลังดำเนินการ</option>
+              <option value="done">เสร็จสิ้น</option>
+              <option value="hold">รอดำเนินการ</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table id="project-table">
+              <thead>
+                <tr>
+                  <th>ชื่อโครงการ</th>
+                  <th>ลูกค้า</th>
+                  <th>มูลค่า (บาท)</th>
+                  <th>วันเริ่ม</th>
+                  <th>กำหนดส่ง</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="project-tbody"></tbody>
+            </table>
+            <div id="pj-empty" class="empty-state" style="display:none;">
+              <div class="empty-icon">📁</div>
+              <p>ยังไม่มีโครงการ<br>กด "เพิ่มโครงการ" เพื่อเริ่มต้น</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: LEADS (KANBAN) ===== -->
+    <div class="page" id="page-leads">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">โอกาส</h2>
+          <p style="font-size:13px;color:var(--text-muted);">ติดตาม pipeline การขาย</p>
+        </div>
+        <button class="btn btn-primary" onclick="openLeadModal()">+ เพิ่มโอกาส</button>
+      </div>
+      <!-- Pipeline summary -->
+      <div class="stats-grid" id="leads-stats" style="grid-template-columns:repeat(5,1fr);">
+        <div class="stat-card" style="border-top:3px solid #94a3b8;"><div class="stat-label">🔍 ค้นหา</div><div class="stat-value" id="ls-prospect">0</div></div>
+        <div class="stat-card" style="border-top:3px solid #3b82f6;"><div class="stat-label">📞 ติดต่อ</div><div class="stat-value" id="ls-contact">0</div></div>
+        <div class="stat-card" style="border-top:3px solid #f59e0b;"><div class="stat-label">📄 เสนอราคา</div><div class="stat-value" id="ls-quote">0</div></div>
+        <div class="stat-card" style="border-top:3px solid #8b5cf6;"><div class="stat-label">🤝 เจรจา</div><div class="stat-value" id="ls-nego">0</div></div>
+        <div class="stat-card" style="border-top:3px solid #22c55e;"><div class="stat-label">✅ ปิดได้</div><div class="stat-value" id="ls-won">0</div></div>
+      </div>
+      <!-- Kanban board -->
+      <div id="kanban-board" style="display:flex;gap:14px;overflow-x:auto;padding-bottom:16px;">
+        <div class="kanban-col" data-stage="prospect">
+          <div class="kanban-col-header" style="border-top-color:#94a3b8;">
+            <span>🔍 ค้นหาลูกค้า</span><span class="tab-count" id="kc-prospect">0</span>
+          </div>
+          <div class="kanban-cards" id="kboard-prospect" ondragover="allowDrop(event)" ondrop="dropLead(event,'prospect')"></div>
+        </div>
+        <div class="kanban-col" data-stage="contact">
+          <div class="kanban-col-header" style="border-top-color:#3b82f6;">
+            <span>📞 ติดต่อแล้ว</span><span class="tab-count" id="kc-contact">0</span>
+          </div>
+          <div class="kanban-cards" id="kboard-contact" ondragover="allowDrop(event)" ondrop="dropLead(event,'contact')"></div>
+        </div>
+        <div class="kanban-col" data-stage="quote">
+          <div class="kanban-col-header" style="border-top-color:#f59e0b;">
+            <span>📄 เสนอราคา</span><span class="tab-count" id="kc-quote">0</span>
+          </div>
+          <div class="kanban-cards" id="kboard-quote" ondragover="allowDrop(event)" ondrop="dropLead(event,'quote')"></div>
+        </div>
+        <div class="kanban-col" data-stage="negotiate">
+          <div class="kanban-col-header" style="border-top-color:#8b5cf6;">
+            <span>🤝 เจรจา</span><span class="tab-count" id="kc-negotiate">0</span>
+          </div>
+          <div class="kanban-cards" id="kboard-negotiate" ondragover="allowDrop(event)" ondrop="dropLead(event,'negotiate')"></div>
+        </div>
+        <div class="kanban-col" data-stage="won">
+          <div class="kanban-col-header" style="border-top-color:#22c55e;">
+            <span>✅ ปิดได้</span><span class="tab-count" id="kc-won">0</span>
+          </div>
+          <div class="kanban-cards" id="kboard-won" ondragover="allowDrop(event)" ondrop="dropLead(event,'won')"></div>
+        </div>
+        <div class="kanban-col" data-stage="lost">
+          <div class="kanban-col-header" style="border-top-color:#ef4444;">
+            <span>❌ ปิดไม่ได้</span><span class="tab-count" id="kc-lost">0</span>
+          </div>
+          <div class="kanban-cards" id="kboard-lost" ondragover="allowDrop(event)" ondrop="dropLead(event,'lost')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: QUOTES ===== -->
+    <div class="page" id="page-quotes">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">ใบเสนอราคา</h2>
+          <p style="font-size:13px;color:var(--text-muted);">จัดการใบเสนอราคาทั้งหมด</p>
+        </div>
+        <button class="btn btn-primary" onclick="openQuoteModal()">+ สร้างใบเสนอราคา</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">ทั้งหมด</div><div class="stat-value" id="qt-all">0</div></div>
+        <div class="stat-card"><div class="stat-label">รอตอบรับ</div><div class="stat-value" id="qt-pending" style="color:var(--warning)">0</div></div>
+        <div class="stat-card"><div class="stat-label">อนุมัติแล้ว</div><div class="stat-value" id="qt-approved" style="color:var(--success)">0</div></div>
+        <div class="stat-card"><div class="stat-label">มูลค่ารวม</div><div class="stat-value" id="qt-value" style="font-size:18px">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filter-bar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="ค้นหาใบเสนอ..." id="qt-search" oninput="renderQuotes()">
+            </div>
+            <select class="form-control" style="width:auto;" id="qt-filter" onchange="renderQuotes()">
+              <option value="">ทุกสถานะ</option>
+              <option value="draft">ร่าง</option>
+              <option value="sent">ส่งแล้ว</option>
+              <option value="approved">อนุมัติ</option>
+              <option value="rejected">ปฏิเสธ</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่</th>
+                  <th>ลูกค้า</th>
+                  <th>รายการ</th>
+                  <th>มูลค่า (บาท)</th>
+                  <th>วันที่</th>
+                  <th>หมดอายุ</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="quote-tbody"></tbody>
+            </table>
+            <div id="qt-empty" class="empty-state" style="display:none;">
+              <div class="empty-icon">📄</div>
+              <p>ยังไม่มีใบเสนอราคา<br>กด "สร้างใบเสนอราคา" เพื่อเริ่มต้น</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: ORDERS ===== -->
+    <div class="page" id="page-orders">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">ใบสั่งขาย</h2>
+          <p style="font-size:13px;color:var(--text-muted);">จัดการออเดอร์และการจัดส่ง</p>
+        </div>
+        <button class="btn btn-primary" onclick="openOrderModal()">+ สร้างใบสั่งขาย</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">ทั้งหมด</div><div class="stat-value" id="od-all">0</div></div>
+        <div class="stat-card"><div class="stat-label">รอดำเนินการ</div><div class="stat-value" id="od-pending" style="color:var(--warning)">0</div></div>
+        <div class="stat-card"><div class="stat-label">จัดส่งแล้ว</div><div class="stat-value" id="od-shipped" style="color:var(--info)">0</div></div>
+        <div class="stat-card"><div class="stat-label">ยอดรวม (บาท)</div><div class="stat-value" id="od-value" style="font-size:18px">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filter-bar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="ค้นหาใบสั่งขาย..." id="od-search" oninput="renderOrders()">
+            </div>
+            <select class="form-control" style="width:auto;" id="od-filter" onchange="renderOrders()">
+              <option value="">ทุกสถานะ</option>
+              <option value="pending">รอดำเนินการ</option>
+              <option value="processing">กำลังผลิต</option>
+              <option value="shipped">จัดส่งแล้ว</option>
+              <option value="completed">เสร็จสิ้น</option>
+              <option value="cancelled">ยกเลิก</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>เลขที่</th>
+                  <th>ลูกค้า</th>
+                  <th>จากใบเสนอ</th>
+                  <th>มูลค่า (บาท)</th>
+                  <th>วันที่สั่ง</th>
+                  <th>กำหนดส่ง</th>
+                  <th>สถานะ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="order-tbody"></tbody>
+            </table>
+            <div id="od-empty" class="empty-state" style="display:none;">
+              <div class="empty-icon">🛒</div>
+              <p>ยังไม่มีใบสั่งขาย<br>กด "สร้างใบสั่งขาย" หรือแปลงจากใบเสนอราคา</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: FORECAST ===== -->
+    <div class="page" id="page-forecast">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">คาดการณ์</h2>
+        <p style="font-size:13px;color:var(--text-muted);">วิเคราะห์และคาดการณ์ยอดขาย</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Pipeline รวม</div><div class="stat-value" id="fc-pipeline" style="font-size:18px">฿0</div><div class="stat-sub">มูลค่าโอกาสทั้งหมด</div></div>
+        <div class="stat-card"><div class="stat-label">คาดปิดได้ (ถ่วงน้ำหนัก)</div><div class="stat-value" id="fc-weighted" style="font-size:18px;color:var(--info)">฿0</div><div class="stat-sub">จากความน่าจะเป็น</div></div>
+        <div class="stat-card"><div class="stat-label">ปิดได้แล้วเดือนนี้</div><div class="stat-value" id="fc-won-month" style="font-size:18px;color:var(--success)">฿0</div><div class="stat-sub">ใบสั่งขายที่เสร็จสิ้น</div></div>
+        <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value" id="fc-winrate">0%</div><div class="stat-sub">โอกาสที่ปิดได้</div></div>
+      </div>
+      <!-- Pipeline by stage -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">📊 Pipeline ตาม Stage</span></div>
+        <div class="card-body">
+          <div id="fc-stage-bars"></div>
+        </div>
+      </div>
+      <!-- Top leads -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">🏆 Top 10 โอกาส (มูลค่าสูงสุด)</span></div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>โอกาส</th><th>ลูกค้า</th><th>Stage</th><th>มูลค่า</th><th>โอกาส%</th><th>คาดปิด</th></tr></thead>
+              <tbody id="fc-top-leads"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: REPORTS ===== -->
+    <div class="page" id="page-reports">
+      <div style="margin-bottom:20px;">
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">รายงาน</h2>
+        <p style="font-size:13px;color:var(--text-muted);">สรุปผลงานและวิเคราะห์ข้อมูล</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">ลูกค้าใหม่เดือนนี้</div><div class="stat-value" id="rp-new-cust" style="color:var(--success)">0</div></div>
+        <div class="stat-card"><div class="stat-label">กิจกรรมทั้งหมด</div><div class="stat-value" id="rp-acts">0</div></div>
+        <div class="stat-card"><div class="stat-label">ใบเสนอราคา</div><div class="stat-value" id="rp-quotes">0</div></div>
+        <div class="stat-card"><div class="stat-label">ยอดขายรวม</div><div class="stat-value" id="rp-revenue" style="font-size:18px">฿0</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- ลูกค้าตามสถานะ -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">👥 ลูกค้าตามสถานะ</span></div>
+          <div class="card-body" id="rp-cust-status"></div>
+        </div>
+        <!-- กิจกรรมตามประเภท -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📞 กิจกรรมตามประเภท</span></div>
+          <div class="card-body" id="rp-act-types"></div>
+        </div>
+        <!-- Top ลูกค้า (กิจกรรม) -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">⭐ ลูกค้าที่ติดต่อมากที่สุด</span></div>
+          <div class="card-body" style="padding:0;"><div class="table-wrap"><table>
+            <thead><tr><th>ลูกค้า</th><th>กิจกรรม</th><th>Hotness</th></tr></thead>
+            <tbody id="rp-top-cust"></tbody>
+          </table></div></div>
+        </div>
+        <!-- งานที่เกินกำหนด -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">⚠️ สรุปงานติดตาม</span></div>
+          <div class="card-body" id="rp-tasks-summary"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== PAGE: SETTINGS ===== -->
     <div class="page" id="page-settings">
@@ -1155,6 +1521,258 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <button class="btn btn-ghost" onclick="closeModal('modal-task-detail')">ยกเลิก</button>
       <button class="btn btn-ghost" onclick="saveTaskUpdateNoFollowup()">บันทึกโดยไม่ติดตาม</button>
       <button class="btn btn-primary" onclick="saveTaskUpdate()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: PROJECT ===== -->
+<div class="modal-overlay" id="modal-project">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="pj-modal-title">เพิ่มโครงการ</h3>
+      <button class="modal-close" onclick="closeModal('modal-project')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pj-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ชื่อโครงการ <span>*</span></label>
+          <input class="form-control" id="pj-name" placeholder="ชื่อโครงการ">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ลูกค้า</label>
+          <select class="form-control" id="pj-customer"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">มูลค่า (บาท)</label>
+          <input class="form-control" id="pj-value" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="pj-status">
+            <option value="open">กำลังดำเนินการ</option>
+            <option value="hold">รอดำเนินการ</option>
+            <option value="done">เสร็จสิ้น</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">วันเริ่ม</label>
+          <input class="form-control" id="pj-start" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">กำหนดส่ง</label>
+          <input class="form-control" id="pj-due" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายละเอียด</label>
+        <textarea class="form-control" id="pj-note" rows="2" placeholder="รายละเอียดโครงการ..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-project')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveProject()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: LEAD ===== -->
+<div class="modal-overlay" id="modal-lead">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="lead-modal-title">เพิ่มโอกาส</h3>
+      <button class="modal-close" onclick="closeModal('modal-lead')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="lead-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ชื่อโอกาส <span>*</span></label>
+          <input class="form-control" id="lead-name" placeholder="เช่น ขายสินค้า OEM รอบ Q2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ลูกค้า <span>*</span></label>
+          <select class="form-control" id="lead-customer"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">มูลค่าคาด (บาท)</label>
+          <input class="form-control" id="lead-value" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">โอกาสปิด (%)</label>
+          <input class="form-control" id="lead-prob" type="number" min="0" max="100" placeholder="50">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Stage</label>
+          <select class="form-control" id="lead-stage">
+            <option value="prospect">🔍 ค้นหาลูกค้า</option>
+            <option value="contact">📞 ติดต่อแล้ว</option>
+            <option value="quote">📄 เสนอราคา</option>
+            <option value="negotiate">🤝 เจรจา</option>
+            <option value="won">✅ ปิดได้</option>
+            <option value="lost">❌ ปิดไม่ได้</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">คาดปิดภายใน</label>
+          <input class="form-control" id="lead-close-date" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="lead-note" rows="2" placeholder="รายละเอียดโอกาส..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-lead')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveLead()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: QUOTE ===== -->
+<div class="modal-overlay" id="modal-quote">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="qt-modal-title">สร้างใบเสนอราคา</h3>
+      <button class="modal-close" onclick="closeModal('modal-quote')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="qt-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ลูกค้า <span>*</span></label>
+          <select class="form-control" id="qt-customer"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="qt-status">
+            <option value="draft">ร่าง</option>
+            <option value="sent">ส่งแล้ว</option>
+            <option value="approved">อนุมัติ</option>
+            <option value="rejected">ปฏิเสธ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">วันที่ออก</label>
+          <input class="form-control" id="qt-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">วันหมดอายุ</label>
+          <input class="form-control" id="qt-expire" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายการสินค้า/บริการ</label>
+        <div id="qt-items-list"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addQuoteItem()" style="margin-top:8px;">+ เพิ่มรายการ</button>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text-muted);">รวมก่อน VAT</div>
+          <div style="font-size:16px;font-weight:700;" id="qt-subtotal">฿0</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text-muted);">VAT 7%</div>
+          <div style="font-size:16px;font-weight:700;" id="qt-vat">฿0</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text-muted);">รวมทั้งสิ้น</div>
+          <div style="font-size:20px;font-weight:700;color:var(--sidebar-bg);" id="qt-total">฿0</div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px;">
+        <label class="form-label">หมายเหตุ</label>
+        <textarea class="form-control" id="qt-note" rows="2" placeholder="เงื่อนไขการชำระเงิน ฯลฯ"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-quote')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveQuote()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ORDER ===== -->
+<div class="modal-overlay" id="modal-order">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="od-modal-title">สร้างใบสั่งขาย</h3>
+      <button class="modal-close" onclick="closeModal('modal-order')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="od-edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ลูกค้า <span>*</span></label>
+          <select class="form-control" id="od-customer"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">อ้างอิงใบเสนอราคา</label>
+          <select class="form-control" id="od-quote-ref">
+            <option value="">-- ไม่อ้างอิง --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">วันที่สั่ง</label>
+          <input class="form-control" id="od-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">กำหนดส่ง</label>
+          <input class="form-control" id="od-due" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">รายการสินค้า/บริการ</label>
+        <div id="od-items-list"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addOrderItem()" style="margin-top:8px;">+ เพิ่มรายการ</button>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text-muted);">รวมก่อน VAT</div>
+          <div style="font-size:16px;font-weight:700;" id="od-subtotal">฿0</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text-muted);">VAT 7%</div>
+          <div style="font-size:16px;font-weight:700;" id="od-vat">฿0</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;color:var(--text-muted);">รวมทั้งสิ้น</div>
+          <div style="font-size:20px;font-weight:700;color:var(--sidebar-bg);" id="od-total">฿0</div>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:12px;">
+        <div class="form-group">
+          <label class="form-label">สถานะ</label>
+          <select class="form-control" id="od-status">
+            <option value="pending">รอดำเนินการ</option>
+            <option value="processing">กำลังผลิต</option>
+            <option value="shipped">จัดส่งแล้ว</option>
+            <option value="completed">เสร็จสิ้น</option>
+            <option value="cancelled">ยกเลิก</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเหตุ</label>
+          <input class="form-control" id="od-note" placeholder="ที่อยู่จัดส่ง ฯลฯ">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-order')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveOrder()">💾 บันทึก</button>
     </div>
   </div>
 </div>
@@ -1868,14 +2486,622 @@ function removeTagDef(id) {
   toast('🗑️ ลบ Tag แล้ว');
 }
 
+
 // ============================================================
-//  DASHBOARD
+//  PHASE 2 DATA
+// ============================================================
+let projects = DB.get('projects', []);
+let leads = DB.get('leads', []);
+let quotes = DB.get('quotes', []);
+let orders = DB.get('orders', []);
+
+function saveAll() {
+  save();
+  DB.set('projects', projects);
+  DB.set('leads', leads);
+  DB.set('quotes', quotes);
+  DB.set('orders', orders);
+}
+
+function fmtMoney(n) {
+  if (!n) return '฿0';
+  return '฿' + Number(n).toLocaleString('th-TH');
+}
+function genDocNo(prefix) {
+  const now = new Date();
+  const y = now.getFullYear().toString().slice(2);
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const seq = String(Math.floor(Math.random()*9000)+1000);
+  return prefix + y + m + '-' + seq;
+}
+
+// ============================================================
+//  PROJECTS
+// ============================================================
+function openProjectModal(id=null) {
+  const isEdit = !!id;
+  document.getElementById('pj-modal-title').textContent = isEdit ? 'แก้ไขโครงการ' : 'เพิ่มโครงการ';
+  document.getElementById('pj-edit-id').value = id || '';
+  // populate customer
+  const sel = document.getElementById('pj-customer');
+  sel.innerHTML = '<option value="">-- เลือกลูกค้า --</option>' + customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if (isEdit) {
+    const p = projects.find(x=>x.id===id);
+    if (!p) return;
+    document.getElementById('pj-name').value = p.name||'';
+    sel.value = p.customerId||'';
+    document.getElementById('pj-value').value = p.value||'';
+    document.getElementById('pj-status').value = p.status||'open';
+    document.getElementById('pj-start').value = p.startDate||'';
+    document.getElementById('pj-due').value = p.dueDate||'';
+    document.getElementById('pj-note').value = p.note||'';
+  } else {
+    ['pj-name','pj-value','pj-note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('pj-status').value = 'open';
+    document.getElementById('pj-start').value = today();
+    document.getElementById('pj-due').value = '';
+  }
+  openModal('modal-project');
+}
+function saveProject() {
+  const name = document.getElementById('pj-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อโครงการ'); return; }
+  const id = document.getElementById('pj-edit-id').value || genId();
+  const isEdit = projects.some(x=>x.id===id);
+  const p = {
+    id, name,
+    customerId: document.getElementById('pj-customer').value,
+    value: parseFloat(document.getElementById('pj-value').value)||0,
+    status: document.getElementById('pj-status').value,
+    startDate: document.getElementById('pj-start').value,
+    dueDate: document.getElementById('pj-due').value,
+    note: document.getElementById('pj-note').value.trim(),
+    createdAt: isEdit ? projects.find(x=>x.id===id)?.createdAt : today(),
+  };
+  if (isEdit) projects = projects.map(x=>x.id===id?p:x);
+  else projects.push(p);
+  saveAll();
+  closeModal('modal-project');
+  renderProjects();
+  toast(isEdit ? '✅ แก้ไขโครงการแล้ว' : '✅ เพิ่มโครงการแล้ว');
+}
+function renderProjects() {
+  const q = document.getElementById('pj-search').value.toLowerCase();
+  const sf = document.getElementById('pj-filter-status').value;
+  let list = projects.filter(p => {
+    const c = customers.find(x=>x.id===p.customerId);
+    const matchQ = !q || p.name.toLowerCase().includes(q) || (c?.name||'').toLowerCase().includes(q);
+    const matchS = !sf || p.status===sf;
+    return matchQ && matchS;
+  });
+  const tbody = document.getElementById('project-tbody');
+  const empty = document.getElementById('pj-empty');
+  document.getElementById('pj-total').textContent = projects.length;
+  document.getElementById('pj-active').textContent = projects.filter(x=>x.status==='open').length;
+  document.getElementById('pj-done').textContent = projects.filter(x=>x.status==='done').length;
+  const totalVal = projects.reduce((s,p)=>s+(p.value||0),0);
+  document.getElementById('pj-value').textContent; // stat card
+  document.getElementById('pj-value') && (document.getElementById('pj-value').textContent = fmtMoney(totalVal));
+  if (!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const statusLabel = {open:'กำลังดำเนินการ',done:'เสร็จสิ้น',hold:'รอดำเนินการ'};
+  tbody.innerHTML = list.map(p => {
+    const c = customers.find(x=>x.id===p.customerId);
+    return `<tr>
+      <td><strong>${p.name}</strong>${p.note?`<div style="font-size:12px;color:var(--text-muted)">${p.note.substring(0,40)}</div>`:''}</td>
+      <td>${c?.name||'-'}</td>
+      <td>${fmtMoney(p.value)}</td>
+      <td>${fmtDate(p.startDate)}</td>
+      <td>${fmtDate(p.dueDate)}</td>
+      <td><span class="badge badge-${p.status}">${statusLabel[p.status]||p.status}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-xs btn-ghost" onclick="openProjectModal('${p.id}')">✏️</button>
+        <button class="btn btn-xs btn-danger" onclick="deleteProject('${p.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function deleteProject(id) {
+  if (!confirm('ลบโครงการนี้?')) return;
+  projects = projects.filter(x=>x.id!==id);
+  saveAll(); renderProjects(); toast('🗑️ ลบโครงการแล้ว');
+}
+
+// ============================================================
+//  LEADS / KANBAN
+// ============================================================
+function openLeadModal(id=null) {
+  const isEdit = !!id;
+  document.getElementById('lead-modal-title').textContent = isEdit ? 'แก้ไขโอกาส' : 'เพิ่มโอกาส';
+  document.getElementById('lead-edit-id').value = id||'';
+  const sel = document.getElementById('lead-customer');
+  sel.innerHTML = '<option value="">-- เลือกลูกค้า --</option>' + customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if (isEdit) {
+    const l = leads.find(x=>x.id===id);
+    if (!l) return;
+    document.getElementById('lead-name').value = l.name||'';
+    sel.value = l.customerId||'';
+    document.getElementById('lead-value').value = l.value||'';
+    document.getElementById('lead-prob').value = l.prob||50;
+    document.getElementById('lead-stage').value = l.stage||'prospect';
+    document.getElementById('lead-close-date').value = l.closeDate||'';
+    document.getElementById('lead-note').value = l.note||'';
+  } else {
+    ['lead-name','lead-note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('lead-value').value='';
+    document.getElementById('lead-prob').value=50;
+    document.getElementById('lead-stage').value='prospect';
+    document.getElementById('lead-close-date').value='';
+  }
+  openModal('modal-lead');
+}
+function saveLead() {
+  const name = document.getElementById('lead-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อโอกาส'); return; }
+  const id = document.getElementById('lead-edit-id').value || genId();
+  const isEdit = leads.some(x=>x.id===id);
+  const l = {
+    id, name,
+    customerId: document.getElementById('lead-customer').value,
+    value: parseFloat(document.getElementById('lead-value').value)||0,
+    prob: parseInt(document.getElementById('lead-prob').value)||50,
+    stage: document.getElementById('lead-stage').value,
+    closeDate: document.getElementById('lead-close-date').value,
+    note: document.getElementById('lead-note').value.trim(),
+    createdAt: isEdit ? leads.find(x=>x.id===id)?.createdAt : today(),
+  };
+  if (isEdit) leads = leads.map(x=>x.id===id?l:x);
+  else leads.push(l);
+  saveAll();
+  closeModal('modal-lead');
+  renderKanban();
+  toast(isEdit ? '✅ แก้ไขโอกาสแล้ว' : '✅ เพิ่มโอกาสแล้ว');
+}
+function renderKanban() {
+  const stages = ['prospect','contact','quote','negotiate','won','lost'];
+  const stageColors = {prospect:'#94a3b8',contact:'#3b82f6',quote:'#f59e0b',negotiate:'#8b5cf6',won:'#22c55e',lost:'#ef4444'};
+  stages.forEach(stage => {
+    const col = document.getElementById('kboard-'+stage);
+    if (!col) return;
+    const stageleads = leads.filter(l=>l.stage===stage);
+    document.getElementById('kc-'+stage).textContent = stageleads.length;
+    col.innerHTML = stageleads.map(l => {
+      const c = customers.find(x=>x.id===l.customerId);
+      return `<div class="kanban-card" draggable="true" id="kcard-${l.id}"
+        style="border-left-color:${stageColors[stage]}"
+        ondragstart="dragLead(event,'${l.id}')"
+        ondblclick="openLeadModal('${l.id}')">
+        <div class="kanban-card-title">${l.name}</div>
+        <div class="kanban-card-customer">👤 ${c?.name||'-'}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+          <span class="kanban-card-value">${fmtMoney(l.value)}</span>
+          <span class="kanban-card-prob">${l.prob||0}%</span>
+        </div>
+        ${l.closeDate?`<div style="font-size:11px;color:var(--text-light);margin-top:2px;">📅 ${fmtDate(l.closeDate)}</div>`:''}
+      </div>`;
+    }).join('') + `<div style="text-align:center;padding:12px 0;">
+        <button class="btn btn-xs btn-ghost" onclick="openLeadModalStage('${stage}')">+ เพิ่ม</button>
+      </div>`;
+  });
+  // update stats
+  const stageMap = {prospect:'ls-prospect',contact:'ls-contact',quote:'ls-quote',negotiate:'ls-nego',won:'ls-won'};
+  Object.entries(stageMap).forEach(([s,id]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = leads.filter(l=>l.stage===s).length;
+  });
+  updateDashboard();
+}
+function openLeadModalStage(stage) {
+  openLeadModal();
+  setTimeout(() => { document.getElementById('lead-stage').value = stage; }, 50);
+}
+function dragLead(e, id) { e.dataTransfer.setData('leadId', id); e.target.classList.add('dragging'); }
+function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function dropLead(e, stage) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = e.dataTransfer.getData('leadId');
+  const l = leads.find(x=>x.id===id);
+  if (l) { l.stage = stage; saveAll(); renderKanban(); }
+}
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.kanban-card').forEach(c=>c.classList.remove('dragging'));
+  document.querySelectorAll('.kanban-cards').forEach(c=>c.classList.remove('drag-over'));
+});
+
+// ============================================================
+//  QUOTES
+// ============================================================
+let quoteItems = [];
+function openQuoteModal(id=null) {
+  const isEdit = !!id;
+  document.getElementById('qt-modal-title').textContent = isEdit ? 'แก้ไขใบเสนอราคา' : 'สร้างใบเสนอราคา';
+  document.getElementById('qt-edit-id').value = id||'';
+  quoteItems = [];
+  const sel = document.getElementById('qt-customer');
+  sel.innerHTML = '<option value="">-- เลือกลูกค้า --</option>' + customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if (isEdit) {
+    const q = quotes.find(x=>x.id===id);
+    if (!q) return;
+    sel.value = q.customerId||'';
+    document.getElementById('qt-status').value = q.status||'draft';
+    document.getElementById('qt-date').value = q.date||today();
+    document.getElementById('qt-expire').value = q.expireDate||'';
+    document.getElementById('qt-note').value = q.note||'';
+    quoteItems = JSON.parse(JSON.stringify(q.items||[]));
+  } else {
+    sel.value=''; document.getElementById('qt-status').value='draft';
+    document.getElementById('qt-date').value=today();
+    document.getElementById('qt-expire').value='';
+    document.getElementById('qt-note').value='';
+    quoteItems = [{id:genId(),name:'',qty:1,unit:'ชิ้น',price:0}];
+  }
+  renderQuoteItems(); openModal('modal-quote');
+}
+function addQuoteItem() { quoteItems.push({id:genId(),name:'',qty:1,unit:'ชิ้น',price:0}); renderQuoteItems(); }
+function renderQuoteItems() {
+  const el = document.getElementById('qt-items-list');
+  el.innerHTML = quoteItems.map((item,i) => `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;">
+      <input class="form-control" placeholder="รายการ" value="${item.name}" oninput="quoteItems[${i}].name=this.value">
+      <input class="form-control" type="number" placeholder="จำนวน" value="${item.qty}" oninput="quoteItems[${i}].qty=parseFloat(this.value)||0;calcQuoteTotal()">
+      <input class="form-control" placeholder="หน่วย" value="${item.unit}" oninput="quoteItems[${i}].unit=this.value">
+      <input class="form-control" type="number" placeholder="ราคา/หน่วย" value="${item.price}" oninput="quoteItems[${i}].price=parseFloat(this.value)||0;calcQuoteTotal()">
+      <button class="btn btn-xs btn-danger" onclick="quoteItems.splice(${i},1);renderQuoteItems()">✕</button>
+    </div>`).join('');
+  calcQuoteTotal();
+}
+function calcQuoteTotal() {
+  const sub = quoteItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const vat = sub*0.07;
+  document.getElementById('qt-subtotal').textContent = fmtMoney(sub);
+  document.getElementById('qt-vat').textContent = fmtMoney(vat);
+  document.getElementById('qt-total').textContent = fmtMoney(sub+vat);
+}
+function saveQuote() {
+  const custId = document.getElementById('qt-customer').value;
+  if (!custId) { alert('กรุณาเลือกลูกค้า'); return; }
+  const id = document.getElementById('qt-edit-id').value || genId();
+  const isEdit = quotes.some(x=>x.id===id);
+  const sub = quoteItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const q = {
+    id, docNo: isEdit ? quotes.find(x=>x.id===id)?.docNo : genDocNo('QT'),
+    customerId: custId,
+    status: document.getElementById('qt-status').value,
+    date: document.getElementById('qt-date').value,
+    expireDate: document.getElementById('qt-expire').value,
+    note: document.getElementById('qt-note').value.trim(),
+    items: JSON.parse(JSON.stringify(quoteItems)),
+    subtotal: sub, vat: sub*0.07, total: sub+(sub*0.07),
+    createdAt: isEdit ? quotes.find(x=>x.id===id)?.createdAt : today(),
+  };
+  if (isEdit) quotes = quotes.map(x=>x.id===id?q:x);
+  else quotes.push(q);
+  saveAll(); closeModal('modal-quote'); renderQuotes();
+  toast(isEdit ? '✅ แก้ไขใบเสนอราคาแล้ว' : '✅ สร้างใบเสนอราคาแล้ว');
+}
+function renderQuotes() {
+  const q = document.getElementById('qt-search').value.toLowerCase();
+  const sf = document.getElementById('qt-filter').value;
+  let list = quotes.filter(x => {
+    const c = customers.find(cc=>cc.id===x.customerId);
+    const matchQ = !q || (x.docNo||'').toLowerCase().includes(q) || (c?.name||'').toLowerCase().includes(q);
+    const matchS = !sf || x.status===sf;
+    return matchQ && matchS;
+  });
+  document.getElementById('qt-all').textContent = quotes.length;
+  document.getElementById('qt-pending').textContent = quotes.filter(x=>x.status==='sent').length;
+  document.getElementById('qt-approved').textContent = quotes.filter(x=>x.status==='approved').length;
+  const totalVal = quotes.reduce((s,x)=>s+(x.total||0),0);
+  document.getElementById('qt-value').textContent = fmtMoney(totalVal);
+  const tbody = document.getElementById('quote-tbody');
+  const empty = document.getElementById('qt-empty');
+  if (!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const statusLabel = {draft:'ร่าง',sent:'ส่งแล้ว',approved:'อนุมัติ',rejected:'ปฏิเสธ'};
+  tbody.innerHTML = list.map(x => {
+    const c = customers.find(cc=>cc.id===x.customerId);
+    return `<tr>
+      <td><strong>${x.docNo||'-'}</strong></td>
+      <td>${c?.name||'-'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${(x.items||[]).length} รายการ</td>
+      <td>${fmtMoney(x.total)}</td>
+      <td>${fmtDate(x.date)}</td>
+      <td>${fmtDate(x.expireDate)}</td>
+      <td><span class="badge badge-${x.status}">${statusLabel[x.status]||x.status}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-xs btn-ghost" onclick="openQuoteModal('${x.id}')">✏️</button>
+        <button class="btn btn-xs btn-ghost" onclick="convertToOrder('${x.id}')" title="แปลงเป็นใบสั่งขาย">🛒</button>
+        <button class="btn btn-xs btn-danger" onclick="deleteQuote('${x.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function deleteQuote(id) {
+  if (!confirm('ลบใบเสนอราคานี้?')) return;
+  quotes = quotes.filter(x=>x.id!==id);
+  saveAll(); renderQuotes(); toast('🗑️ ลบใบเสนอราคาแล้ว');
+}
+function convertToOrder(quoteId) {
+  const q = quotes.find(x=>x.id===quoteId);
+  if (!q) return;
+  openOrderModal();
+  setTimeout(() => {
+    document.getElementById('od-customer').value = q.customerId;
+    document.getElementById('od-quote-ref').value = quoteId;
+    orderItems = JSON.parse(JSON.stringify(q.items||[]));
+    renderOrderItems();
+  }, 100);
+  toast('📋 โหลดข้อมูลจากใบเสนอราคาแล้ว');
+}
+
+// ============================================================
+//  ORDERS
+// ============================================================
+let orderItems = [];
+function openOrderModal(id=null) {
+  const isEdit = !!id;
+  document.getElementById('od-modal-title').textContent = isEdit ? 'แก้ไขใบสั่งขาย' : 'สร้างใบสั่งขาย';
+  document.getElementById('od-edit-id').value = id||'';
+  orderItems = [];
+  const sel = document.getElementById('od-customer');
+  sel.innerHTML = '<option value="">-- เลือกลูกค้า --</option>' + customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const qsel = document.getElementById('od-quote-ref');
+  qsel.innerHTML = '<option value="">-- ไม่อ้างอิง --</option>' + quotes.map(q=>{
+    const c = customers.find(x=>x.id===q.customerId);
+    return `<option value="${q.id}">${q.docNo} - ${c?.name||''}</option>`;
+  }).join('');
+  if (isEdit) {
+    const o = orders.find(x=>x.id===id);
+    if (!o) return;
+    sel.value = o.customerId||'';
+    qsel.value = o.quoteId||'';
+    document.getElementById('od-date').value = o.date||today();
+    document.getElementById('od-due').value = o.dueDate||'';
+    document.getElementById('od-status').value = o.status||'pending';
+    document.getElementById('od-note').value = o.note||'';
+    orderItems = JSON.parse(JSON.stringify(o.items||[]));
+  } else {
+    sel.value=''; qsel.value='';
+    document.getElementById('od-date').value=today();
+    document.getElementById('od-due').value='';
+    document.getElementById('od-status').value='pending';
+    document.getElementById('od-note').value='';
+    orderItems = [{id:genId(),name:'',qty:1,unit:'ชิ้น',price:0}];
+  }
+  renderOrderItems(); openModal('modal-order');
+}
+function addOrderItem() { orderItems.push({id:genId(),name:'',qty:1,unit:'ชิ้น',price:0}); renderOrderItems(); }
+function renderOrderItems() {
+  const el = document.getElementById('od-items-list');
+  el.innerHTML = orderItems.map((item,i) => `
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px;">
+      <input class="form-control" placeholder="รายการ" value="${item.name}" oninput="orderItems[${i}].name=this.value">
+      <input class="form-control" type="number" placeholder="จำนวน" value="${item.qty}" oninput="orderItems[${i}].qty=parseFloat(this.value)||0;calcOrderTotal()">
+      <input class="form-control" placeholder="หน่วย" value="${item.unit}" oninput="orderItems[${i}].unit=this.value">
+      <input class="form-control" type="number" placeholder="ราคา/หน่วย" value="${item.price}" oninput="orderItems[${i}].price=parseFloat(this.value)||0;calcOrderTotal()">
+      <button class="btn btn-xs btn-danger" onclick="orderItems.splice(${i},1);renderOrderItems()">✕</button>
+    </div>`).join('');
+  calcOrderTotal();
+}
+function calcOrderTotal() {
+  const sub = orderItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const vat = sub*0.07;
+  document.getElementById('od-subtotal').textContent = fmtMoney(sub);
+  document.getElementById('od-vat').textContent = fmtMoney(vat);
+  document.getElementById('od-total').textContent = fmtMoney(sub+vat);
+}
+function saveOrder() {
+  const custId = document.getElementById('od-customer').value;
+  if (!custId) { alert('กรุณาเลือกลูกค้า'); return; }
+  const id = document.getElementById('od-edit-id').value || genId();
+  const isEdit = orders.some(x=>x.id===id);
+  const sub = orderItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const o = {
+    id, docNo: isEdit ? orders.find(x=>x.id===id)?.docNo : genDocNo('SO'),
+    customerId: custId,
+    quoteId: document.getElementById('od-quote-ref').value,
+    date: document.getElementById('od-date').value,
+    dueDate: document.getElementById('od-due').value,
+    status: document.getElementById('od-status').value,
+    note: document.getElementById('od-note').value.trim(),
+    items: JSON.parse(JSON.stringify(orderItems)),
+    subtotal: sub, vat: sub*0.07, total: sub+(sub*0.07),
+    createdAt: isEdit ? orders.find(x=>x.id===id)?.createdAt : today(),
+  };
+  if (isEdit) orders = orders.map(x=>x.id===id?o:x);
+  else orders.push(o);
+  saveAll(); closeModal('modal-order'); renderOrders();
+  toast(isEdit ? '✅ แก้ไขใบสั่งขายแล้ว' : '✅ สร้างใบสั่งขายแล้ว');
+}
+function renderOrders() {
+  const q = document.getElementById('od-search').value.toLowerCase();
+  const sf = document.getElementById('od-filter').value;
+  let list = orders.filter(x => {
+    const c = customers.find(cc=>cc.id===x.customerId);
+    const matchQ = !q || (x.docNo||'').toLowerCase().includes(q) || (c?.name||'').toLowerCase().includes(q);
+    const matchS = !sf || x.status===sf;
+    return matchQ && matchS;
+  });
+  document.getElementById('od-all').textContent = orders.length;
+  document.getElementById('od-pending').textContent = orders.filter(x=>x.status==='pending').length;
+  document.getElementById('od-shipped').textContent = orders.filter(x=>x.status==='shipped'||x.status==='completed').length;
+  document.getElementById('od-value').textContent = fmtMoney(orders.reduce((s,x)=>s+(x.total||0),0));
+  const tbody = document.getElementById('order-tbody');
+  const empty = document.getElementById('od-empty');
+  if (!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const statusLabel = {pending:'รอดำเนินการ',processing:'กำลังผลิต',shipped:'จัดส่งแล้ว',completed:'เสร็จสิ้น',cancelled:'ยกเลิก'};
+  tbody.innerHTML = list.map(x => {
+    const c = customers.find(cc=>cc.id===x.customerId);
+    const q = quotes.find(qq=>qq.id===x.quoteId);
+    return `<tr>
+      <td><strong>${x.docNo||'-'}</strong></td>
+      <td>${c?.name||'-'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${q?.docNo||'-'}</td>
+      <td>${fmtMoney(x.total)}</td>
+      <td>${fmtDate(x.date)}</td>
+      <td>${fmtDate(x.dueDate)}</td>
+      <td><span class="badge badge-${x.status}">${statusLabel[x.status]||x.status}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-xs btn-ghost" onclick="openOrderModal('${x.id}')">✏️</button>
+        <button class="btn btn-xs btn-danger" onclick="deleteOrder('${x.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function deleteOrder(id) {
+  if (!confirm('ลบใบสั่งขายนี้?')) return;
+  orders = orders.filter(x=>x.id!==id);
+  saveAll(); renderOrders(); toast('🗑️ ลบใบสั่งขายแล้ว');
+}
+
+// ============================================================
+//  FORECAST
+// ============================================================
+function renderForecast() {
+  const pipeline = leads.reduce((s,l)=>s+(l.value||0),0);
+  const weighted = leads.reduce((s,l)=>s+((l.value||0)*(l.prob||0)/100),0);
+  const thisMonth = today().substring(0,7);
+  const wonMonth = orders.filter(o=>o.date?.startsWith(thisMonth)).reduce((s,o)=>s+(o.total||0),0);
+  const wonLeads = leads.filter(l=>l.stage==='won').length;
+  const totalLeadsClosed = leads.filter(l=>l.stage==='won'||l.stage==='lost').length;
+  const winRate = totalLeadsClosed>0 ? Math.round(wonLeads/totalLeadsClosed*100) : 0;
+  document.getElementById('fc-pipeline').textContent = fmtMoney(pipeline);
+  document.getElementById('fc-weighted').textContent = fmtMoney(weighted);
+  document.getElementById('fc-won-month').textContent = fmtMoney(wonMonth);
+  document.getElementById('fc-winrate').textContent = winRate + '%';
+  // Stage bars
+  const stages = [
+    {stage:'prospect',label:'🔍 ค้นหา',color:'#94a3b8'},
+    {stage:'contact',label:'📞 ติดต่อ',color:'#3b82f6'},
+    {stage:'quote',label:'📄 เสนอราคา',color:'#f59e0b'},
+    {stage:'negotiate',label:'🤝 เจรจา',color:'#8b5cf6'},
+    {stage:'won',label:'✅ ปิดได้',color:'#22c55e'},
+    {stage:'lost',label:'❌ ปิดไม่ได้',color:'#ef4444'},
+  ];
+  const maxVal = Math.max(...stages.map(s=>leads.filter(l=>l.stage===s.stage).reduce((sum,l)=>sum+(l.value||0),0)),1);
+  const barsEl = document.getElementById('fc-stage-bars');
+  barsEl.innerHTML = stages.map(s => {
+    const stageLeads = leads.filter(l=>l.stage===s.stage);
+    const val = stageLeads.reduce((sum,l)=>sum+(l.value||0),0);
+    const pct = Math.round(val/maxVal*100);
+    return `<div class="mini-bar">
+      <span class="mini-bar-label">${s.label}</span>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${s.color};"></div></div>
+      <span class="mini-bar-val">${fmtMoney(val)}</span>
+      <span style="font-size:11px;color:var(--text-light);width:40px;text-align:right;">${stageLeads.length} รายการ</span>
+    </div>`;
+  }).join('');
+  // Top leads
+  const topLeads = [...leads].sort((a,b)=>(b.value||0)-(a.value||0)).slice(0,10);
+  document.getElementById('fc-top-leads').innerHTML = topLeads.map(l => {
+    const c = customers.find(x=>x.id===l.customerId);
+    const stageLabel = {prospect:'ค้นหา',contact:'ติดต่อ',quote:'เสนอราคา',negotiate:'เจรจา',won:'ปิดได้',lost:'ปิดไม่ได้'};
+    return `<tr>
+      <td>${l.name}</td>
+      <td>${c?.name||'-'}</td>
+      <td>${stageLabel[l.stage]||l.stage}</td>
+      <td>${fmtMoney(l.value)}</td>
+      <td>${l.prob||0}%</td>
+      <td>${fmtDate(l.closeDate)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+//  REPORTS
+// ============================================================
+function renderReports() {
+  const thisMonth = today().substring(0,7);
+  const newCust = customers.filter(c=>c.createdAt?.startsWith(thisMonth)).length;
+  const revenue = orders.filter(o=>o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('rp-new-cust').textContent = newCust;
+  document.getElementById('rp-acts').textContent = activities.length;
+  document.getElementById('rp-quotes').textContent = quotes.length;
+  document.getElementById('rp-revenue').textContent = fmtMoney(revenue);
+  // Customer by status
+  const statusData = [
+    {label:'🎯 เป้าหมาย',status:'prospect',color:'#3b82f6'},
+    {label:'🆕 ใหม่',status:'fresh',color:'#22c55e'},
+    {label:'⭐ ประจำ',status:'existing',color:'#f59e0b'},
+    {label:'😴 ห่างหาย',status:'lapse',color:'#ef4444'},
+  ];
+  const maxCust = Math.max(...statusData.map(s=>customers.filter(c=>c.status===s.status).length),1);
+  document.getElementById('rp-cust-status').innerHTML = statusData.map(s => {
+    const cnt = customers.filter(c=>c.status===s.status).length;
+    const pct = Math.round(cnt/maxCust*100);
+    return `<div class="mini-bar">
+      <span class="mini-bar-label">${s.label}</span>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${s.color};"></div></div>
+      <span class="mini-bar-val">${cnt} ราย</span>
+    </div>`;
+  }).join('');
+  // Activity by type
+  const actTypes = [
+    {label:'📤 ขาออก',type:'ขาออก',color:'#3b82f6'},
+    {label:'📥 ขาเข้า',type:'ขาเข้า',color:'#22c55e'},
+    {label:'🔍 หาข้อมูล',type:'หาข้อมูล',color:'#f59e0b'},
+  ];
+  const maxAct = Math.max(...actTypes.map(a=>activities.filter(x=>x.type===a.type).length),1);
+  document.getElementById('rp-act-types').innerHTML = actTypes.map(a => {
+    const cnt = activities.filter(x=>x.type===a.type).length;
+    const pct = Math.round(cnt/maxAct*100);
+    return `<div class="mini-bar">
+      <span class="mini-bar-label">${a.label}</span>
+      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${a.color};"></div></div>
+      <span class="mini-bar-val">${cnt} ครั้ง</span>
+    </div>`;
+  }).join('');
+  // Top customers by activity
+  const custActCount = customers.map(c => ({
+    name: c.name, count: activities.filter(a=>a.customerId===c.id).length, hotness: c.hotness||0
+  })).sort((a,b)=>b.count-a.count).slice(0,5);
+  document.getElementById('rp-top-cust').innerHTML = custActCount.map(x =>
+    `<tr><td>${x.name}</td><td>${x.count}</td><td>${hotnessStars(x.hotness)}</td></tr>`
+  ).join('');
+  // Tasks summary
+  const td = today();
+  const overdue = tasks.filter(t=>!t.done&&t.dueDate<td).length;
+  const todayT = tasks.filter(t=>!t.done&&t.dueDate===td).length;
+  const upcoming = tasks.filter(t=>!t.done&&t.dueDate>td).length;
+  const done = tasks.filter(t=>t.done).length;
+  document.getElementById('rp-tasks-summary').innerHTML = `
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🔴 เกินกำหนด</span><span style="font-size:20px;font-weight:700;color:var(--danger);">${overdue}</span></div>
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🟢 วันนี้</span><span style="font-size:20px;font-weight:700;color:var(--success);">${todayT}</span></div>
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🔵 เร็วๆนี้</span><span style="font-size:20px;font-weight:700;color:var(--info);">${upcoming}</span></div>
+    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">✅ เสร็จแล้ว</span><span style="font-size:20px;font-weight:700;color:var(--text-muted);">${done}</span></div>
+  `;
+}
+
+// ============================================================
+//  DASHBOARD UPDATE (enhanced)
 // ============================================================
 function updateDashboard() {
   document.getElementById('db-cust').textContent = customers.length;
   document.getElementById('db-tasks').textContent = tasks.filter(t=>!t.done && t.dueDate===today()).length;
-  document.getElementById('db-leads').textContent = 0;
-  document.getElementById('db-quotes').textContent = 0;
+  document.getElementById('db-leads').textContent = leads.filter(l=>l.stage!=='won'&&l.stage!=='lost').length;
+  document.getElementById('db-quotes').textContent = quotes.length;
+}
+
+// Override navTo to handle phase2 pages
+const _origNavTo = navTo;
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageNames[page] || page;
+  if (page === 'activities') renderTasks();
+  if (page === 'customers') { renderCustomers(); updateCustStats(); }
+  if (page === 'dashboard') updateDashboard();
+  if (page === 'settings') renderSettings();
+  if (page === 'projects') renderProjects();
+  if (page === 'leads') renderKanban();
+  if (page === 'quotes') renderQuotes();
+  if (page === 'orders') renderOrders();
+  if (page === 'forecast') renderForecast();
+  if (page === 'reports') renderReports();
 }
 
 // ============================================================
@@ -1884,6 +3110,11 @@ function updateDashboard() {
 (function init() {
   // Load settings
   document.getElementById('set-company').value = settings.company||'';
+  // Load phase2 data
+  projects = DB.get('projects', []);
+  leads = DB.get('leads', []);
+  quotes = DB.get('quotes', []);
+  orders = DB.get('orders', []);
   // Go to activities page
   navTo('activities');
   updateCustStats();
