@@ -683,6 +683,21 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .mini-bar-track { flex: 1; background: var(--bg); border-radius: 4px; height: 10px; overflow: hidden; }
 .mini-bar-fill { height: 100%; border-radius: 4px; }
 .mini-bar-val { font-size: 12px; font-weight: 600; width: 50px; text-align: right; }
+
+/* ===== FUNNEL CHART ===== */
+.funnel-row { display:flex;align-items:center;margin-bottom:8px;gap:10px; }
+.funnel-bar { height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:600;transition:width 0.4s;min-width:40px;clip-path:polygon(2% 0%,98% 0%,95% 100%,5% 100%); }
+.funnel-label { font-size:12px;color:var(--text-muted);width:95px;flex-shrink:0; }
+.funnel-val { font-size:12px;font-weight:600;width:80px;text-align:right;flex-shrink:0; }
+
+/* ===== IMAGE PREVIEW ===== */
+.act-img-wrap { position:relative;display:inline-block; }
+.act-img-thumb { width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--border);cursor:pointer;transition:transform 0.15s;display:block; }
+.act-img-thumb:hover { transform:scale(1.05); }
+.img-remove-btn { position:absolute;top:-6px;right:-6px;width:18px;height:18px;background:var(--danger);color:white;border-radius:50%;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1; }
+#lightbox { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out; }
+#lightbox.open { display:flex; }
+#lightbox img { max-width:90vw;max-height:90vh;border-radius:8px; }
 </style>
 </head>
 <body>
@@ -729,12 +744,67 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ===== PAGE: ACTIVITIES ===== -->
     <div class="page active" id="page-activities">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
         <div>
           <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">งานติดตาม</h2>
           <p style="font-size:13px;color:var(--text-muted);">บันทึกและติดตามกิจกรรมการขายทั้งหมด</p>
         </div>
-        <button class="btn btn-primary" onclick="openActivityModal()">+ เพิ่มกิจกรรม</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <!-- Filter พนักงาน -->
+          <select class="form-control" style="width:auto;" id="act-filter-member" onchange="renderTasks()">
+            <option value="">👤 พนักงาน: ทั้งหมด</option>
+          </select>
+          <button class="btn btn-primary" onclick="openActivityModal()">+ เพิ่มกิจกรรม</button>
+        </div>
+      </div>
+
+      <!-- เป้าหมายวันนี้ (แบบ Jubili) -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-body" style="padding:12px 20px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+            <span>🏆</span>
+            <span style="font-size:14px;font-weight:600;">เป้าหมายวันนี้</span>
+            <select class="form-control" style="width:auto;font-size:12px;padding:4px 8px;margin-left:8px;" id="act-goal-period" onchange="updateGoalBar()">
+              <option value="today">วันนี้</option>
+              <option value="month">เดือนนี้</option>
+              <option value="quarter">ไตรมาสนี้</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;" id="act-goal-bars">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                <span>👥 ลูกค้าใหม่</span><span id="gb-cust-val">0/0</span>
+              </div>
+              <div style="background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">
+                <div id="gb-cust-bar" style="height:100%;background:#3b82f6;border-radius:4px;width:0%;transition:width 0.4s;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                <span>🎯 โอกาส</span><span id="gb-lead-val">0/0</span>
+              </div>
+              <div style="background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">
+                <div id="gb-lead-bar" style="height:100%;background:#8b5cf6;border-radius:4px;width:0%;transition:width 0.4s;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                <span>💰 ยอดขาย</span><span id="gb-rev-val">฿0/฿0</span>
+              </div>
+              <div style="background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">
+                <div id="gb-rev-bar" style="height:100%;background:#22c55e;border-radius:4px;width:0%;transition:width 0.4s;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                <span>📋 กิจกรรม</span><span id="gb-act-val">0/0</span>
+              </div>
+              <div style="background:#f1f5f9;border-radius:4px;height:8px;overflow:hidden;">
+                <div id="gb-act-bar" style="height:100%;background:#f59e0b;border-radius:4px;width:0%;transition:width 0.4s;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Stats -->
@@ -774,6 +844,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               <option value="ขาเข้า">ขาเข้า</option>
               <option value="ขาออก">ขาออก</option>
               <option value="หาข้อมูล">หาข้อมูล</option>
+            </select>
+            <select class="form-control" style="width:auto;" id="act-filter-hotness" onchange="renderTasks()">
+              <option value="">🔥 ทุก Hotness</option>
+              <option value="5">🔥🔥🔥🔥🔥 5 ดาว</option>
+              <option value="4">🔥🔥🔥🔥 4 ดาว</option>
+              <option value="3">🔥🔥🔥 3 ดาว</option>
+              <option value="2">🔥🔥 2 ดาว</option>
+              <option value="1">🔥 1 ดาว</option>
             </select>
           </div>
         </div>
@@ -939,11 +1017,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
 
       <!-- Charts Row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-        <!-- Pipeline by Stage -->
+      <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;margin-bottom:16px;">
+        <!-- Funnel Chart (กระบวนการขาย แบบ Jubili) -->
         <div class="card">
-          <div class="card-header"><span class="card-title">🎯 Pipeline ตาม Stage</span></div>
-          <div class="card-body" id="db-pipeline-chart" style="min-height:160px;"></div>
+          <div class="card-header">
+            <span class="card-title">🔻 กระบวนการขาย</span>
+            <span style="font-size:12px;color:var(--text-muted);" id="db-funnel-total">0 รายการ</span>
+          </div>
+          <div class="card-body" style="padding:12px 20px;" id="db-funnel-chart"></div>
         </div>
         <!-- Customer by Status -->
         <div class="card">
@@ -1136,6 +1217,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                 <tr>
                   <th>เลขที่</th>
                   <th>ลูกค้า</th>
+                  <th>ความสำคัญ</th>
                   <th>รายการ</th>
                   <th>มูลค่า (บาท)</th>
                   <th>วันที่</th>
@@ -1360,6 +1442,15 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <div class="form-group">
         <label class="form-label">รายละเอียด</label>
         <textarea class="form-control" id="act-note" placeholder="สรุปการติดต่อ..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📷 รูปภาพประกอบ (ไม่บังคับ)</label>
+        <div id="act-image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+        <label style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f8fafc;border:2px dashed var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all 0.15s;">
+          <span>📎 เลือกรูปภาพ</span>
+          <input type="file" id="act-image-input" accept="image/*" multiple style="display:none;" onchange="handleActImages(this)">
+        </label>
+        <span style="font-size:11px;color:var(--text-light);margin-left:8px;">PNG, JPG ได้สูงสุด 3 รูป</span>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
         <div class="fub-title" style="font-size:14px;font-weight:600;margin-bottom:12px;">📅 แผนติดตามครั้งถัดไป</div>
@@ -1791,6 +1882,16 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <label class="form-label">หมายเหตุ</label>
         <textarea class="form-control" id="qt-note" rows="2" placeholder="เงื่อนไขการชำระเงิน ฯลฯ"></textarea>
       </div>
+      <div class="form-group">
+        <label class="form-label">ความสำคัญ (Hotness)</label>
+        <div class="hotness fire" id="qt-hotness-stars" style="margin-top:6px;gap:4px;">
+          <span style="font-size:22px;" onclick="setQuoteHotness(1)">🔥</span>
+          <span style="font-size:22px;" onclick="setQuoteHotness(2)">🔥</span>
+          <span style="font-size:22px;" onclick="setQuoteHotness(3)">🔥</span>
+          <span style="font-size:22px;" onclick="setQuoteHotness(4)">🔥</span>
+          <span style="font-size:22px;" onclick="setQuoteHotness(5)">🔥</span>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-quote')">ยกเลิก</button>
@@ -1871,6 +1972,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <button class="btn btn-primary" onclick="saveOrder()">💾 บันทึก</button>
     </div>
   </div>
+</div>
+
+<!-- ===== LIGHTBOX ===== -->
+<div id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightbox-img" src="" alt="">
 </div>
 
 <!-- ===== TOAST ===== -->
@@ -2897,9 +3003,11 @@ function renderQuotes() {
   const statusLabel = {draft:'ร่าง',sent:'ส่งแล้ว',approved:'อนุมัติ',rejected:'ปฏิเสธ'};
   tbody.innerHTML = list.map(x => {
     const c = customers.find(cc=>cc.id===x.customerId);
+    const fires = Array(5).fill(0).map((_,i)=>`<span style="color:${i<(x.hotness||0)?'#f97316':'#d1d5db'};font-size:13px;">🔥</span>`).join('');
     return `<tr>
       <td><strong>${x.docNo||'-'}</strong></td>
       <td>${c?.name||'-'}</td>
+      <td><div style="display:flex;gap:1px;">${fires}</div></td>
       <td style="font-size:12px;color:var(--text-muted);">${(x.items||[]).length} รายการ</td>
       <td>${fmtMoney(x.total)}</td>
       <td>${fmtDate(x.date)}</td>
@@ -2907,7 +3015,6 @@ function renderQuotes() {
       <td><span class="badge badge-${x.status}">${statusLabel[x.status]||x.status}</span></td>
       <td style="white-space:nowrap;">
         <button class="btn btn-xs btn-ghost" onclick="openQuoteModal('${x.id}')">✏️</button>
-        <button class="btn btn-xs btn-ghost" onclick="printQuote('${x.id}')" title="พิมพ์">🖨️</button>
         <button class="btn btn-xs btn-ghost" onclick="convertToOrder('${x.id}')" title="แปลงเป็นใบสั่งขาย">🛒</button>
         <button class="btn btn-xs btn-danger" onclick="deleteQuote('${x.id}')">✕</button>
       </td>
@@ -3454,6 +3561,251 @@ function printQuote(id) {
   </body></html>`);
   pw.document.close();
 }
+// ============================================================
+//  PHASE 4 — NEW FEATURES
+// ============================================================
+
+// --- 1. QUOTE HOTNESS ---
+let quoteHotness = 0;
+function setQuoteHotness(v) {
+  quoteHotness = v;
+  const stars = document.getElementById('qt-hotness-stars')?.children;
+  if (stars) for (let i=0;i<5;i++) stars[i].style.opacity = i<v?'1':'0.25';
+}
+
+// Override openQuoteModal to init hotness
+const _origOpenQuoteModal = openQuoteModal;
+function openQuoteModal(id=null) {
+  _origOpenQuoteModal(id);
+  quoteHotness = 0;
+  if (id) {
+    const q = quotes.find(x=>x.id===id);
+    if (q) { quoteHotness = q.hotness||0; }
+  }
+  setTimeout(()=>setQuoteHotness(quoteHotness), 50);
+}
+
+// Override saveQuote to save hotness
+const _origSaveQuote = saveQuote;
+function saveQuote() {
+  // patch hotness into quote before saving
+  const origPush = quotes.push.bind(quotes);
+  const origMap = quotes.map.bind(quotes);
+  // intercept via direct approach
+  const custId = document.getElementById('qt-customer').value;
+  if (!custId) { alert('กรุณาเลือกลูกค้า'); return; }
+  const id = document.getElementById('qt-edit-id').value || genId();
+  const isEdit = quotes.some(x=>x.id===id);
+  const sub = quoteItems.reduce((s,i)=>s+(i.qty*i.price),0);
+  const q = {
+    id, docNo: isEdit ? quotes.find(x=>x.id===id)?.docNo : genDocNo('QT'),
+    customerId: custId,
+    status: document.getElementById('qt-status').value,
+    date: document.getElementById('qt-date').value,
+    expireDate: document.getElementById('qt-expire').value,
+    note: document.getElementById('qt-note').value.trim(),
+    hotness: quoteHotness,
+    items: JSON.parse(JSON.stringify(quoteItems)),
+    subtotal: sub, vat: sub*0.07, total: sub+(sub*0.07),
+    createdAt: isEdit ? quotes.find(x=>x.id===id)?.createdAt : today(),
+  };
+  if (isEdit) quotes = quotes.map(x=>x.id===id?q:x);
+  else quotes.push(q);
+  saveAll(); closeModal('modal-quote'); renderQuotes();
+  toast(isEdit ? '✅ แก้ไขใบเสนอราคาแล้ว' : '✅ สร้างใบเสนอราคาแล้ว');
+}
+
+// --- 2. GOAL BAR (เป้าหมายวันนี้) ---
+const goals = { cust:5, lead:3, revenue:50000, act:10 };
+function updateGoalBar() {
+  const period = document.getElementById('act-goal-period')?.value || 'today';
+  const td = today();
+  const thisMonth = td.substring(0,7);
+  let custNew, leadNew, rev, actCnt;
+  if (period === 'today') {
+    custNew = customers.filter(c=>c.createdAt===td).length;
+    leadNew = leads.filter(l=>l.createdAt===td).length;
+    rev = orders.filter(o=>o.status==='completed'&&o.date===td).reduce((s,o)=>s+(o.total||0),0);
+    actCnt = activities.filter(a=>a.date===td).length;
+  } else if (period === 'month') {
+    custNew = customers.filter(c=>c.createdAt?.startsWith(thisMonth)).length;
+    leadNew = leads.filter(l=>l.createdAt?.startsWith(thisMonth)).length;
+    rev = orders.filter(o=>o.status==='completed'&&o.date?.startsWith(thisMonth)).reduce((s,o)=>s+(o.total||0),0);
+    actCnt = activities.filter(a=>a.date?.startsWith(thisMonth)).length;
+  } else {
+    custNew = customers.length; leadNew = leads.length;
+    rev = orders.filter(o=>o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
+    actCnt = activities.length;
+  }
+  const setBar = (barId,valId,cur,target,fmt='num') => {
+    const pct = Math.min(Math.round(cur/Math.max(target,1)*100),100);
+    const bar = document.getElementById(barId);
+    const val = document.getElementById(valId);
+    if (bar) bar.style.width = pct+'%';
+    if (val) val.textContent = fmt==='money' ? `${fmtMoney(cur)}/${fmtMoney(target)}` : `${cur}/${target}`;
+  };
+  setBar('gb-cust-bar','gb-cust-val',custNew,goals.cust);
+  setBar('gb-lead-bar','gb-lead-val',leadNew,goals.lead);
+  setBar('gb-rev-bar','gb-rev-val',rev,goals.revenue,'money');
+  setBar('gb-act-bar','gb-act-val',actCnt,goals.act);
+}
+
+// --- 3. TEAM / MEMBER FILTER ---
+function populateMemberFilter() {
+  const sel = document.getElementById('act-filter-member');
+  if (!sel) return;
+  // Collect unique member names from activities
+  const members = [...new Set(activities.map(a=>a.member).filter(Boolean))];
+  sel.innerHTML = '<option value="">👤 พนักงาน: ทั้งหมด</option>' +
+    members.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+// --- 4. FUNNEL CHART ---
+function renderFunnelChart() {
+  const el = document.getElementById('db-funnel-chart');
+  if (!el) return;
+  const stages = [
+    {s:'prospect', label:'🔍 ค้นหาลูกค้า', color:'#94a3b8'},
+    {s:'contact',  label:'📞 ติดต่อแล้ว',   color:'#3b82f6'},
+    {s:'quote',    label:'📄 เสนอราคา',      color:'#f59e0b'},
+    {s:'negotiate',label:'🤝 เจรจา',          color:'#8b5cf6'},
+    {s:'won',      label:'✅ ปิดได้',         color:'#22c55e'},
+  ];
+  const counts = stages.map(s=>({...s, cnt:leads.filter(l=>l.stage===s.s).length, val:leads.filter(l=>l.stage===s.s).reduce((sum,l)=>sum+(l.value||0),0)}));
+  const maxCnt = Math.max(...counts.map(c=>c.cnt),1);
+  const total = counts.reduce((s,c)=>s+c.cnt,0);
+  const totalEl = document.getElementById('db-funnel-total');
+  if (totalEl) totalEl.textContent = total + ' รายการ';
+
+  el.innerHTML = counts.map((s,i) => {
+    const widthPct = Math.max(Math.round(s.cnt/maxCnt*100),s.cnt>0?15:5);
+    // Funnel shape: narrowing from top
+    const funnelW = 100 - (i * 10);
+    return `<div class="funnel-row">
+      <span class="funnel-label">${s.label}</span>
+      <div style="flex:1;display:flex;justify-content:center;">
+        <div style="width:${funnelW}%;height:32px;background:${s.color};border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;font-size:13px;font-weight:700;transition:width 0.5s;">
+          ${s.cnt}
+        </div>
+      </div>
+      <span class="funnel-val">${s.cnt>0?fmtMoney(s.val):'-'}</span>
+    </div>`;
+  }).join('') + (total===0 ? '<div class="empty-state" style="padding:16px;"><p>ยังไม่มีข้อมูล Pipeline</p></div>' : '');
+}
+
+// --- 5. IMAGE UPLOAD IN ACTIVITY ---
+let actImages = []; // base64 images array
+
+function handleActImages(input) {
+  const files = Array.from(input.files).slice(0, 3 - actImages.length);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      actImages.push(e.target.result);
+      renderActImagePreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderActImagePreview() {
+  const el = document.getElementById('act-image-preview');
+  if (!el) return;
+  el.innerHTML = actImages.map((src,i) => `
+    <div class="act-img-wrap">
+      <img src="${src}" class="act-img-thumb" onclick="openLightbox('${src}')">
+      <button class="img-remove-btn" onclick="removeActImage(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeActImage(idx) {
+  actImages.splice(idx,1);
+  renderActImagePreview();
+}
+
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+// Override openActivityModal to reset images
+const _origOpenActivityModal = openActivityModal;
+function openActivityModal(preCustId='') {
+  actImages = [];
+  _origOpenActivityModal(preCustId);
+  renderActImagePreview();
+}
+
+// Override saveActivityWithFollowup to include images + member
+const _origSaveActivity = saveActivityWithFollowup;
+function saveActivityWithFollowup() {
+  const custId = document.getElementById('act-customer').value;
+  const date = document.getElementById('act-date').value;
+  if (!custId) { alert('กรุณาเลือกลูกค้า'); return; }
+  if (!date) { alert('กรุณากรอกวันที่'); return; }
+  const act = {
+    id: genId(), customerId: custId,
+    type: document.getElementById('act-type').value,
+    channel: document.getElementById('act-channel').value,
+    date, note: document.getElementById('act-note').value.trim(),
+    hotness: actHotness,
+    images: [...actImages],
+    member: document.getElementById('act-filter-member')?.value || '',
+    createdAt: today(),
+  };
+  activities.push(act);
+  const followDate = document.getElementById('act-followup-date').value;
+  const followNote = document.getElementById('act-followup-note').value.trim();
+  if (followDate) {
+    tasks.push({ id:genId(), customerId:custId, activityId:act.id, dueDate:followDate, note:followNote, hotness:actHotness, done:false, createdAt:today() });
+  }
+  actImages = [];
+  saveAll();
+  closeModal('modal-activity');
+  renderTasks();
+  updateGoalBar();
+  toast('✅ บันทึกกิจกรรมแล้ว');
+}
+
+// Show images in activity list
+const _origRenderDetailActivities = renderDetailActivities;
+function renderDetailActivities() {
+  const list = activities.filter(a=>a.customerId===currentDetailCustId).sort((a,b)=>b.date.localeCompare(a.date));
+  const el = document.getElementById('detail-activity-list');
+  const empty = document.getElementById('detail-act-empty');
+  if (!list.length) { if(el) el.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  const typeIcon = { 'ขาออก':'📤', 'ขาเข้า':'📥', 'หาข้อมูล':'🔍' };
+  const typeCls = { 'ขาออก':'out', 'ขาเข้า':'in', 'หาข้อมูล':'info' };
+  if(el) el.innerHTML = list.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon ${typeCls[a.type]||'out'}">${typeIcon[a.type]||'📞'}</div>
+      <div class="activity-body">
+        <div class="activity-title">${a.type} · ${a.channel} <span style="color:var(--text-light);font-weight:400;">${fmtDate(a.date)}</span></div>
+        <div class="activity-meta">${hotnessStars(a.hotness,'fire')}${a.member?' · '+a.member:''}</div>
+        ${a.note?`<div class="activity-note">${a.note}</div>`:''}
+        ${(a.images||[]).length?`<div style="display:flex;gap:6px;margin-top:6px;">${(a.images||[]).map(src=>`<img src="${src}" class="act-img-thumb" style="width:56px;height:56px;" onclick="openLightbox('${src}')">`).join('')}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// Override navTo to call new functions
+const _p4OrigNavTo = navTo;
+function navTo(page) {
+  _p4OrigNavTo(page);
+  if (page==='activities') { updateGoalBar(); populateMemberFilter(); }
+  if (page==='dashboard') { renderFunnelChart(); }
+}
+
+// Override updateDashboard to also render funnel
+const _p4OrigUpdateDashboard = updateDashboard;
+function updateDashboard() {
+  _p4OrigUpdateDashboard();
+  renderFunnelChart();
+}
+
+// Init Phase 4
+populateMemberFilter();
+updateGoalBar();
 </script>
-</body>
-</html>
