@@ -32,12 +32,12 @@
   --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
 }
 
-body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; }
+body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
 /* ===== SIDEBAR ===== */
 #sidebar {
   width: var(--sidebar-width);
-  min-height: 100vh;
+  height: 100vh;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
@@ -45,6 +45,7 @@ body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--t
   top: 0; left: 0; bottom: 0;
   z-index: 100;
   transition: width 0.25s ease;
+  overflow: hidden;
 }
 #sidebar.collapsed { width: 60px; }
 
@@ -99,7 +100,8 @@ body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--t
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   transition: margin-left 0.25s ease;
 }
 #main.expanded { margin-left: 60px; }
@@ -129,7 +131,7 @@ body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--t
 }
 
 /* ===== CONTENT ===== */
-#content { flex: 1; padding: 24px; }
+#content { flex: 1; padding: 24px; overflow-y: auto; height: calc(100vh - var(--topbar-h)); scroll-behavior: smooth; }
 
 .page { display: none; }
 .page.active { display: block; }
@@ -1387,7 +1389,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
         </div>
       </div>
-    </div>
 
     <!-- ===== PAGE: QUOTES ===== -->
     <div class="page" id="page-quotes">
@@ -1507,35 +1508,34 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ===== PAGE: FORECAST ===== -->
     <div class="page" id="page-forecast">
-      <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
-        <div>
-          <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">คาดการณ์ยอดขาย</h2>
-          <p style="font-size:13px;color:var(--text-muted);">เปรียบเทียบเป้าหมายกับยอดจริงรายเดือน</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <label style="font-size:13px;font-weight:600;">ประจำปี</label>
-          <input class="form-control" id="fc-year" type="number" value="2026" min="2020" max="2030" style="width:90px;" onchange="renderForecast()">
+      <!-- Header แบบ Jubili -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <h2 style="font-size:20px;font-weight:700;">คาดการณ์ยอดขาย</h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13px;color:var(--text-muted);">ประจำปี</span>
+          <input class="form-control" id="fc-year" type="number" value="2026" min="2020" max="2030" style="width:80px;" onchange="renderForecast()">
           <button class="btn btn-primary btn-sm" onclick="openForecastGoalModal()">✏️ ปรับเป้าหมาย</button>
         </div>
       </div>
 
-      <!-- 2 Tabs แบบ Jubili -->
-      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">
-        <button id="fc-tab-org" onclick="setForecastTab('org')" style="padding:10px 20px;border:none;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:600;color:var(--sidebar-bg);border-bottom:2px solid var(--accent);margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-          <span>👥</span> ระดับกิจการ
+      <!-- Tabs แบบ Jubili — อยู่ชิดบน -->
+      <div style="display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;">
+        <button id="fc-tab-org" onclick="setForecastTab('org')"
+          style="padding:10px 24px;border:none;border-bottom:3px solid var(--accent);margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:700;color:var(--sidebar-bg);cursor:pointer;display:flex;align-items:center;gap:6px;">
+          👥 ระดับกิจการ
         </button>
-        <button id="fc-tab-prod" onclick="setForecastTab('prod')" style="padding:10px 20px;border:none;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:500;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-          <span>📦</span> กลุ่มสินค้า
+        <button id="fc-tab-prod" onclick="setForecastTab('prod')"
+          style="padding:10px 24px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:6px;">
+          📦 กลุ่มสินค้า
         </button>
       </div>
 
       <!-- TAB 1: ระดับกิจการ -->
       <div id="fc-view-org">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="padding:12px 16px;">
             <span class="card-title">🏢 ระดับกิจการ</span>
-            <span style="font-size:12px;color:var(--text-muted);" id="fc-org-updated"></span>
+            <span style="font-size:11px;color:var(--text-muted);" id="fc-org-updated"></span>
           </div>
           <div class="card-body" style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch;">
             <table id="fc-org-table" style="font-size:11px;width:100%;border-collapse:collapse;">
@@ -1578,13 +1578,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <!-- TAB 2: กลุ่มสินค้า -->
       <div id="fc-view-prod" style="display:none;">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">📦 กลุ่มสินค้า</span>
-            <div style="display:flex;gap:8px;">
-              <select class="form-control" style="width:auto;font-size:12px;" id="fc-prod-group" onchange="renderForecastProd()">
-                <option value="">กลุ่มสินค้าหลัก: ทั้งหมด</option>
-              </select>
-            </div>
+          <div class="card-header" style="padding:12px 16px;">
+            <span class="card-title">📦 กลุ่มสินค้าทั้งหมด</span>
+            <span style="font-size:11px;color:var(--text-muted);">แยกตามรายการสินค้าในใบสั่งขาย</span>
           </div>
           <div class="card-body" style="padding:0;overflow-x:auto;">
             <table id="fc-prod-table" style="font-size:11px;width:100%;border-collapse:collapse;">
@@ -2507,6 +2503,7 @@ function navTo(page) {
   document.getElementById('page-'+page)?.classList.add('active');
   document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
   document.getElementById('topbar-title').textContent = pageNames[page] || page;
+  document.getElementById('content').scrollTop = 0;
   if (page === 'activities') renderTasks();
   if (page === 'customers') { renderCustomers(); updateCustStats(); }
   if (page === 'dashboard') updateDashboard();
@@ -3691,12 +3688,12 @@ function setForecastTab(tab) {
   if (btnOrg) {
     btnOrg.style.color = tab==='org' ? 'var(--sidebar-bg)' : 'var(--text-muted)';
     btnOrg.style.borderBottomColor = tab==='org' ? 'var(--accent)' : 'transparent';
-    btnOrg.style.fontWeight = tab==='org' ? '600' : '500';
+    btnOrg.style.fontWeight = tab==='org' ? '700' : '500';
   }
   if (btnProd) {
     btnProd.style.color = tab==='prod' ? 'var(--sidebar-bg)' : 'var(--text-muted)';
     btnProd.style.borderBottomColor = tab==='prod' ? 'var(--accent)' : 'transparent';
-    btnProd.style.fontWeight = tab==='prod' ? '600' : '500';
+    btnProd.style.fontWeight = tab==='prod' ? '700' : '500';
   }
   if (tab==='org') renderForecastOrg();
   else renderForecastProd();
@@ -4179,6 +4176,7 @@ function navTo(page) {
   document.getElementById('page-'+page)?.classList.add('active');
   document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
   document.getElementById('topbar-title').textContent = pageNames[page] || page;
+  document.getElementById('content').scrollTop = 0;
   if (page === 'activities') renderTasks();
   if (page === 'customers') { renderCustomers(); updateCustStats(); }
   if (page === 'dashboard') updateDashboard();
