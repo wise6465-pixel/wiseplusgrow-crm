@@ -898,58 +898,84 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">ลูกค้า</h2>
           <p style="font-size:13px;color:var(--text-muted);">จัดการข้อมูลลูกค้าและผู้ติดต่อ</p>
         </div>
-        <button class="btn btn-primary" onclick="openCustomerModal()">+ เพิ่มลูกค้า</button>
-      </div>
-
-      <!-- Customer stats -->
-      <div class="stats-grid" id="cust-stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">ทั้งหมด</div>
-          <div class="stat-value" id="cstat-all">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">🎯 เป้าหมาย</div>
-          <div class="stat-value" id="cstat-prospect" style="color:var(--info)">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">🆕 ใหม่</div>
-          <div class="stat-value" id="cstat-fresh" style="color:var(--success)">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">⭐ ประจำ</div>
-          <div class="stat-value" id="cstat-existing" style="color:var(--warning)">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">😴 ห่างหาย</div>
-          <div class="stat-value" id="cstat-lapse" style="color:var(--danger)">0</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;background:var(--bg);border-radius:6px;padding:3px;gap:2px;">
+            <button id="btn-cust-list" class="btn btn-xs" onclick="setCustView('list')" style="background:white;color:var(--sidebar-bg);box-shadow:var(--shadow);">☰ รายการ</button>
+            <button id="btn-cust-rank" class="btn btn-xs" onclick="setCustView('rank')" style="background:transparent;color:var(--text-muted);">🏆 ลำดับลูกค้า</button>
+          </div>
+          <button class="btn btn-primary" onclick="openCustomerModal()">+ เพิ่มลูกค้า</button>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="filter-bar">
-            <div class="search-box">
-              <span class="search-icon">🔍</span>
-              <input type="text" placeholder="ค้นหาชื่อ / โทรศัพท์ / อีเมล..." id="cust-search" oninput="renderCustomers()">
+      <!-- LIST VIEW -->
+      <div id="cust-list-view">
+        <div class="stats-grid" id="cust-stats-grid">
+          <div class="stat-card"><div class="stat-label">ทั้งหมด</div><div class="stat-value" id="cstat-all">0</div></div>
+          <div class="stat-card"><div class="stat-label">🎯 เป้าหมาย</div><div class="stat-value" id="cstat-prospect" style="color:var(--info)">0</div></div>
+          <div class="stat-card"><div class="stat-label">🆕 ใหม่</div><div class="stat-value" id="cstat-fresh" style="color:var(--success)">0</div></div>
+          <div class="stat-card"><div class="stat-label">⭐ ประจำ</div><div class="stat-value" id="cstat-existing" style="color:var(--warning)">0</div></div>
+          <div class="stat-card"><div class="stat-label">😴 ห่างหาย</div><div class="stat-value" id="cstat-lapse" style="color:var(--danger)">0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="filter-bar">
+              <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="ค้นหาชื่อ / โทรศัพท์ / อีเมล..." id="cust-search" oninput="renderCustomers()">
+              </div>
+              <select class="form-control" style="width:auto;" id="cust-filter-tag" onchange="renderCustomers()">
+                <option value="">ทุก Tag</option>
+              </select>
             </div>
-            <select class="form-control" style="width:auto;" id="cust-filter-tag" onchange="renderCustomers()">
-              <option value="">ทุก Tag</option>
+          </div>
+          <div class="card-body" style="padding-top:8px;">
+            <div class="status-tabs" id="cust-status-tabs">
+              <div class="status-tab active" data-status="all" onclick="setCustStatus('all')">ทั้งหมด <span class="count" id="stab-all">0</span></div>
+              <div class="status-tab" data-status="prospect" onclick="setCustStatus('prospect')">🎯 เป้าหมาย <span class="count" id="stab-prospect">0</span></div>
+              <div class="status-tab" data-status="fresh" onclick="setCustStatus('fresh')">🆕 ใหม่ <span class="count" id="stab-fresh">0</span></div>
+              <div class="status-tab" data-status="existing" onclick="setCustStatus('existing')">⭐ ประจำ <span class="count" id="stab-existing">0</span></div>
+              <div class="status-tab" data-status="lapse" onclick="setCustStatus('lapse')">😴 ห่างหาย <span class="count" id="stab-lapse">0</span></div>
+            </div>
+            <div class="customer-grid" id="customer-grid"></div>
+            <div id="cust-empty" class="empty-state" style="display:none;">
+              <div class="empty-icon">👥</div>
+              <p>ไม่พบลูกค้า<br>กด "เพิ่มลูกค้า" เพื่อเริ่มต้น</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RANKING VIEW -->
+      <div id="cust-rank-view" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🏆 ลำดับลูกค้า</span>
+            <select class="form-control" style="width:auto;" id="rank-sort" onchange="renderRanking()">
+              <option value="acts">เรียงตามกิจกรรม</option>
+              <option value="hotness">เรียงตาม Hotness</option>
+              <option value="quotes">เรียงตามใบเสนอราคา</option>
             </select>
           </div>
-        </div>
-        <div class="card-body" style="padding-top:8px;">
-          <!-- Status tabs -->
-          <div class="status-tabs" id="cust-status-tabs">
-            <div class="status-tab active" data-status="all" onclick="setCustStatus('all')">ทั้งหมด <span class="count" id="stab-all">0</span></div>
-            <div class="status-tab" data-status="prospect" onclick="setCustStatus('prospect')">🎯 เป้าหมาย <span class="count" id="stab-prospect">0</span></div>
-            <div class="status-tab" data-status="fresh" onclick="setCustStatus('fresh')">🆕 ใหม่ <span class="count" id="stab-fresh">0</span></div>
-            <div class="status-tab" data-status="existing" onclick="setCustStatus('existing')">⭐ ประจำ <span class="count" id="stab-existing">0</span></div>
-            <div class="status-tab" data-status="lapse" onclick="setCustStatus('lapse')">😴 ห่างหาย <span class="count" id="stab-lapse">0</span></div>
-          </div>
-          <div class="customer-grid" id="customer-grid"></div>
-          <div id="cust-empty" class="empty-state" style="display:none;">
-            <div class="empty-icon">👥</div>
-            <p>ไม่พบลูกค้า<br>กด "เพิ่มลูกค้า" เพื่อเริ่มต้น</p>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:50px;">อันดับ</th>
+                    <th>ลูกค้า</th>
+                    <th>สถานะ</th>
+                    <th style="text-align:center;">กิจกรรม</th>
+                    <th style="text-align:center;">ใบเสนอ</th>
+                    <th style="text-align:center;">Hotness</th>
+                    <th>กิจกรรมล่าสุด</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-tbody"></tbody>
+              </table>
+              <div id="ranking-empty" class="empty-state" style="display:none;padding:32px;">
+                <div class="empty-icon">🏆</div><p>ยังไม่มีลูกค้า</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1016,26 +1042,94 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- Charts Row -->
-      <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;margin-bottom:16px;">
-        <!-- Funnel Chart (กระบวนการขาย แบบ Jubili) -->
+      <!-- Row: เป้าหมาย + สถานะงาน (Donut + ตารางพนักงาน) แบบ Jubili -->
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;margin-bottom:16px;">
+        <!-- เป้าหมาย -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🏆 เป้าหมาย</span>
+            <select class="form-control" style="width:auto;font-size:12px;" id="act-goal-period" onchange="updateGoalBar()">
+              <option value="today">วันนี้</option>
+              <option value="month">เดือนนี้</option>
+              <option value="all">ทั้งหมด</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>👥 ลูกค้าใหม่</span><span id="gb-cust-val" style="font-weight:600;color:var(--info)">0/5</span></div>
+              <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;"><div id="gb-cust-bar" style="height:100%;background:var(--info);border-radius:4px;width:0%;transition:width 0.4s;"></div></div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>🎯 โอกาส</span><span id="gb-lead-val" style="font-weight:600;color:var(--purple)">0/3</span></div>
+              <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;"><div id="gb-lead-bar" style="height:100%;background:var(--purple);border-radius:4px;width:0%;transition:width 0.4s;"></div></div>
+            </div>
+            <div style="margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>💰 ยอดขาย</span><span id="gb-rev-val" style="font-weight:600;color:var(--success)">0/50,000</span></div>
+              <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;"><div id="gb-rev-bar" style="height:100%;background:var(--success);border-radius:4px;width:0%;transition:width 0.4s;"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;"><span>📋 กิจกรรม</span><span id="gb-act-val" style="font-weight:600;color:var(--warning)">0/10</span></div>
+              <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;"><div id="gb-act-bar" style="height:100%;background:var(--warning);border-radius:4px;width:0%;transition:width 0.4s;"></div></div>
+            </div>
+          </div>
+        </div>
+        <!-- สถานะงาน: Donut + ตารางพนักงาน แบบ Jubili -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">👁️ สถานะงาน</span></div>
+          <div class="card-body" style="display:grid;grid-template-columns:155px 1fr;gap:16px;padding:16px;">
+            <div style="display:flex;flex-direction:column;align-items:center;">
+              <canvas id="db-donut-canvas" width="140" height="140"></canvas>
+              <div id="db-donut-legend" style="margin-top:10px;width:100%;"></div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table style="font-size:12px;width:100%;">
+                <thead>
+                  <tr>
+                    <th style="padding:5px 8px;">ชื่อ</th>
+                    <th style="text-align:center;padding:5px 8px;">กิจกรรม</th>
+                    <th style="text-align:center;padding:5px 8px;">โอกาส</th>
+                    <th style="text-align:center;padding:5px 8px;">เสนอ</th>
+                    <th style="text-align:center;padding:5px 8px;color:var(--danger);">Lost</th>
+                    <th style="text-align:center;padding:5px 8px;color:var(--success);">Win</th>
+                  </tr>
+                </thead>
+                <tbody id="db-staff-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row: Funnel + Line chart + รูปกิจกรรม แบบ Jubili -->
+      <div style="display:grid;grid-template-columns:1fr 1.2fr 0.8fr;gap:16px;margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
             <span class="card-title">🔻 กระบวนการขาย</span>
             <span style="font-size:12px;color:var(--text-muted);" id="db-funnel-total">0 รายการ</span>
           </div>
-          <div class="card-body" style="padding:12px 20px;" id="db-funnel-chart"></div>
+          <div class="card-body" style="padding:12px 16px;" id="db-funnel-chart"></div>
         </div>
-        <!-- Customer by Status -->
         <div class="card">
-          <div class="card-header"><span class="card-title">👥 ลูกค้าตามสถานะ</span></div>
-          <div class="card-body" id="db-cust-chart" style="min-height:160px;"></div>
+          <div class="card-header"><span class="card-title">📈 ความเคลื่อนไหว</span></div>
+          <div class="card-body" style="padding:12px 16px;">
+            <div style="display:flex;gap:12px;margin-bottom:8px;">
+              <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#1a2332;display:inline-block;border-radius:2px;"></span>Activity</span>
+              <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#f59e0b;display:inline-block;border-radius:2px;"></span>Opportunity</span>
+              <span style="font-size:11px;display:flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#22c55e;display:inline-block;border-radius:2px;"></span>Win</span>
+            </div>
+            <canvas id="db-line-canvas" height="90" style="width:100%;display:block;"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">📷 รูปกิจกรรมล่าสุด</span></div>
+          <div class="card-body" id="db-recent-images" style="padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;min-height:110px;">
+            <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px;" id="db-images-empty">ยังไม่มีรูปภาพ</div>
+          </div>
         </div>
       </div>
 
-      <!-- Bottom Row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-        <!-- Recent Activities -->
+      <!-- Bottom Row: กิจกรรมล่าสุด + งานที่ต้องทำ -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="card">
           <div class="card-header">
             <span class="card-title">📝 กิจกรรมล่าสุด</span>
@@ -1043,13 +1137,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
           <div class="card-body" style="padding:0;">
             <div id="db-recent-acts" class="activity-list" style="padding:0 16px;"></div>
-            <div id="db-acts-empty" class="empty-state" style="padding:24px;display:none;">
-              <div class="empty-icon" style="font-size:32px;">📝</div>
-              <p>ยังไม่มีกิจกรรม</p>
-            </div>
+            <div id="db-acts-empty" class="empty-state" style="padding:24px;display:none;"><div class="empty-icon" style="font-size:32px;">📝</div><p>ยังไม่มีกิจกรรม</p></div>
           </div>
         </div>
-        <!-- Upcoming Tasks -->
         <div class="card">
           <div class="card-header">
             <span class="card-title">📅 งานที่ต้องทำ</span>
@@ -1057,37 +1147,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
           <div class="card-body" style="padding:0;">
             <div id="db-upcoming-tasks" style="padding:8px 12px;"></div>
-            <div id="db-tasks-empty" class="empty-state" style="padding:24px;display:none;">
-              <div class="empty-icon" style="font-size:32px;">✅</div>
-              <p>ไม่มีงานค้างอยู่</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Staff Table (แบบ Jubili) -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">👥 สถานะพนักงาน</span>
-          <span style="font-size:12px;color:var(--text-muted);" id="db-staff-period">เดือนนี้</span>
-        </div>
-        <div class="card-body" style="padding:0;">
-          <div class="table-wrap">
-            <table id="db-staff-table">
-              <thead>
-                <tr>
-                  <th>ชื่อพนักงาน</th>
-                  <th style="text-align:center;">กิจกรรม</th>
-                  <th style="text-align:center;">โอกาสใหม่</th>
-                  <th style="text-align:center;">เสนอราคา</th>
-                  <th style="text-align:center;">ปิดได้ (Win)</th>
-                  <th style="text-align:center;">Lost</th>
-                  <th style="text-align:right;">ยอดขาย</th>
-                </tr>
-              </thead>
-              <tbody id="db-staff-tbody">
-                <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีข้อมูลพนักงาน — เพิ่มพนักงานในตั้งค่า</td></tr>
-              </tbody>
-            </table>
+            <div id="db-tasks-empty" class="empty-state" style="padding:24px;display:none;"><div class="empty-icon" style="font-size:32px;">✅</div><p>ไม่มีงานค้างอยู่</p></div>
           </div>
         </div>
       </div>
@@ -4273,4 +4333,224 @@ members = DB.get('members', []);
 const savedGoals = DB.get('goals', null);
 if (savedGoals) Object.assign(goals, savedGoals);
 renderStaffTable();
+
+// ============================================================
+//  PHASE 6 — Donut, Line chart, Ranking, รูปกิจกรรม
+// ============================================================
+
+// --- CUSTOMER VIEW TOGGLE ---
+function setCustView(view) {
+  const listEl = document.getElementById('cust-list-view');
+  const rankEl = document.getElementById('cust-rank-view');
+  const btnList = document.getElementById('btn-cust-list');
+  const btnRank = document.getElementById('btn-cust-rank');
+  if (view === 'list') {
+    listEl.style.display = '';
+    rankEl.style.display = 'none';
+    btnList.style.cssText = 'background:white;color:var(--sidebar-bg);box-shadow:var(--shadow);';
+    btnRank.style.cssText = 'background:transparent;color:var(--text-muted);';
+  } else {
+    listEl.style.display = 'none';
+    rankEl.style.display = 'block';
+    btnRank.style.cssText = 'background:white;color:var(--sidebar-bg);box-shadow:var(--shadow);';
+    btnList.style.cssText = 'background:transparent;color:var(--text-muted);';
+    renderRanking();
+  }
+}
+
+// --- RANKING ---
+function renderRanking() {
+  const sort = document.getElementById('rank-sort')?.value || 'acts';
+  const ranked = customers.map(c => ({
+    ...c,
+    actCount: activities.filter(a => a.customerId === c.id).length,
+    quoteCount: quotes.filter(q => q.customerId === c.id).length,
+    lastActDate: activities.filter(a => a.customerId === c.id).sort((a,b) => b.date.localeCompare(a.date))[0]?.date || ''
+  })).sort((a,b) => {
+    if (sort === 'acts') return b.actCount - a.actCount;
+    if (sort === 'hotness') return (b.hotness||0) - (a.hotness||0);
+    if (sort === 'quotes') return b.quoteCount - a.quoteCount;
+    return 0;
+  });
+  const tbody = document.getElementById('ranking-tbody');
+  const empty = document.getElementById('ranking-empty');
+  if (!ranked.length) { if(tbody) tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  const sL = {prospect:'🎯 เป้าหมาย',fresh:'🆕 ใหม่',existing:'⭐ ประจำ',lapse:'😴 ห่างหาย'};
+  const sB = {prospect:'badge-prospect',fresh:'badge-fresh',existing:'badge-existing',lapse:'badge-lapse'};
+  const med = ['🥇','🥈','🥉'];
+  if(tbody) tbody.innerHTML = ranked.map((c,i) => `
+    <tr onclick="openCustomerDetail('${c.id}')" style="cursor:pointer;">
+      <td style="text-align:center;font-size:18px;">${med[i]||'#'+(i+1)}</td>
+      <td><div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:var(--sidebar-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${(c.name||'?').charAt(0)}</div>
+        <div><div style="font-weight:600;font-size:14px;">${c.name}</div><div style="font-size:11px;color:var(--text-muted);">${c.phone||''}</div></div>
+      </div></td>
+      <td><span class="badge ${sB[c.status]||'badge-gray'}">${sL[c.status]||'-'}</span></td>
+      <td style="text-align:center;"><strong>${c.actCount}</strong></td>
+      <td style="text-align:center;">${c.quoteCount}</td>
+      <td>${hotnessStars(c.hotness)}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${c.lastActDate?fmtDate(c.lastActDate):'-'}</td>
+    </tr>`).join('');
+}
+
+// --- DONUT CHART ---
+function renderDonutChart() {
+  const canvas = document.getElementById('db-donut-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const data = [
+    {label:'โอกาสใหม่', value:leads.filter(l=>l.stage==='prospect'||l.stage==='contact').length, color:'#f59e0b'},
+    {label:'เสนอราคา',  value:leads.filter(l=>l.stage==='quote').length,    color:'#3b82f6'},
+    {label:'ต่อรอง',    value:leads.filter(l=>l.stage==='negotiate').length, color:'#8b5cf6'},
+    {label:'Lost',      value:leads.filter(l=>l.stage==='lost').length,      color:'#ef4444'},
+    {label:'Win',       value:leads.filter(l=>l.stage==='won').length,       color:'#22c55e'},
+  ].filter(d => d.value > 0);
+  const total = data.reduce((s,d)=>s+d.value,0);
+  const cx=W/2, cy=H/2, r=H/2-6, innerR=r*0.55;
+  if (!total) {
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle='#e2e8f0'; ctx.lineWidth=14; ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.font='10px Sarabun'; ctx.textAlign='center';
+    ctx.fillText('ไม่มีข้อมูล',cx,cy+4);
+    const leg=document.getElementById('db-donut-legend'); if(leg) leg.innerHTML=''; return;
+  }
+  let ang=-Math.PI/2;
+  data.forEach(d=>{
+    const s=(d.value/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,ang,ang+s);
+    ctx.closePath(); ctx.fillStyle=d.color; ctx.fill(); ang+=s;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+  ctx.fillStyle='#1a2332'; ctx.font='bold 15px Sarabun'; ctx.textAlign='center';
+  ctx.fillText(total,cx,cy+4); ctx.font='9px Sarabun'; ctx.fillStyle='#64748b';
+  ctx.fillText('รายการ',cx,cy+16);
+  const leg=document.getElementById('db-donut-legend');
+  if(leg) leg.innerHTML=data.map(d=>`
+    <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;font-size:10px;">
+      <div style="width:8px;height:8px;border-radius:2px;background:${d.color};flex-shrink:0;"></div>
+      <span style="flex:1;">${d.label}</span><span style="font-weight:600;">${d.value}</span>
+    </div>`).join('');
+}
+
+// --- STAFF TABLE (ใน Donut card) ---
+(function(){
+  const _orig = window.renderStaffTable;
+  window.renderStaffTable = function() {
+    const tbody = document.getElementById('db-staff-tbody');
+    if (!tbody) return;
+    const mems = DB.get('members',[]);
+    const thisMonth = today().substring(0,7);
+    if (!mems.length) {
+      tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--text-muted);font-size:11px;">ยังไม่มีพนักงาน — <a href="#" onclick="navTo('settings')" style="color:var(--accent);">ตั้งค่า</a></td></tr>`;
+      return;
+    }
+    const rows = mems.map(m=>{
+      const mA=activities.filter(a=>a.member===m.name&&a.date?.startsWith(thisMonth)).length;
+      const mL=leads.filter(l=>l.member===m.name&&l.createdAt?.startsWith(thisMonth)).length;
+      const mQ=quotes.filter(q=>q.member===m.name&&q.date?.startsWith(thisMonth)).length;
+      const mW=leads.filter(l=>l.member===m.name&&l.stage==='won').length;
+      const mLo=leads.filter(l=>l.member===m.name&&l.stage==='lost').length;
+      return `<tr>
+        <td style="padding:4px 8px;font-size:11px;font-weight:600;">${m.name}</td>
+        <td style="text-align:center;padding:4px 8px;font-size:11px;">${mA}</td>
+        <td style="text-align:center;padding:4px 8px;font-size:11px;">${mL}</td>
+        <td style="text-align:center;padding:4px 8px;font-size:11px;">${mQ}</td>
+        <td style="text-align:center;padding:4px 8px;font-size:11px;color:var(--danger);">${mLo}</td>
+        <td style="text-align:center;padding:4px 8px;font-size:11px;color:var(--success);font-weight:700;">${mW}</td>
+      </tr>`;
+    });
+    const tA=activities.filter(a=>a.date?.startsWith(thisMonth)).length;
+    const tL=leads.filter(l=>l.createdAt?.startsWith(thisMonth)).length;
+    const tQ=quotes.filter(q=>q.date?.startsWith(thisMonth)).length;
+    const tW=leads.filter(l=>l.stage==='won').length;
+    const tLo=leads.filter(l=>l.stage==='lost').length;
+    rows.push(`<tr style="background:#f8fafc;font-weight:700;font-size:11px;">
+      <td style="padding:4px 8px;">ทั้งหมด</td>
+      <td style="text-align:center;padding:4px 8px;">${tA}</td>
+      <td style="text-align:center;padding:4px 8px;">${tL}</td>
+      <td style="text-align:center;padding:4px 8px;">${tQ}</td>
+      <td style="text-align:center;padding:4px 8px;color:var(--danger);">${tLo}</td>
+      <td style="text-align:center;padding:4px 8px;color:var(--success);">${tW}</td>
+    </tr>`);
+    tbody.innerHTML=rows.join('');
+  };
+})();
+
+// --- LINE CHART ---
+function renderLineChart() {
+  const canvas = document.getElementById('db-line-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.clientWidth || 400;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const days=14, labels=[],actD=[],oppD=[],winD=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.toISOString().slice(0,10);
+    labels.push(d.getDate()+'/'+(d.getMonth()+1));
+    actD.push(activities.filter(a=>a.date===ds).length);
+    oppD.push(leads.filter(l=>l.createdAt===ds).length);
+    winD.push(leads.filter(l=>l.stage==='won'&&l.createdAt===ds).length);
+  }
+  const maxV=Math.max(...actD,...oppD,...winD,1);
+  const pL=24,pR=8,pT=8,pB=18;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  ctx.strokeStyle='#f1f5f9'; ctx.lineWidth=1;
+  for(let i=0;i<=3;i++){
+    const y=pT+(cH/3)*i;
+    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(W-pR,y); ctx.stroke();
+    ctx.fillStyle='#94a3b8'; ctx.font='9px Sarabun'; ctx.textAlign='right';
+    ctx.fillText(Math.round(maxV*(1-i/3)),pL-3,y+3);
+  }
+  const dl=(data,color)=>{
+    if(!data.some(v=>v>0)) return;
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round';
+    data.forEach((v,i)=>{ const x=pL+(i/(days-1))*cW,y=pT+cH-(v/maxV)*cH; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.stroke();
+  };
+  dl(actD,'#1a2332'); dl(oppD,'#f59e0b'); dl(winD,'#22c55e');
+  ctx.fillStyle='#94a3b8'; ctx.font='9px Sarabun'; ctx.textAlign='center';
+  labels.forEach((l,i)=>{ if(i%2===0) ctx.fillText(l,pL+(i/(days-1))*cW,H-2); });
+}
+
+// --- RECENT IMAGES ---
+function renderRecentImages() {
+  const el=document.getElementById('db-recent-images');
+  const empty=document.getElementById('db-images-empty');
+  if(!el) return;
+  const imgs=activities.filter(a=>(a.images||[]).length>0)
+    .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4)
+    .map(a=>a.images[0]);
+  if(!imgs.length){ if(empty) empty.style.display='flex'; return; }
+  if(empty) empty.style.display='none';
+  el.innerHTML=imgs.map(src=>`<img src="${src}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="openLightbox('${src}')">`).join('');
+}
+
+// Patch updateDashboard
+(function(){
+  const _orig=window.updateDashboard;
+  window.updateDashboard=function(){
+    _orig(); renderDonutChart(); renderStaffTable(); renderLineChart(); renderRecentImages();
+  };
+})();
+
+// Patch navTo
+(function(){
+  const _orig=window.navTo;
+  window.navTo=function(page){
+    _orig(page);
+    if(page==='customers') setCustView('list');
+    if(page==='dashboard'){ renderDonutChart(); renderStaffTable(); renderLineChart(); renderRecentImages(); }
+  };
+})();
+
+// Init Phase 6
+renderDonutChart();
+renderStaffTable();
+renderLineChart();
+renderRecentImages();
 </script>
