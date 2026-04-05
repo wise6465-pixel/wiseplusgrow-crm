@@ -1660,107 +1660,273 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <!-- ===== PAGE: REPORTS ===== -->
     <div class="page" id="page-reports">
-      <div style="margin-bottom:20px;">
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">รายงาน</h2>
-        <p style="font-size:13px;color:var(--text-muted);">สรุปผลงานและวิเคราะห์ข้อมูล</p>
+
+      <!-- LIST VIEW: แสดงรายการรายงานแบบ Jubili -->
+      <div id="rp-list-view">
+        <div style="display:flex;align-items:center;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;">
+          <button style="padding:10px 20px;border:none;border-bottom:3px solid var(--accent);margin-bottom:-2px;background:transparent;font-family:Sarabun,sans-serif;font-size:14px;font-weight:700;color:var(--sidebar-bg);cursor:default;">📋 รายงาน</button>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table style="font-size:13px;width:100%;">
+              <thead>
+                <tr style="background:#1a2332;color:white;">
+                  <th style="padding:12px 16px;width:80px;">รหัส</th>
+                  <th style="padding:12px 16px;">ชื่อรายงาน</th>
+                  <th style="padding:12px 16px;">คำอธิบาย</th>
+                  <th style="padding:12px 16px;width:120px;text-align:right;">เข้าชมล่าสุด</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="rp-list-row" onclick="openReport('r00')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-00</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">รายงานสรุปยอดขายประจำปี</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานสรุปยอดขายประจำปี แสดงรายเดือน นับจากต้นปี เทียบกับปีก่อนหน้า</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r00">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r01')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-01</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">สรุปยอดขายรายเดือนของกิจการ</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานสรุปยอดขายรายเดือนของกิจการ นับถึงสิ้นเดือน</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r01">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r02')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-02</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">รายละเอียดยอดขายรายเดือน</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานรายละเอียดยอดขาย ยอดชำระเงิน รายเดือน ของพนักงานรายบุคคล / ทีม / ทั้งกิจการ</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r02">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r03')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-03</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">รายละเอียดกิจกรรมการขาย</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานรายละเอียดกิจกรรมการขาย รายเดือน ของพนักงานรายบุคคล / ทีม / ทั้งกิจการ</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r03">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r04')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-04</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">สรุปสาเหตุที่ไม่ได้งาน</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานสรุปข้อมูลการขายที่ลูกค้าปฏิเสธ ตามช่วงเวลาที่กำหนด แยกตามกลุ่มสินค้า</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r04">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r05')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-05</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">วิเคราะห์รายลูกค้า</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานวิเคราะห์พฤติกรรมลูกค้า ย้อนหลัง 30/60/90/180 วัน</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r05">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r06')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-06</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">วิเคราะห์ตามแท็กลูกค้า</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานวิเคราะห์กิจกรรมการขาย และยอดขาย รายเดือน ตามแท็กลูกค้า</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r06">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r07')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-07</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">รายงานยอดคาดการณ์และยอดขายตามกลุ่มสินค้า</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานใบเสนอราคา ยอดคาดการณ์ และยอดขายจริง ตามกลุ่มสินค้า ในเดือนที่กำหนด</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r07">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r08')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-08</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">รายงานการขายโครงการ</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานติดตามสถานะการขายโครงการรายเดือน</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r08">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r09')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-09</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">รายงานยอดคาดการณ์และยอดขายรายบุคคล</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานเปรียบเทียบเป้ายอดขาย ยอดคาดการณ์ และยอดขายจริง รายบุคคล / ทีม / ทั้งกิจการ</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r09">-</td>
+                </tr>
+                <tr class="rp-list-row" onclick="openReport('r13')" style="cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;">
+                  <td style="padding:14px 16px;"><span style="background:var(--accent);color:var(--sidebar-bg);padding:3px 8px;border-radius:4px;font-weight:700;font-size:12px;">R-13</span></td>
+                  <td style="padding:14px 16px;font-weight:600;">แผนงานติดตาม</td>
+                  <td style="padding:14px 16px;color:var(--text-muted);font-size:12px;">รายงานแสดงแผนการทำงานขาย จากการบันทึกกำหนดตามครั้งที่ผ่านไป ภายในช่วงเวลาที่กำหนด</td>
+                  <td style="padding:14px 16px;text-align:right;font-size:12px;color:var(--text-muted);" id="rp-last-r13">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">ลูกค้าใหม่เดือนนี้</div><div class="stat-value" id="rp-new-cust" style="color:var(--success)">0</div></div>
-        <div class="stat-card"><div class="stat-label">กิจกรรมทั้งหมด</div><div class="stat-value" id="rp-acts">0</div></div>
-        <div class="stat-card"><div class="stat-label">ใบเสนอราคา</div><div class="stat-value" id="rp-quotes">0</div></div>
-        <div class="stat-card"><div class="stat-label">ยอดขายรวม</div><div class="stat-value" id="rp-revenue" style="font-size:18px">฿0</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <!-- ลูกค้าตามสถานะ -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">👥 ลูกค้าตามสถานะ</span></div>
-          <div class="card-body" id="rp-cust-status"></div>
+
+      <!-- DETAIL VIEW: แสดงรายงานจริง -->
+      <div id="rp-detail-view" style="display:none;">
+        <!-- Header ด้านบน -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button onclick="closeReport()" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-family:Sarabun,sans-serif;font-size:13px;color:var(--text-muted);">← กลับ</button>
+            <div>
+              <span id="rp-detail-code" style="background:var(--accent);color:var(--sidebar-bg);padding:3px 10px;border-radius:4px;font-weight:700;font-size:13px;margin-right:8px;"></span>
+              <span id="rp-detail-title" style="font-size:18px;font-weight:700;"></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select class="form-control" id="rp-year" style="width:90px;" onchange="renderRpContent()"></select>
+            <select class="form-control" id="rp-month" style="width:130px;" onchange="renderRpContent()">
+              <option value="">ทุกเดือน</option>
+              <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
+              <option value="03">มีนาคม</option><option value="04">เมษายน</option>
+              <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+              <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+              <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
+              <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+            </select>
+            <select class="form-control" id="rp-member-filter" style="width:auto;" onchange="renderRpContent()">
+              <option value="">พนักงาน: ทั้งหมด</option>
+            </select>
+          </div>
         </div>
-        <!-- กิจกรรมตามประเภท -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">📞 กิจกรรมตามประเภท</span></div>
-          <div class="card-body" id="rp-act-types"></div>
+
+        <!-- KPI Summary -->
+        <div class="stats-grid" style="margin-bottom:16px;">
+          <div class="stat-card"><div class="stat-label">💰 ยอดขายรวม</div><div class="stat-value" id="rp-revenue" style="font-size:20px;color:var(--sidebar-bg)">฿0</div><div class="stat-sub" id="rp-order-count">0 ออเดอร์</div></div>
+          <div class="stat-card"><div class="stat-label">📋 กิจกรรม</div><div class="stat-value" id="rp-acts">0</div><div class="stat-sub">ครั้ง</div></div>
+          <div class="stat-card"><div class="stat-label">👥 ลูกค้าใหม่</div><div class="stat-value" id="rp-new-cust" style="color:var(--success)">0</div><div class="stat-sub">ราย</div></div>
+          <div class="stat-card"><div class="stat-label">🎯 Win Rate</div><div class="stat-value" id="rp-winrate" style="color:var(--info)">0%</div><div class="stat-sub" id="rp-winrate-sub">โอกาส</div></div>
         </div>
-        <!-- Top ลูกค้า (กิจกรรม) -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">⭐ ลูกค้าที่ติดต่อมากที่สุด</span></div>
-          <div class="card-body" style="padding:0;"><div class="table-wrap"><table>
-            <thead><tr><th>ลูกค้า</th><th>กิจกรรม</th><th>Hotness</th></tr></thead>
-            <tbody id="rp-top-cust"></tbody>
-          </table></div></div>
-        </div>
-        <!-- งานที่เกินกำหนด -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">⚠️ สรุปงานติดตาม</span></div>
-          <div class="card-body" id="rp-tasks-summary"></div>
-        </div>
+
+        <!-- Report Content -->
+        <div id="rp-content"></div>
       </div>
     </div>
 
     <!-- ===== PAGE: SETTINGS ===== -->
     <div class="page" id="page-settings">
       <div style="margin-bottom:20px;"><h2 style="font-size:20px;font-weight:700;">ตั้งค่า</h2></div>
-      <div class="card" style="max-width:560px;">
-        <div class="card-header"><span class="card-title">ข้อมูลกิจการ</span></div>
-        <div class="card-body">
-          <div class="form-group"><label class="form-label">ชื่อบริษัท</label><input class="form-control" id="set-company" placeholder="Wiseplusgrow"></div>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">อีเมล</label><input class="form-control" id="set-email" type="email" placeholder="info@wiseplusgrow.com"></div>
-            <div class="form-group"><label class="form-label">โทรศัพท์</label><input class="form-control" id="set-phone" placeholder="02-xxx-xxxx"></div>
-          </div>
-          <div class="form-group"><label class="form-label">ที่อยู่</label><textarea class="form-control" id="set-address" rows="2"></textarea></div>
-          <button class="btn btn-primary" onclick="saveSettings()">💾 บันทึก</button>
-        </div>
-      </div>
-      <div class="card" style="max-width:560px;">
-        <div class="card-header"><span class="card-title">🏆 ตั้งค่าเป้าหมาย</span></div>
-        <div class="card-body">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">กำหนดเป้าหมายรายวันสำหรับทีมขาย</p>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">👥 ลูกค้าใหม่ (ราย/วัน)</label>
-              <input class="form-control" id="set-goal-cust" type="number" min="1" placeholder="5">
-            </div>
-            <div class="form-group">
-              <label class="form-label">🎯 โอกาสใหม่ (รายการ/วัน)</label>
-              <input class="form-control" id="set-goal-lead" type="number" min="1" placeholder="3">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- คอลัมน์ซ้าย -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- ข้อมูลกิจการ -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏢 ข้อมูลกิจการ</span></div>
+            <div class="card-body">
+              <div class="form-group"><label class="form-label">ชื่อบริษัท</label><input class="form-control" id="set-company" placeholder="Wiseplusgrow"></div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">อีเมล</label><input class="form-control" id="set-email" type="email"></div>
+                <div class="form-group"><label class="form-label">โทรศัพท์</label><input class="form-control" id="set-phone"></div>
+              </div>
+              <div class="form-group"><label class="form-label">ที่อยู่</label><textarea class="form-control" id="set-address" rows="2"></textarea></div>
+              <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 บันทึก</button>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">💰 ยอดขาย (บาท/วัน)</label>
-              <input class="form-control" id="set-goal-revenue" type="number" min="0" placeholder="50000">
+
+          <!-- เป้าหมาย -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏆 เป้าหมายรายวัน</span></div>
+            <div class="card-body">
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">👥 ลูกค้าใหม่/วัน</label><input class="form-control" id="set-goal-cust" type="number" min="1" placeholder="5"></div>
+                <div class="form-group"><label class="form-label">🎯 โอกาสใหม่/วัน</label><input class="form-control" id="set-goal-lead" type="number" min="1" placeholder="3"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">💰 ยอดขาย (บาท/วัน)</label><input class="form-control" id="set-goal-revenue" type="number" placeholder="50000"></div>
+                <div class="form-group"><label class="form-label">📋 กิจกรรม/วัน</label><input class="form-control" id="set-goal-act" type="number" placeholder="10"></div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="saveGoalSettings()">💾 บันทึกเป้าหมาย</button>
             </div>
-            <div class="form-group">
-              <label class="form-label">📋 กิจกรรม (ครั้ง/วัน)</label>
-              <input class="form-control" id="set-goal-act" type="number" min="1" placeholder="10">
+          </div>
+
+          <!-- พนักงาน -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">👤 จัดการพนักงาน</span>
+              <button class="btn btn-primary btn-sm" onclick="openMemberModal()">+ เพิ่ม</button>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <div id="member-list" style="padding:8px 0;"></div>
+              <div id="member-empty" class="empty-state" style="padding:24px;display:none;">
+                <div class="empty-icon">👤</div><p>ยังไม่มีพนักงาน</p>
+              </div>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="saveGoalSettings()">💾 บันทึกเป้าหมาย</button>
-        </div>
-      </div>
-      <div class="card" style="max-width:560px;">
-        <div class="card-header">
-          <span class="card-title">👤 จัดการพนักงาน</span>
-          <button class="btn btn-primary btn-sm" onclick="openMemberModal()">+ เพิ่มพนักงาน</button>
-        </div>
-        <div class="card-body" style="padding:0;">
-          <div id="member-list" style="padding:8px 0;"></div>
-          <div id="member-empty" class="empty-state" style="padding:24px;display:none;">
-            <div class="empty-icon">👤</div>
-            <p>ยังไม่มีพนักงาน<br>กด "เพิ่มพนักงาน" เพื่อเริ่มต้น</p>
+
+          <!-- Tag ลูกค้า -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏷️ Tag ลูกค้า</span></div>
+            <div class="card-body">
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <input class="form-control" id="new-tag-name" placeholder="ชื่อ Tag เช่น VIP, โรงงาน">
+                <input type="color" id="new-tag-color" value="#3b82f6" style="width:44px;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;">
+                <button class="btn btn-primary btn-sm" onclick="addTagDef()">+ เพิ่ม</button>
+              </div>
+              <div id="tag-def-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="card" style="max-width:560px;">
-        <div class="card-header"><span class="card-title">จัดการ Tag ลูกค้า</span></div>
-        <div class="card-body">
-          <div style="display:flex;gap:10px;margin-bottom:14px;">
-            <input class="form-control" id="new-tag-name" placeholder="ชื่อ Tag เช่น โรงงาน, ภาคเหนือ">
-            <input type="color" id="new-tag-color" value="#3b82f6" style="width:44px;height:40px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;">
-            <button class="btn btn-primary" onclick="addTagDef()">+ เพิ่ม</button>
+
+        <!-- คอลัมน์ขวา -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- จัดการสินค้า -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📦 จัดการสินค้า</span>
+              <button class="btn btn-primary btn-sm" onclick="addProduct()">+ เพิ่มสินค้า</button>
+            </div>
+            <div class="card-body" style="padding:0;">
+              <div id="product-add-form" style="display:none;padding:12px 16px;background:#f8fafc;border-bottom:1px solid var(--border);">
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">ชื่อสินค้า *</label><input class="form-control" id="prod-name" placeholder="เช่น น้ำยาซักผ้า OEM"></div>
+                  <div class="form-group"><label class="form-label">กลุ่มสินค้า</label><input class="form-control" id="prod-group" placeholder="เช่น น้ำยาซักผ้า"></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label class="form-label">ราคาต่อหน่วย (บาท)</label><input class="form-control" id="prod-price" type="number" placeholder="0"></div>
+                  <div class="form-group"><label class="form-label">หน่วย</label><input class="form-control" id="prod-unit" placeholder="ชิ้น / ลิตร / กก."></div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-primary btn-sm" onclick="saveProduct()">💾 บันทึก</button>
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('product-add-form').style.display='none'">ยกเลิก</button>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table id="product-table">
+                  <thead><tr><th>ชื่อสินค้า</th><th>กลุ่ม</th><th style="text-align:right;">ราคา</th><th>หน่วย</th><th></th></tr></thead>
+                  <tbody id="product-tbody"></tbody>
+                </table>
+                <div id="product-empty" class="empty-state" style="padding:24px;display:none;">
+                  <div class="empty-icon">📦</div><p>ยังไม่มีสินค้า</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div id="tag-def-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+
+          <!-- ประเภทโครงการ -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📁 ประเภทโครงการ</span>
+              <button class="btn btn-primary btn-sm" onclick="addProjType()">+ เพิ่ม</button>
+            </div>
+            <div class="card-body">
+              <div id="proj-type-add" style="display:none;margin-bottom:12px;">
+                <div style="display:flex;gap:8px;">
+                  <input class="form-control" id="new-proj-type" placeholder="เช่น OEM, ODM, พัฒนาสูตร">
+                  <button class="btn btn-primary btn-sm" onclick="saveProjType()">บันทึก</button>
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('proj-type-add').style.display='none'">ยกเลิก</button>
+                </div>
+              </div>
+              <div id="proj-type-list" style="display:flex;flex-wrap:wrap;gap:8px;">
+              </div>
+            </div>
+          </div>
+
+          <!-- เหตุผล Lost -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">❌ เหตุผล Lost</span>
+              <button class="btn btn-primary btn-sm" onclick="addLostReason()">+ เพิ่ม</button>
+            </div>
+            <div class="card-body">
+              <div id="lost-reason-add" style="display:none;margin-bottom:12px;">
+                <div style="display:flex;gap:8px;">
+                  <input class="form-control" id="new-lost-reason" placeholder="เช่น ราคาสูง, เลือกคู่แข่ง, งบประมาณไม่พอ">
+                  <button class="btn btn-primary btn-sm" onclick="saveLostReason()">บันทึก</button>
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('lost-reason-add').style.display='none'">ยกเลิก</button>
+                </div>
+              </div>
+              <div id="lost-reason-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3952,71 +4118,9 @@ function saveForecastGoal() {
 // ============================================================
 //  REPORTS
 // ============================================================
-function renderReports() {
-  const thisMonth = today().substring(0,7);
-  const newCust = customers.filter(c=>c.createdAt?.startsWith(thisMonth)).length;
-  const revenue = orders.filter(o=>o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
-  document.getElementById('rp-new-cust').textContent = newCust;
-  document.getElementById('rp-acts').textContent = activities.length;
-  document.getElementById('rp-quotes').textContent = quotes.length;
-  document.getElementById('rp-revenue').textContent = fmtMoney(revenue);
-  // Customer by status
-  const statusData = [
-    {label:'🎯 เป้าหมาย',status:'prospect',color:'#3b82f6'},
-    {label:'🆕 ใหม่',status:'fresh',color:'#22c55e'},
-    {label:'⭐ ประจำ',status:'existing',color:'#f59e0b'},
-    {label:'😴 ห่างหาย',status:'lapse',color:'#ef4444'},
-  ];
-  const maxCust = Math.max(...statusData.map(s=>customers.filter(c=>c.status===s.status).length),1);
-  document.getElementById('rp-cust-status').innerHTML = statusData.map(s => {
-    const cnt = customers.filter(c=>c.status===s.status).length;
-    const pct = Math.round(cnt/maxCust*100);
-    return `<div class="mini-bar">
-      <span class="mini-bar-label">${s.label}</span>
-      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${s.color};"></div></div>
-      <span class="mini-bar-val">${cnt} ราย</span>
-    </div>`;
-  }).join('');
-  // Activity by type
-  const actTypes = [
-    {label:'📤 ขาออก',type:'ขาออก',color:'#3b82f6'},
-    {label:'📥 ขาเข้า',type:'ขาเข้า',color:'#22c55e'},
-    {label:'🔍 หาข้อมูล',type:'หาข้อมูล',color:'#f59e0b'},
-  ];
-  const maxAct = Math.max(...actTypes.map(a=>activities.filter(x=>x.type===a.type).length),1);
-  document.getElementById('rp-act-types').innerHTML = actTypes.map(a => {
-    const cnt = activities.filter(x=>x.type===a.type).length;
-    const pct = Math.round(cnt/maxAct*100);
-    return `<div class="mini-bar">
-      <span class="mini-bar-label">${a.label}</span>
-      <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%;background:${a.color};"></div></div>
-      <span class="mini-bar-val">${cnt} ครั้ง</span>
-    </div>`;
-  }).join('');
-  // Top customers by activity
-  const custActCount = customers.map(c => ({
-    name: c.name, count: activities.filter(a=>a.customerId===c.id).length, hotness: c.hotness||0
-  })).sort((a,b)=>b.count-a.count).slice(0,5);
-  document.getElementById('rp-top-cust').innerHTML = custActCount.map(x =>
-    `<tr><td>${x.name}</td><td>${x.count}</td><td>${hotnessStars(x.hotness)}</td></tr>`
-  ).join('');
-  // Tasks summary
-  const td = today();
-  const overdue = tasks.filter(t=>!t.done&&t.dueDate<td).length;
-  const todayT = tasks.filter(t=>!t.done&&t.dueDate===td).length;
-  const upcoming = tasks.filter(t=>!t.done&&t.dueDate>td).length;
-  const done = tasks.filter(t=>t.done).length;
-  document.getElementById('rp-tasks-summary').innerHTML = `
-    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🔴 เกินกำหนด</span><span style="font-size:20px;font-weight:700;color:var(--danger);">${overdue}</span></div>
-    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🟢 วันนี้</span><span style="font-size:20px;font-weight:700;color:var(--success);">${todayT}</span></div>
-    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">🔵 เร็วๆนี้</span><span style="font-size:20px;font-weight:700;color:var(--info);">${upcoming}</span></div>
-    <div class="mini-bar"><span class="mini-bar-label" style="width:100px;">✅ เสร็จแล้ว</span><span style="font-size:20px;font-weight:700;color:var(--text-muted);">${done}</span></div>
-  `;
-}
 
-// ============================================================
-//  DASHBOARD UPDATE (enhanced)
-// ============================================================
+// old renderReports removed
+
 function updateDashboard() {
   const td = today();
   const thisMonth = td.substring(0,7);
@@ -5289,4 +5393,552 @@ renderProjectChart();
 renderPaymentChart();
 renderStaffRank();
 renderProdRank();
+
+// ============================================================
+//  PHASE 10 — ตั้งค่าสมบูรณ์ + รายงาน R-00 ถึง R-13
+// ============================================================
+
+// --- PRODUCTS ---
+let products = DB.get('wpg_products', []);
+function addProduct() {
+  document.getElementById('product-add-form').style.display = 'block';
+  ['prod-name','prod-group','prod-unit'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('prod-price').value = '';
+  document.getElementById('prod-name').focus();
+}
+function saveProduct() {
+  const name = document.getElementById('prod-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อสินค้า'); return; }
+  const prod = {
+    id: genId(),
+    name,
+    group: document.getElementById('prod-group').value.trim(),
+    price: parseFloat(document.getElementById('prod-price').value)||0,
+    unit: document.getElementById('prod-unit').value.trim()||'ชิ้น',
+    createdAt: today(),
+  };
+  products.push(prod);
+  DB.set('wpg_products', products);
+  document.getElementById('product-add-form').style.display = 'none';
+  renderProducts();
+  toast('✅ เพิ่มสินค้าแล้ว');
+}
+function deleteProduct(id) {
+  products = products.filter(p => p.id !== id);
+  DB.set('wpg_products', products);
+  renderProducts();
+  toast('🗑️ ลบสินค้าแล้ว');
+}
+function renderProducts() {
+  const tbody = document.getElementById('product-tbody');
+  const empty = document.getElementById('product-empty');
+  if (!tbody) return;
+  if (!products.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+  tbody.innerHTML = products.map(p => `<tr>
+    <td style="font-size:13px;">${p.name}</td>
+    <td style="font-size:12px;color:var(--text-muted);">${p.group||'-'}</td>
+    <td style="text-align:right;font-size:13px;">${p.price>0?fmtMoney(p.price):'-'}</td>
+    <td style="font-size:12px;">${p.unit}</td>
+    <td><button class="btn btn-xs btn-danger" onclick="deleteProduct('${p.id}')">🗑️</button></td>
+  </tr>`).join('');
+}
+
+// --- PROJ TYPES ---
+let projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
+function addProjType() {
+  document.getElementById('proj-type-add').style.display = 'block';
+  document.getElementById('new-proj-type').value = '';
+  document.getElementById('new-proj-type').focus();
+}
+function saveProjType() {
+  const val = document.getElementById('new-proj-type').value.trim();
+  if (!val) return;
+  if (!projTypes.includes(val)) {
+    projTypes.push(val);
+    DB.set('wpg_projTypes', projTypes);
+  }
+  document.getElementById('proj-type-add').style.display = 'none';
+  renderProjTypes();
+  toast('✅ เพิ่มประเภทโครงการแล้ว');
+}
+function deleteProjType(val) {
+  projTypes = projTypes.filter(t => t !== val);
+  DB.set('wpg_projTypes', projTypes);
+  renderProjTypes();
+}
+function renderProjTypes() {
+  const el = document.getElementById('proj-type-list');
+  if (!el) return;
+  if (!projTypes.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีประเภท</span>'; return; }
+  el.innerHTML = projTypes.map(t => `
+    <div style="display:inline-flex;align-items:center;gap:6px;background:var(--sidebar-bg);color:var(--accent);padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;">
+      ${t}
+      <span onclick="deleteProjType('${t}')" style="cursor:pointer;opacity:0.7;font-size:10px;">✕</span>
+    </div>`).join('');
+}
+
+// --- LOST REASONS ---
+let lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
+function addLostReason() {
+  document.getElementById('lost-reason-add').style.display = 'block';
+  document.getElementById('new-lost-reason').value = '';
+  document.getElementById('new-lost-reason').focus();
+}
+function saveLostReason() {
+  const val = document.getElementById('new-lost-reason').value.trim();
+  if (!val) return;
+  if (!lostReasons.includes(val)) {
+    lostReasons.push(val);
+    DB.set('wpg_lostReasons', lostReasons);
+  }
+  document.getElementById('lost-reason-add').style.display = 'none';
+  renderLostReasons();
+  toast('✅ เพิ่มเหตุผล Lost แล้ว');
+}
+function deleteLostReason(val) {
+  lostReasons = lostReasons.filter(r => r !== val);
+  DB.set('wpg_lostReasons', lostReasons);
+  renderLostReasons();
+}
+function renderLostReasons() {
+  const el = document.getElementById('lost-reason-list');
+  if (!el) return;
+  if (!lostReasons.length) { el.innerHTML='<span style="font-size:12px;color:var(--text-muted);">ยังไม่มีเหตุผล</span>'; return; }
+  el.innerHTML = lostReasons.map(r => `
+    <div style="display:inline-flex;align-items:center;gap:6px;background:#fef2f2;color:var(--danger);padding:5px 10px;border-radius:16px;font-size:12px;font-weight:600;">
+      ${r}
+      <span onclick="deleteLostReason('${r}')" style="cursor:pointer;opacity:0.7;font-size:10px;">✕</span>
+    </div>`).join('');
+}
+
+// Patch renderSettings to include new sections
+(function(){
+  const _orig = window.renderSettings;
+  window.renderSettings = function(){
+    if(_orig) _orig();
+    // reload data
+    products = DB.get('wpg_products', []);
+    projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
+    lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
+    renderProducts();
+    renderProjTypes();
+    renderLostReasons();
+  };
+})();
+
+// ============================================================
+//  REPORTS R-00 ถึง R-13
+// ============================================================
+
+let rpTab = 'r00';
+const rpMeta = {
+  r00: 'รายงานสรุปยอดขายประจำปี',
+  r01: 'สรุปยอดขายรายเดือนของกิจการ',
+  r02: 'รายละเอียดยอดขายรายเดือน',
+  r03: 'รายละเอียดกิจกรรมการขาย',
+  r04: 'สรุปสาเหตุที่ไม่ได้งาน',
+  r05: 'วิเคราะห์รายลูกค้า',
+  r06: 'วิเคราะห์ตามแท็กลูกค้า',
+  r07: 'รายงานยอดคาดการณ์และยอดขายตามกลุ่มสินค้า',
+  r08: 'รายงานการขายโครงการ',
+  r09: 'รายงานยอดคาดการณ์และยอดขายรายบุคคล',
+  r13: 'แผนงานติดตาม',
+};
+
+function getRpFiltered() {
+  const year = document.getElementById('rp-year')?.value || new Date().getFullYear().toString();
+  const month = document.getElementById('rp-month')?.value || '';
+  const member = document.getElementById('rp-member-filter')?.value || '';
+  const prefix = year + (month ? '-'+month : '');
+  const filtOrders = orders.filter(o =>
+    o.status==='completed' &&
+    (o.date||'').startsWith(prefix) &&
+    (!member || o.member===member)
+  );
+  const filtActs = activities.filter(a =>
+    (a.date||'').startsWith(prefix) &&
+    (!member || a.member===member)
+  );
+  const filtLeads = leads.filter(l =>
+    (l.createdAt||'').startsWith(prefix) &&
+    (!member || l.member===member)
+  );
+  const filtCust = customers.filter(c =>
+    (c.createdAt||'').startsWith(prefix)
+  );
+  return { filtOrders, filtActs, filtLeads, filtCust, year, month, member };
+}
+
+function openReport(tab) {
+  rpTab = tab;
+  // บันทึก last visited
+  const rpHistory = DB.get('rp_history',{});
+  rpHistory[tab] = today();
+  DB.set('rp_history', rpHistory);
+  const lastEl = document.getElementById('rp-last-'+tab);
+  if (lastEl) lastEl.textContent = fmtDate(today());
+  // แสดง detail view
+  document.getElementById('rp-list-view').style.display = 'none';
+  document.getElementById('rp-detail-view').style.display = 'block';
+  // ใส่ชื่อรายงาน
+  const codeEl = document.getElementById('rp-detail-code');
+  const titleEl = document.getElementById('rp-detail-title');
+  if(codeEl) codeEl.textContent = tab.toUpperCase().replace('R0','R-0').replace('R1','R-1');
+  if(titleEl) titleEl.textContent = rpMeta[tab]||'';
+  // init year options
+  const ySel = document.getElementById('rp-year');
+  if (ySel && !ySel.options.length) {
+    const curY = new Date().getFullYear();
+    for(let y=curY;y>=curY-3;y--) {
+      const opt = document.createElement('option');
+      opt.value=y; opt.textContent=y; if(y===curY) opt.selected=true;
+      ySel.appendChild(opt);
+    }
+  }
+  // populate member filter
+  const mSel = document.getElementById('rp-member-filter');
+  if (mSel) {
+    const mems = DB.get('members',[]);
+    mSel.innerHTML = '<option value="">พนักงาน: ทั้งหมด</option>' +
+      mems.map(m=>`<option value="${m.name}">${m.name}</option>`).join('');
+  }
+  renderRpKpi();
+  renderRpContent();
+}
+
+function closeReport() {
+  document.getElementById('rp-list-view').style.display = '';
+  document.getElementById('rp-detail-view').style.display = 'none';
+}
+
+function renderReports() {
+  // โหลด last visited
+  const rpHistory = DB.get('rp_history',{});
+  Object.entries(rpHistory).forEach(([tab,date]) => {
+    const el = document.getElementById('rp-last-'+tab);
+    if(el) el.textContent = fmtDate(date);
+  });
+  // hover effect
+  document.querySelectorAll('.rp-list-row').forEach(row => {
+    row.addEventListener('mouseenter', ()=>row.style.background='#f8fafc');
+    row.addEventListener('mouseleave', ()=>row.style.background='');
+  });
+}
+
+function renderRpKpi() {
+  const { filtOrders, filtActs, filtLeads, filtCust } = getRpFiltered();
+  const rev = filtOrders.reduce((s,o)=>s+(o.total||0),0);
+  const wonL = filtLeads.filter(l=>l.stage==='won').length;
+  const totalL = filtLeads.filter(l=>l.stage==='won'||l.stage==='lost').length;
+  const wr = totalL>0?Math.round(wonL/totalL*100):0;
+  const setV = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  setV('rp-revenue', fmtMoney(rev));
+  setV('rp-order-count', filtOrders.length + ' ออเดอร์');
+  setV('rp-acts', filtActs.length);
+  setV('rp-new-cust', filtCust.length);
+  setV('rp-winrate', wr+'%');
+  setV('rp-winrate-sub', wonL+'/'+totalL+' โอกาส');
+}
+
+// renderReports v2 moved above
+
+function renderRpContent() {
+  const el = document.getElementById('rp-content');
+  if (!el) return;
+  const { filtOrders, filtActs, filtLeads, filtCust, year, month } = getRpFiltered();
+  const fmt = v => fmtMoney(v);
+  const fmtN = v => v > 0 ? v : '-';
+
+  const thStyle = 'padding:8px 10px;font-size:11px;';
+  const tdStyle = 'padding:7px 10px;font-size:12px;';
+  const tdR = 'padding:7px 10px;font-size:12px;text-align:right;';
+
+  switch(rpTab) {
+    case 'r00': {
+      // R-00 ยอดขายประจำปี รายเดือน
+      const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+      const mNames = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      const mData = months.map((m,i) => {
+        const mo = orders.filter(o=>o.status==='completed'&&(o.date||'').startsWith(year+'-'+m));
+        return { month: mNames[i], count: mo.length, total: mo.reduce((s,o)=>s+(o.total||0),0) };
+      });
+      const grandTotal = mData.reduce((s,d)=>s+d.total,0);
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-00 สรุปยอดขายประจำปี ${year}</span></div>
+        <div class="card-body" style="padding:0;overflow-x:auto;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;">
+            <th style="${thStyle}">เดือน</th><th style="${thStyle};text-align:center;">ออเดอร์</th>
+            <th style="${thStyle};text-align:right;">ยอดขาย</th>
+            <th style="${thStyle};text-align:right;">สัดส่วน</th>
+            <th style="${thStyle};">กราฟ</th>
+          </tr></thead><tbody>
+          ${mData.map(d=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="${tdStyle};font-weight:600;">${d.month}</td>
+            <td style="${tdStyle};text-align:center;">${fmtN(d.count)}</td>
+            <td style="${tdR};color:${d.total>0?'var(--sidebar-bg)':'var(--text-muted)'};">${d.total>0?fmt(d.total):'-'}</td>
+            <td style="${tdR};">${grandTotal>0?Math.round(d.total/grandTotal*100)+'%':'-'}</td>
+            <td style="${tdStyle};min-width:80px;">
+              <div style="height:10px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${grandTotal>0?Math.round(d.total/grandTotal*100):0}%;background:var(--sidebar-bg);border-radius:4px;"></div>
+              </div>
+            </td>
+          </tr>`).join('')}
+          <tr style="background:#f0fdf4;font-weight:700;">
+            <td style="${tdStyle};">รวมทั้งปี</td>
+            <td style="${tdStyle};text-align:center;">${orders.filter(o=>o.status==='completed'&&(o.date||'').startsWith(year)).length}</td>
+            <td style="${tdR};color:var(--success);">${fmt(grandTotal)}</td>
+            <td style="${tdR};">100%</td><td></td>
+          </tr></tbody></table></div></div>`;
+      break;
+    }
+    case 'r01': {
+      // R-01 ยอดขายรายเดือน แบ่งตามพนักงาน
+      const mems = DB.get('members',[]);
+      const rows = filtOrders.reduce((acc,o) => {
+        const key = o.member||'ไม่ระบุ';
+        if(!acc[key]) acc[key]={name:key,count:0,total:0};
+        acc[key].count++; acc[key].total+=(o.total||0);
+        return acc;
+      }, {});
+      const sorted = Object.values(rows).sort((a,b)=>b.total-a.total);
+      const grand = sorted.reduce((s,r)=>s+r.total,0);
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-01 ยอดขายรายเดือนตามพนักงาน</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;">
+            <th style="${thStyle}">พนักงาน</th><th style="${thStyle};text-align:center;">ออเดอร์</th>
+            <th style="${thStyle};text-align:right;">ยอดขาย</th><th style="${thStyle};text-align:right;">%</th>
+          </tr></thead><tbody>
+          ${sorted.length ? sorted.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="${tdStyle};font-weight:600;">${r.name}</td>
+            <td style="${tdStyle};text-align:center;">${r.count}</td>
+            <td style="${tdR};color:var(--sidebar-bg);">${fmt(r.total)}</td>
+            <td style="${tdR};">${grand>0?Math.round(r.total/grand*100)+'%':'-'}</td>
+          </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีข้อมูล</td></tr>`}
+          ${sorted.length?`<tr style="background:#f0fdf4;font-weight:700;">
+            <td style="${tdStyle};">รวม</td><td style="${tdStyle};text-align:center;">${filtOrders.length}</td>
+            <td style="${tdR};color:var(--success);">${fmt(grand)}</td><td style="${tdR};">100%</td>
+          </tr>`:''}
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r02': {
+      // R-02 รายละเอียดยอดขาย
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-02 รายละเอียดยอดขาย</span></div>
+        <div class="card-body" style="padding:0;overflow-x:auto;"><table style="font-size:11px;">
+          <thead><tr style="background:#1a2332;color:white;">
+            <th style="${thStyle}">เลขที่</th><th style="${thStyle}">ลูกค้า</th>
+            <th style="${thStyle}">พนักงาน</th><th style="${thStyle}">วันที่</th>
+            <th style="${thStyle}">ประเภท</th><th style="${thStyle}">ชำระ</th>
+            <th style="${thStyle};text-align:right;">มูลค่า</th>
+          </tr></thead><tbody>
+          ${filtOrders.length ? filtOrders.sort((a,b)=>b.date.localeCompare(a.date)).map(o=>{
+            const c = customers.find(x=>x.id===o.customerId);
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="${tdStyle};font-weight:600;">${o.docNo||'-'}</td>
+              <td style="${tdStyle};">${c?.name||'-'}</td>
+              <td style="${tdStyle};">${o.member||'-'}</td>
+              <td style="${tdStyle};">${fmtDate(o.date)}</td>
+              <td style="${tdStyle};"><span style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:10px;">${o.type||'SO'}</span></td>
+              <td style="${tdStyle};">${o.paymentType||'-'}</td>
+              <td style="${tdR};color:var(--sidebar-bg);font-weight:600;">${fmt(o.total)}</td>
+            </tr>`;
+          }).join('') : `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีข้อมูล</td></tr>`}
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r03': {
+      // R-03 กิจกรรมการขาย
+      const chMap = filtActs.reduce((acc,a)=>{ acc[a.channel||'อื่นๆ']=(acc[a.channel||'อื่นๆ']||0)+1; return acc; },{});
+      const memMap = filtActs.reduce((acc,a)=>{ acc[a.member||'ไม่ระบุ']=(acc[a.member||'ไม่ระบุ']||0)+1; return acc; },{});
+      const maxCh = Math.max(...Object.values(chMap),1);
+      el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card"><div class="card-header"><span class="card-title">R-03 กิจกรรมตามช่องทาง</span></div>
+          <div class="card-body">${Object.entries(chMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+            <div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span>${k}</span><span style="font-weight:600;">${v}</span></div>
+            <div style="background:var(--bg);border-radius:4px;height:8px;"><div style="height:100%;width:${Math.round(v/maxCh*100)}%;background:var(--info);border-radius:4px;"></div></div></div>`).join('')||'<div style="color:var(--text-muted);text-align:center;padding:20px;">ไม่มีข้อมูล</div>'}</div></div>
+        <div class="card"><div class="card-header"><span class="card-title">กิจกรรมตามพนักงาน</span></div>
+          <div class="card-body" style="padding:0;"><table style="font-size:12px;"><thead><tr style="background:#f8fafc;"><th style="${thStyle}">พนักงาน</th><th style="${thStyle};text-align:right;">จำนวน</th></tr></thead><tbody>
+          ${Object.entries(memMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr style="border-bottom:1px solid var(--border);"><td style="${tdStyle};">${k}</td><td style="${tdR};font-weight:700;">${v}</td></tr>`).join('') || `<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--text-muted);">ไม่มีข้อมูล</td></tr>`}
+          </tbody></table></div></div></div>`;
+      break;
+    }
+    case 'r04': {
+      // R-04 เหตุผล Lost
+      const lostLeads = filtLeads.filter(l=>l.stage==='lost');
+      const reasonMap = lostLeads.reduce((acc,l)=>{ const r=l.lostReason||'ไม่ระบุ'; acc[r]=(acc[r]||0)+1; return acc; },{});
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-04 วิเคราะห์เหตุผล Lost (${lostLeads.length} รายการ)</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;"><th style="${thStyle}">เหตุผล</th><th style="${thStyle};text-align:center;">จำนวน</th><th style="${thStyle};text-align:right;">%</th></tr></thead><tbody>
+          ${Object.entries(reasonMap).sort((a,b)=>b[1]-a[1]).map(([r,n])=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="${tdStyle};">${r}</td><td style="${tdStyle};text-align:center;font-weight:700;color:var(--danger);">${n}</td>
+            <td style="${tdR};">${lostLeads.length>0?Math.round(n/lostLeads.length*100)+'%':'-'}</td></tr>`).join('')||`<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีข้อมูล Lost</td></tr>`}
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r05': {
+      // R-05 วิเคราะห์ลูกค้า 30/60/90/180 วัน
+      const now = new Date();
+      const daysSince = d => { if(!d) return 9999; return Math.floor((now-new Date(d))/86400000); };
+      const custAnalysis = customers.map(c => {
+        const lastAct = activities.filter(a=>a.customerId===c.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
+        const days = daysSince(lastAct?.date);
+        let band = days<=30?'🟢 ≤30 วัน':days<=60?'🟡 31-60 วัน':days<=90?'🟠 61-90 วัน':days<=180?'🔴 91-180 วัน':'⚫ >180 วัน';
+        return { ...c, lastDate: lastAct?.date||'-', days, band };
+      }).sort((a,b)=>a.days-b.days);
+      const bandCount = custAnalysis.reduce((acc,c)=>{ acc[c.band]=(acc[c.band]||0)+1; return acc; },{});
+      el.innerHTML = `<div style="display:grid;grid-template-columns:200px 1fr;gap:16px;">
+        <div class="card"><div class="card-header"><span class="card-title">สรุปตามช่วงเวลา</span></div>
+          <div class="card-body">${Object.entries(bandCount).map(([b,n])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;"><span>${b}</span><strong>${n}</strong></div>`).join('')}</div></div>
+        <div class="card"><div class="card-header"><span class="card-title">R-05 รายละเอียดลูกค้า</span></div>
+          <div class="card-body" style="padding:0;overflow-y:auto;max-height:400px;"><table style="font-size:11px;">
+            <thead><tr style="background:#f8fafc;"><th style="${thStyle}">ลูกค้า</th><th style="${thStyle}">กิจกรรมล่าสุด</th><th style="${thStyle};text-align:center;">วันที่ผ่านมา</th><th style="${thStyle}">สถานะ</th></tr></thead><tbody>
+            ${custAnalysis.map(c=>`<tr style="border-bottom:1px solid var(--border);">
+              <td style="${tdStyle};">${c.name}</td><td style="${tdStyle};">${c.lastDate!=='-'?fmtDate(c.lastDate):'-'}</td>
+              <td style="${tdStyle};text-align:center;">${c.days<9999?c.days+' วัน':'-'}</td>
+              <td style="${tdStyle};">${c.band}</td></tr>`).join('')}
+            </tbody></table></div></div></div>`;
+      break;
+    }
+    case 'r06': {
+      // R-06 วิเคราะห์ตาม Tag
+      const tagMap = {};
+      customers.forEach(c => {
+        (c.tags||[]).forEach(t => {
+          const label = t.replace(/^c:[^:]+:/,'').replace(/^c:/,'');
+          if(!label||label.length>20) return;
+          if(!tagMap[label]) tagMap[label]={count:0,acts:0,revenue:0};
+          tagMap[label].count++;
+          tagMap[label].acts += activities.filter(a=>a.customerId===c.id).length;
+          tagMap[label].revenue += orders.filter(o=>o.customerId===c.id&&o.status==='completed').reduce((s,o)=>s+(o.total||0),0);
+        });
+      });
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-06 วิเคราะห์ตาม Tag ลูกค้า</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;"><th style="${thStyle}">Tag</th><th style="${thStyle};text-align:center;">ลูกค้า</th><th style="${thStyle};text-align:center;">กิจกรรม</th><th style="${thStyle};text-align:right;">ยอดขาย</th></tr></thead><tbody>
+          ${Object.entries(tagMap).sort((a,b)=>b[1].count-a[1].count).map(([t,d])=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="${tdStyle};font-weight:600;">${t}</td><td style="${tdStyle};text-align:center;">${d.count}</td>
+            <td style="${tdStyle};text-align:center;">${d.acts}</td><td style="${tdR};">${d.revenue>0?fmt(d.revenue):'-'}</td></tr>`).join('')||`<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีข้อมูล Tag</td></tr>`}
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r07': {
+      // R-07 ยอดคาดการณ์ตามกลุ่มสินค้า (จาก quotes)
+      const prodMap = {};
+      quotes.forEach(q => {
+        (q.items||[]).forEach(item => {
+          if(!item.name) return;
+          if(!prodMap[item.name]) prodMap[item.name]={quotes:0,value:0,orders:0,orderVal:0};
+          prodMap[item.name].quotes++;
+          prodMap[item.name].value += (item.qty||1)*(item.price||0);
+        });
+      });
+      filtOrders.forEach(o => {
+        (o.items||[]).forEach(item => {
+          if(!item.name) return;
+          if(!prodMap[item.name]) prodMap[item.name]={quotes:0,value:0,orders:0,orderVal:0};
+          prodMap[item.name].orders++;
+          prodMap[item.name].orderVal += (item.qty||1)*(item.price||0);
+        });
+      });
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-07 ยอดคาดการณ์ตามกลุ่มสินค้า</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;"><th style="${thStyle}">สินค้า</th><th style="${thStyle};text-align:center;">ใบเสนอ</th><th style="${thStyle};text-align:right;">มูลค่าเสนอ</th><th style="${thStyle};text-align:center;">ออเดอร์</th><th style="${thStyle};text-align:right;">ยอดขายจริง</th></tr></thead><tbody>
+          ${Object.entries(prodMap).sort((a,b)=>b[1].orderVal-a[1].orderVal).map(([n,d])=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="${tdStyle};font-weight:600;">${n}</td><td style="${tdStyle};text-align:center;">${d.quotes}</td>
+            <td style="${tdR};">${d.value>0?fmt(d.value):'-'}</td><td style="${tdStyle};text-align:center;">${d.orders}</td>
+            <td style="${tdR};color:var(--success);">${d.orderVal>0?fmt(d.orderVal):'-'}</td></tr>`).join('')||`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีข้อมูลสินค้า</td></tr>`}
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r08': {
+      // R-08 ยอดขายโครงการ
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-08 รายงานการขายโครงการ</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;"><th style="${thStyle}">โครงการ</th><th style="${thStyle}">ลูกค้า</th><th style="${thStyle}">ประเภท</th><th style="${thStyle}">พนักงาน</th><th style="${thStyle}">สถานะ</th><th style="${thStyle};text-align:right;">มูลค่า</th></tr></thead><tbody>
+          ${projects.length ? projects.map(p=>{
+            const c=customers.find(x=>x.id===p.customerId);
+            const statusL={open:'🟡 ดำเนินการ',hold:'⏸️ รอ',done:'✅ เสร็จ'};
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="${tdStyle};font-weight:600;">${p.name}</td><td style="${tdStyle};">${c?.name||'-'}</td>
+              <td style="${tdStyle};"><span style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:10px;">${p.type||'-'}</span></td>
+              <td style="${tdStyle};">${p.member||'-'}</td><td style="${tdStyle};">${statusL[p.status]||p.status}</td>
+              <td style="${tdR};color:var(--sidebar-bg);font-weight:600;">${fmt(p.value||0)}</td></tr>`;
+          }).join('') : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีโครงการ</td></tr>`}
+          ${projects.length?`<tr style="background:#f0fdf4;font-weight:700;"><td style="${tdStyle};" colspan="5">รวม</td><td style="${tdR};color:var(--success);">${fmt(projects.reduce((s,p)=>s+(p.value||0),0))}</td></tr>`:''}
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r09': {
+      // R-09 เปรียบเทียบคาดการณ์ vs จริง
+      const fcGoals = DB.get('fc_goals', null);
+      const annualGoal = fcGoals?.year || (goals.revenue||50000)*365;
+      const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+      const mNames = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      const qGoals = fcGoals ? [fcGoals.q1,fcGoals.q2,fcGoals.q3,fcGoals.q4] : [annualGoal/4,annualGoal/4,annualGoal/4,annualGoal/4];
+      const mGoals = months.map((_,i) => qGoals[Math.floor(i/3)]/3);
+      const mActual = months.map(m => orders.filter(o=>o.status==='completed'&&(o.date||'').startsWith(year+'-'+m)).reduce((s,o)=>s+(o.total||0),0));
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-09 เปรียบเทียบเป้าหมาย vs ยอดจริง ปี ${year}</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;"><th style="${thStyle}">เดือน</th><th style="${thStyle};text-align:right;">เป้าหมาย</th><th style="${thStyle};text-align:right;">จริง</th><th style="${thStyle};text-align:right;">%</th><th style="${thStyle};text-align:right;">ผลต่าง</th></tr></thead><tbody>
+          ${months.map((m,i)=>{
+            const goal=mGoals[i]; const actual=mActual[i];
+            const pct=goal>0?Math.round(actual/goal*100):0;
+            const diff=actual-goal;
+            const color=pct>=100?'var(--success)':pct>=70?'var(--warning)':'var(--danger)';
+            const bg=pct>=100?'#f0fdf4':pct>=70?'#fef3c7':'#fef2f2';
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="${tdStyle};font-weight:600;">${mNames[i]}</td>
+              <td style="${tdR};">${fmt(goal)}</td>
+              <td style="${tdR};color:var(--sidebar-bg);">${actual>0?fmt(actual):'-'}</td>
+              <td style="${tdR};background:${bg};color:${color};font-weight:700;">${pct}%</td>
+              <td style="${tdR};color:${diff>=0?'var(--success)':'var(--danger)'};">${diff>=0?'+':''}${fmt(diff)}</td></tr>`;
+          }).join('')}
+          <tr style="background:#f0fdf4;font-weight:700;"><td style="${tdStyle};">รวม</td>
+            <td style="${tdR};">${fmt(annualGoal)}</td>
+            <td style="${tdR};color:var(--sidebar-bg);">${fmt(mActual.reduce((s,v)=>s+v,0))}</td>
+            <td style="${tdR};color:var(--info);">${annualGoal>0?Math.round(mActual.reduce((s,v)=>s+v,0)/annualGoal*100):0}%</td>
+            <td style="${tdR};color:${mActual.reduce((s,v)=>s+v,0)-annualGoal>=0?'var(--success)':'var(--danger)'};">
+              ${mActual.reduce((s,v)=>s+v,0)-annualGoal>=0?'+':''}${fmt(mActual.reduce((s,v)=>s+v,0)-annualGoal)}</td></tr>
+          </tbody></table></div></div>`;
+      break;
+    }
+    case 'r13': {
+      // R-13 แผนงานติดตาม
+      const allTasks = tasks.filter(t=>!t.done).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+      el.innerHTML = `<div class="card"><div class="card-header"><span class="card-title">R-13 แผนงานติดตาม (${allTasks.length} รายการ)</span></div>
+        <div class="card-body" style="padding:0;"><table style="font-size:12px;">
+          <thead><tr style="background:#1a2332;color:white;"><th style="${thStyle}">ลูกค้า</th><th style="${thStyle}">หมายเหตุ</th><th style="${thStyle};text-align:center;">กำหนด</th><th style="${thStyle};text-align:center;">สถานะ</th><th style="${thStyle};text-align:center;">Hotness</th></tr></thead><tbody>
+          ${allTasks.length ? allTasks.map(t=>{
+            const c=customers.find(x=>x.id===t.customerId);
+            const overdue=t.dueDate<today();
+            const isToday=t.dueDate===today();
+            return `<tr style="border-bottom:1px solid var(--border);${overdue?'background:#fef2f2;':''}">
+              <td style="${tdStyle};font-weight:600;">${c?.name||'-'}</td>
+              <td style="${tdStyle};color:var(--text-muted);">${t.note||'-'}</td>
+              <td style="${tdStyle};text-align:center;">${fmtDate(t.dueDate)}</td>
+              <td style="${tdStyle};text-align:center;"><span style="background:${overdue?'#fef2f2':isToday?'#fef3c7':'#f0fdf4'};color:${overdue?'var(--danger)':isToday?'var(--warning)':'var(--success)'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;">${overdue?'เกินกำหนด':isToday?'วันนี้':'รอดำเนินการ'}</span></td>
+              <td style="${tdStyle};text-align:center;">${hotnessStars(t.hotness)}</td></tr>`;
+          }).join('') : `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">ไม่มีงานค้างอยู่</td></tr>`}
+          </tbody></table></div></div>`;
+      break;
+    }
+    default:
+      el.innerHTML = '';
+  }
+}
+
+// Patch navTo for Phase 10
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page){
+    _orig(page);
+    if(page==='settings'){ renderProducts(); renderProjTypes(); renderLostReasons(); }
+    if(page==='reports'){ renderReports(); }
+  };
+})();
+
+// Init Phase 10
+products = DB.get('wpg_products', []);
+projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
+lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
 </script>
