@@ -6786,6 +6786,423 @@ projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
 
 // ============================================================
+//  PHASE 18 — ลูกค้า tab ติดตาม, โครงการ PJ# + ตารางครบ,
+//             ใบสั่งขาย วันจัดส่ง + กำไร + KPI แบบ Jubili
+// ============================================================
+
+// ─────────────────────────────────────────────
+// 1. ลูกค้า — tab "ลูกค้าที่ติดตามทั้งหมด / ไม่ได้ติดตาม"
+// ─────────────────────────────────────────────
+(function(){
+  // เพิ่ม tab ติดตาม/ไม่ติดตาม ใต้ status tabs
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page === 'customers') {
+      setTimeout(injectCustFollowTabs, 150);
+    }
+  };
+})();
+
+function injectCustFollowTabs() {
+  if (document.getElementById('cust-follow-bar')) return;
+  const statusTabs = document.getElementById('cust-status-tabs');
+  if (!statusTabs) return;
+
+  // เพิ่ม follow filter bar ใต้ status tabs
+  const followBar = document.createElement('div');
+  followBar.id = 'cust-follow-bar';
+  followBar.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:8px;';
+  followBar.innerHTML = `
+    <span style="font-size:12px;color:var(--text-muted);font-weight:600;">มุมมอง :</span>
+    <button id="cust-follow-all" onclick="setCustFollow('all')"
+      style="padding:4px 12px;border-radius:16px;border:none;font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;
+      background:var(--sidebar-bg);color:var(--accent);font-weight:600;">
+      งานติดตามทั้งหมด
+    </button>
+    <button id="cust-follow-yes" onclick="setCustFollow('yes')"
+      style="padding:4px 12px;border-radius:16px;border:1px solid var(--border);font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;
+      background:white;color:var(--text-muted);">
+      ลูกค้าที่ติดตามทั้งหมด (<span id="cust-follow-yes-cnt">0</span>)
+    </button>
+    <button id="cust-follow-no" onclick="setCustFollow('no')"
+      style="padding:4px 12px;border-radius:16px;border:1px solid var(--border);font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;
+      background:white;color:var(--text-muted);">
+      ลูกค้าที่ไม่ได้ติดตาม (<span id="cust-follow-no-cnt">0</span>)
+    </button>`;
+  statusTabs.parentNode.insertBefore(followBar, statusTabs);
+  updateCustFollowCounts();
+}
+
+let _custFollowFilter = 'all';
+function setCustFollow(mode) {
+  _custFollowFilter = mode;
+  const btns = ['all','yes','no'];
+  btns.forEach(b => {
+    const el = document.getElementById('cust-follow-' + b);
+    if (!el) return;
+    const active = b === mode;
+    el.style.background = active ? 'var(--sidebar-bg)' : 'white';
+    el.style.color = active ? 'var(--accent)' : 'var(--text-muted)';
+    el.style.border = active ? 'none' : '1px solid var(--border)';
+    el.style.fontWeight = active ? '600' : '400';
+  });
+  renderCustomers();
+}
+
+function updateCustFollowCounts() {
+  const td = today();
+  const notifSets = DB.get('wpg_notif_settings', { regularOrderCount:3, lapseMonths:3 });
+  // ลูกค้าที่ "ติดตาม" = มีงานติดตามที่ยังไม่เสร็จ หรือมีกิจกรรมในเดือนนี้
+  const thisMonth = td.substring(0,7);
+  const followed = customers.filter(c => {
+    const hasPendingTask = tasks.some(t => !t.done && t.customerId === c.id);
+    const hasRecentAct = activities.some(a => a.customerId===c.id && a.date?.startsWith(thisMonth));
+    return hasPendingTask || hasRecentAct;
+  });
+  const notFollowed = customers.filter(c => !followed.find(f=>f.id===c.id));
+  const yesCnt = document.getElementById('cust-follow-yes-cnt');
+  const noCnt  = document.getElementById('cust-follow-no-cnt');
+  if(yesCnt) yesCnt.textContent = followed.length;
+  if(noCnt)  noCnt.textContent  = notFollowed.length;
+}
+
+// Patch renderCustomers ให้กรองตาม follow filter
+(function(){
+  const _orig = window.renderCustomers;
+  window.renderCustomers = function() {
+    // เรียก original ก่อน
+    if(_orig) _orig();
+    // แต่ถ้ามี follow filter ก็ filter เพิ่ม
+    if (_custFollowFilter === 'all') return;
+    const grid = document.getElementById('customer-grid');
+    if (!grid) return;
+    const thisMonth = today().substring(0,7);
+    const followed = new Set(customers.filter(c => {
+      const hasPendingTask = tasks.some(t => !t.done && t.customerId===c.id);
+      const hasRecentAct = activities.some(a => a.customerId===c.id && a.date?.startsWith(thisMonth));
+      return hasPendingTask || hasRecentAct;
+    }).map(c=>c.id));
+    // ซ่อน cards ที่ไม่ตรงเงื่อนไข
+    Array.from(grid.querySelectorAll('.customer-card')).forEach(card => {
+      const onclick = card.getAttribute('onclick')||'';
+      const idMatch = onclick.match(/'([^']+)'/);
+      if (!idMatch) return;
+      const custId = idMatch[1];
+      const isFollowed = followed.has(custId);
+      card.style.display = (_custFollowFilter==='yes' ? isFollowed : !isFollowed) ? '' : 'none';
+    });
+    updateCustFollowCounts();
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 2. โครงการ — PJ# + ตารางครบแบบ Jubili
+// ─────────────────────────────────────────────
+function genProjNo(proj) {
+  if (proj.projNo) return proj.projNo;
+  const d = proj.createdAt || today();
+  const yr = d.substring(2,4);
+  const mo = d.substring(5,7);
+  const day = d.substring(8,10);
+  const idx = String(projects.indexOf(proj)+1).padStart(4,'0');
+  return `PJ#${yr}${mo}${day}-${idx}`;
+}
+
+// Patch renderProjects ให้มี PJ# + คอลัมน์ครบแบบ Jubili
+(function(){
+  const _orig = window.renderProjects;
+  window.renderProjects = function() {
+    const q = (document.getElementById('pj-search')?.value||'').toLowerCase();
+    const sf = document.getElementById('pj-filter-status')?.value||'';
+    const tbody = document.getElementById('project-tbody');
+    const empty = document.getElementById('pj-empty');
+    if (!tbody) return;
+
+    let list = [...projects];
+    if (sf) list = list.filter(p=>p.status===sf);
+    if (q) list = list.filter(p=>{
+      const c=customers.find(x=>x.id===p.customerId);
+      return p.name?.toLowerCase().includes(q)||c?.name?.toLowerCase().includes(q)||genProjNo(p).toLowerCase().includes(q);
+    });
+    list.sort((a,b)=>b.createdAt?.localeCompare(a.createdAt||''));
+
+    // อัพเดต stats
+    const el = id => document.getElementById(id);
+    if(el('pj-total'))  el('pj-total').textContent  = projects.length;
+    if(el('pj-active')) el('pj-active').textContent  = projects.filter(p=>p.status==='open'||p.status==='กำลังดำเนินการ').length;
+    if(el('pj-done'))   el('pj-done').textContent    = projects.filter(p=>p.status==='done'||p.status==='เสร็จสิ้น').length;
+    if(el('pj-value'))  el('pj-value').textContent   = fmtMoney(projects.reduce((s,p)=>s+(p.value||0),0));
+
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    const statusColor = { open:'#3b82f6', กำลังดำเนินการ:'#3b82f6', done:'#22c55e', เสร็จสิ้น:'#22c55e',
+      hold:'#f59e0b', รอดำเนินการ:'#f59e0b', cancelled:'#ef4444', ยกเลิก:'#ef4444' };
+    const statusLabel = { open:'กำลังดำเนินการ', done:'เสร็จสิ้น', hold:'รอดำเนินการ', cancelled:'ยกเลิก' };
+
+    tbody.innerHTML = list.map(p => {
+      const cust = customers.find(x=>x.id===p.customerId);
+      const projNo = genProjNo(p);
+      const actCnt = activities.filter(a=>a.projectId===p.id||a.customerId===p.customerId).length;
+      const qtCnt  = quotes.filter(q=>q.customerId===p.customerId).length;
+      const statusKey = p.status||'open';
+      const color = statusColor[statusKey]||'#94a3b8';
+      const label = statusLabel[statusKey]||statusKey;
+      return `<tr style="border-bottom:1px solid var(--border);cursor:pointer;">
+        <td style="padding:10px 14px;">
+          <span style="font-size:12px;color:var(--text-muted);font-weight:600;">${projNo}</span>
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;font-weight:600;">${p.name||'-'}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${p.type||''}</div>
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;">${cust?.name||'-'}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${cust?.phone||''}</div>
+        </td>
+        <td style="padding:10px 14px;text-align:center;">
+          <span style="font-weight:700;">${hotnessStars(p.hotness||0)}</span>
+        </td>
+        <td style="padding:10px 14px;text-align:center;font-size:13px;font-weight:700;">${qtCnt}</td>
+        <td style="padding:10px 14px;text-align:center;font-size:13px;font-weight:700;">${actCnt}</td>
+        <td style="padding:10px 14px;font-size:12px;">
+          ${p.startDate?fmtDate(p.startDate):'-'}
+          ${p.endDate?`<br><span style="color:var(--text-muted);">ถึง ${fmtDate(p.endDate)}</span>`:''}
+        </td>
+        <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:700;">${fmtMoney(p.value||0)}</td>
+        <td style="padding:10px 14px;font-size:12px;">${p.member||'-'}</td>
+        <td style="padding:10px 14px;text-align:center;">
+          <span style="padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;background:${color}22;color:${color};">
+            ${label}
+          </span>
+        </td>
+        <td style="padding:10px 8px;">
+          <button class="btn btn-xs btn-danger" onclick="deleteProject('${p.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // อัพเดต thead ให้ครบแบบ Jubili
+    const thead = tbody.closest('table')?.querySelector('thead tr');
+    if (thead && thead.children.length < 11) {
+      thead.innerHTML = `
+        <th style="padding:10px 14px;">รหัสโครงการ</th>
+        <th style="padding:10px 14px;">โครงการ</th>
+        <th style="padding:10px 14px;">ลูกค้า</th>
+        <th style="padding:10px 14px;text-align:center;">ความสำคัญ</th>
+        <th style="padding:10px 14px;text-align:center;">ใบเสนอราคา</th>
+        <th style="padding:10px 14px;text-align:center;">กิจกรรม</th>
+        <th style="padding:10px 14px;">วันเริ่ม-สิ้นสุด</th>
+        <th style="padding:10px 14px;text-align:right;">มูลค่า</th>
+        <th style="padding:10px 14px;">ผู้รับผิดชอบ</th>
+        <th style="padding:10px 14px;text-align:center;">สถานะ</th>
+        <th></th>`;
+    }
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 3. ใบสั่งขาย — SO# format + KPI ครบ + วันจัดส่ง + กำไร%
+// ─────────────────────────────────────────────
+
+// Patch renderOrders ให้ครบแบบ Jubili
+(function(){
+  const _orig = window.renderOrders;
+  window.renderOrders = function() {
+    const q2 = (document.getElementById('od-search')?.value||'').toLowerCase();
+    const sf  = document.getElementById('od-filter')?.value||'';
+    const tbody = document.getElementById('order-tbody') || document.getElementById('od-tbody');
+    const empty  = document.getElementById('od-empty');
+    if (!tbody) return;
+
+    let list = [...orders];
+    if (sf) list = list.filter(o=>o.status===sf);
+    if (q2) list = list.filter(o=>{
+      const c=customers.find(x=>x.id===o.customerId);
+      return o.docNo?.toLowerCase().includes(q2)||c?.name?.toLowerCase().includes(q2);
+    });
+    list.sort((a,b)=>b.date?.localeCompare(a.date||''));
+
+    // อัพเดต KPI cards แบบ Jubili
+    const soTotal  = orders.filter(o=>o.type==='SO'||o.type==='SOD').reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+    const sopTotal = orders.filter(o=>o.type==='SOP').reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+    const pending  = orders.filter(o=>o.status==='รอดำเนินการ'||o.status==='กำลังผลิต');
+    const pendingVal = pending.reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+
+    const el = id => document.getElementById(id);
+    if(el('od-all'))     el('od-all').textContent     = orders.length;
+    if(el('od-pending')) el('od-pending').textContent  = pending.length;
+    if(el('od-shipped')) el('od-shipped').textContent  = orders.filter(o=>o.status==='จัดส่งแล้ว'||o.status==='shipped').length;
+    if(el('od-value'))   el('od-value').textContent    = fmtMoney(soTotal+sopTotal);
+
+    // อัพเดต KPI extra (SO/SOD, SOP, รอส่ง)
+    injectOrderKPICards(soTotal, sopTotal, pendingVal);
+
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    const typeLabel = { SO:'SO', SOD:'SOD', SOP:'SOP' };
+    const typeColor = { SO:'#1a2332', SOD:'#3b82f6', SOP:'#22c55e' };
+    const statusColor = { รอดำเนินการ:'#f59e0b', กำลังผลิต:'#3b82f6', จัดส่งแล้ว:'#8b5cf6', เสร็จสิ้น:'#22c55e', ยกเลิก:'#ef4444' };
+
+    tbody.innerHTML = list.map(o => {
+      const cust = customers.find(x=>x.id===o.customerId);
+      const total = (o.items||[]).reduce((s,it)=>s+it.qty*it.price,0);
+      const cost  = total * 0.7; // ประมาณ cost 70%
+      const profit = total > 0 ? Math.round((total-cost)/total*100) : 0;
+      const type  = o.type||'SO';
+      const color = typeColor[type]||'#1a2332';
+      const statusKey = o.status||'รอดำเนินการ';
+      const sColor = statusColor[statusKey]||'#94a3b8';
+
+      return `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 14px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;background:${color};color:white;">${typeLabel[type]}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text-muted);">${o.docNo||'-'}</span>
+          </div>
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;font-weight:600;">${cust?.name||'-'}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${cust?.phone||''}</div>
+        </td>
+        <td style="padding:10px 14px;font-size:12px;">${o.member||'-'}</td>
+        <td style="padding:10px 14px;font-size:12px;">${fmtDate(o.date)}</td>
+        <td style="padding:10px 14px;font-size:12px;">
+          ${o.deliveryDate ? fmtDate(o.deliveryDate) : '<span style="color:var(--text-muted);">-</span>'}
+        </td>
+        <td style="padding:10px 14px;text-align:center;">
+          ${total>0 ? `<div style="font-size:11px;color:${profit>=30?'#22c55e':'#94a3b8'};font-weight:600;">${profit}%</div>` : '-'}
+        </td>
+        <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:700;">${fmtMoney(total)}</td>
+        <td style="padding:10px 14px;text-align:center;">
+          <span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${sColor}22;color:${sColor};">
+            ${statusKey}
+          </span>
+        </td>
+        <td style="padding:10px 8px;">
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-xs" style="background:#1a2332;color:white;" onclick="printOrder('${o.id}')">🖨️</button>
+            <button class="btn btn-xs btn-danger" onclick="deleteOrder('${o.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // อัพเดต thead ให้ครบแบบ Jubili
+    const thead = tbody.closest('table')?.querySelector('thead tr');
+    if (thead) {
+      thead.innerHTML = `
+        <th style="padding:10px 14px;">หมายเลขใบสั่งขาย</th>
+        <th style="padding:10px 14px;">ลูกค้า</th>
+        <th style="padding:10px 14px;">ผู้รับผิดชอบ</th>
+        <th style="padding:10px 14px;">วันที่ออกเอกสาร</th>
+        <th style="padding:10px 14px;">วันที่จัดส่ง</th>
+        <th style="padding:10px 14px;text-align:center;">กำไร(%)</th>
+        <th style="padding:10px 14px;text-align:right;">มูลค่า</th>
+        <th style="padding:10px 14px;text-align:center;">สถานะ</th>
+        <th></th>`;
+    }
+  };
+})();
+
+function injectOrderKPICards(soTotal, sopTotal, pendingVal) {
+  if (document.getElementById('od-kpi-extra')) return;
+  const odPage = document.getElementById('page-orders');
+  if (!odPage) return;
+  const statsGrid = odPage.querySelector('.stats-grid');
+  if (!statsGrid) return;
+
+  // แทนที่ stats grid ด้วย Jubili style
+  statsGrid.style.gridTemplateColumns = 'repeat(4,1fr)';
+
+  // อัพเดต labels ให้เหมือน Jubili
+  const labels = statsGrid.querySelectorAll('.stat-label');
+  const values = statsGrid.querySelectorAll('.stat-value');
+  if (labels[0]) labels[0].textContent = 'SO/SOD (ยอดรวม)';
+  if (labels[1]) labels[1].textContent = 'SOP (ชำระแล้ว)';
+  if (labels[2]) labels[2].textContent = 'ยอดขายรอส่งทั้งหมด';
+  if (labels[3]) labels[3].textContent = 'ทั้งหมด';
+  if (values[0]) { values[0].textContent = fmtMoney(soTotal); values[0].style.fontSize='16px'; }
+  if (values[1]) { values[1].textContent = fmtMoney(sopTotal); values[1].style.color='#22c55e'; values[1].style.fontSize='16px'; }
+  if (values[2]) { values[2].textContent = fmtMoney(pendingVal); values[2].style.color='#f59e0b'; values[2].style.fontSize='16px'; }
+  if (values[3]) values[3].textContent = orders.length;
+
+  statsGrid.setAttribute('id','od-kpi-extra');
+}
+
+// เพิ่ม field deliveryDate ใน order modal ถ้ายังไม่มี
+(function(){
+  const _orig = window.openOrderModal;
+  window.openOrderModal = function(id) {
+    if(_orig) _orig(id);
+    setTimeout(() => {
+      const modal = document.getElementById('modal-order');
+      if (!modal || document.getElementById('order-delivery-date')) return;
+      // หา date field แล้วเพิ่ม delivery date ข้างๆ
+      const dateInput = document.getElementById('od-date');
+      if (dateInput) {
+        const parent = dateInput.closest('.form-group');
+        if (parent) {
+          const deliveryGroup = document.createElement('div');
+          deliveryGroup.className = 'form-group';
+          deliveryGroup.innerHTML = `<label class="form-label">วันที่จัดส่ง</label>
+            <input class="form-control" type="date" id="order-delivery-date">`;
+          parent.parentNode.insertBefore(deliveryGroup, parent.nextSibling);
+        }
+      }
+      // โหลดค่า delivery date ถ้าแก้ไข
+      if (id) {
+        const o = orders.find(x=>x.id===id);
+        if (o?.deliveryDate) {
+          setTimeout(() => {
+            const inp = document.getElementById('order-delivery-date');
+            if(inp) inp.value = o.deliveryDate;
+          }, 50);
+        }
+      }
+    }, 100);
+  };
+})();
+
+// Patch saveOrder ให้บันทึก deliveryDate
+(function(){
+  const _orig = window.saveOrder;
+  window.saveOrder = function() {
+    const deliveryInp = document.getElementById('order-delivery-date');
+    if (deliveryInp) {
+      // inject deliveryDate เข้าไปก่อน save
+      window._pendingDeliveryDate = deliveryInp.value;
+    }
+    if(_orig) _orig();
+    // หลัง save แล้ว inject delivery date ลง order ล่าสุด
+    if (window._pendingDeliveryDate) {
+      const lastOrder = orders[orders.length-1];
+      if (lastOrder && !lastOrder.deliveryDate) {
+        lastOrder.deliveryDate = window._pendingDeliveryDate;
+        DB.set('orders', orders);
+      }
+      window._pendingDeliveryDate = '';
+    }
+  };
+})();
+
+// Init Phase 18
+setTimeout(() => {
+  if (document.getElementById('page-customers')?.classList.contains('active')) {
+    injectCustFollowTabs();
+  }
+  if (document.getElementById('page-projects')?.classList.contains('active')) {
+    renderProjects();
+  }
+  if (document.getElementById('page-orders')?.classList.contains('active')) {
+    renderOrders();
+  }
+}, 700);
+
+
+// ============================================================
 //  PHASE 17 — ลูกค้า tab ลำดับ, โอกาส LD# + ผู้ติดต่อ,
 //             ใบเสนอราคา tab เกินกำหนด + สินค้าในตาราง
 // ============================================================
