@@ -4091,6 +4091,7 @@ function renderOrders() {
       <td>${fmtDate(x.dueDate)}</td>
       <td><span class="badge badge-${x.status}">${statusLabel[x.status]||x.status}</span></td>
       <td style="white-space:nowrap;">
+        <button class="btn btn-xs btn-ghost" onclick="printOrder('${x.id}')" title="พิมพ์">🖨️</button>
         <button class="btn btn-xs btn-ghost" onclick="openOrderModal('${x.id}')">✏️</button>
         <button class="btn btn-xs btn-danger" onclick="deleteOrder('${x.id}')">✕</button>
       </td>
@@ -6232,6 +6233,542 @@ projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
 
 // ============================================================
+//  PHASE 12 — Print, Global Search, Notification, CSV Export, Mobile
+// ============================================================
+
+// ─────────────────────────────────────────────
+// 1. PRINT ใบเสนอราคา / ใบสั่งขาย
+// ─────────────────────────────────────────────
+function printQuote(id) {
+  const q = quotes.find(x => x.id === id);
+  if (!q) return;
+  const cust = customers.find(c => c.id === q.customerId);
+  const s = DB.get('settings', {});
+  const items = (q.items || []).map((it, i) => `
+    <tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;">${i+1}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;">${it.name}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;">${it.qty}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;">${it.unit||'ชิ้น'}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;">${fmtMoney(it.price)}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;">${fmtMoney(it.qty*it.price)}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>ใบเสนอราคา ${q.docNo}</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box;} body{font-family:'Sarabun',sans-serif;font-size:13px;color:#1a2332;padding:30px;}
+      .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a2332;}
+      .company-name{font-size:20px;font-weight:700;color:#1a2332;}
+      .doc-title{font-size:22px;font-weight:700;color:#1a2332;text-align:right;}
+      .doc-no{font-size:13px;color:#64748b;text-align:right;}
+      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+      .info-box{background:#f8fafc;padding:12px 16px;border-radius:6px;}
+      .info-label{font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px;}
+      .info-val{font-size:13px;font-weight:500;}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+      thead tr{background:#1a2332;color:white;}
+      thead th{padding:10px 10px;text-align:left;font-size:12px;}
+      .total-box{display:flex;justify-content:flex-end;}
+      .total-table{width:260px;}
+      .total-table td{padding:5px 10px;font-size:13px;}
+      .grand-total td{font-weight:700;font-size:15px;color:#1a2332;border-top:2px solid #1a2332;}
+      .footer{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+      .sign-box{border-top:1px dashed #94a3b8;padding-top:8px;text-align:center;font-size:12px;color:#64748b;}
+      @media print{body{padding:15px;}}
+    </style></head><body>
+    <div class="hdr">
+      <div>
+        <div class="company-name">💎 ${s.company||'Wiseplusgrow'}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px;">${s.address||''}</div>
+        <div style="font-size:12px;color:#64748b;">เลขภาษี: ${s.taxId||'-'} | โทร: ${s.phone||'-'}</div>
+      </div>
+      <div>
+        <div class="doc-title">ใบเสนอราคา</div>
+        <div class="doc-no">เลขที่: ${q.docNo}</div>
+        <div class="doc-no">วันที่: ${fmtDate(q.date)}</div>
+        <div class="doc-no">หมดอายุ: ${q.expireDate?fmtDate(q.expireDate):'-'}</div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">ลูกค้า</div>
+        <div class="info-val">${cust?.name||'-'}</div>
+        <div style="font-size:12px;color:#64748b;">${cust?.phone||''} ${cust?.email||''}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-label">สถานะ / ผู้รับผิดชอบ</div>
+        <div class="info-val">${q.status||'-'}</div>
+        <div style="font-size:12px;color:#64748b;">${q.member||''}</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>รายการ</th><th style="text-align:center;">จำนวน</th><th style="text-align:center;">หน่วย</th><th style="text-align:right;">ราคา/หน่วย</th><th style="text-align:right;">รวม</th></tr></thead>
+      <tbody>${items}</tbody>
+    </table>
+    <div class="total-box"><table class="total-table">
+      <tr><td>ยอดรวม</td><td style="text-align:right;">${fmtMoney(q.subtotal||0)}</td></tr>
+      <tr><td>VAT 7%</td><td style="text-align:right;">${fmtMoney(q.vat||0)}</td></tr>
+      <tr class="grand-total"><td>ยอดรวมสุทธิ</td><td style="text-align:right;">${fmtMoney(q.total||0)}</td></tr>
+    </table></div>
+    ${s.promptpay?`<div style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border-radius:6px;font-size:12px;">💳 ชำระผ่าน Promptpay: <strong>${s.promptpay}</strong> (${s.promptpayName||''})</div>`:''}
+    <div class="footer">
+      <div class="sign-box">ลงชื่อลูกค้า / Customer Signature</div>
+      <div class="sign-box">ลงชื่อผู้เสนอราคา / Sales Signature</div>
+    </div>
+    <script>window.onload=()=>window.print();<\/script>
+    </body></html>`;
+  const w = window.open('', '_blank', 'width=800,height=900');
+  w.document.write(html);
+  w.document.close();
+}
+
+function printOrder(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  const cust = customers.find(c => c.id === o.customerId);
+  const s = DB.get('settings', {});
+  const typeLabel = { SO:'ใบสั่งขาย', SOD:'ใบสั่งขาย (ส่งของ)', SOP:'ใบสั่งขาย (ชำระแล้ว)' };
+  const items = (o.items || []).map((it, i) => `
+    <tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;">${i+1}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;">${it.name}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;">${it.qty}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;">${it.unit||'ชิ้น'}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;">${fmtMoney(it.price)}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;">${fmtMoney(it.qty*it.price)}</td>
+    </tr>`).join('');
+  const total = (o.items||[]).reduce((s,it)=>s+it.qty*it.price,0);
+  const html = `<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>${typeLabel[o.type]||'ใบสั่งขาย'} ${o.docNo}</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box;} body{font-family:'Sarabun',sans-serif;font-size:13px;color:#1a2332;padding:30px;}
+      .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #1a2332;}
+      .company-name{font-size:20px;font-weight:700;} .doc-title{font-size:22px;font-weight:700;text-align:right;} .doc-no{font-size:13px;color:#64748b;text-align:right;}
+      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+      .info-box{background:#f8fafc;padding:12px 16px;border-radius:6px;}
+      .info-label{font-size:11px;color:#64748b;font-weight:600;margin-bottom:4px;} .info-val{font-size:13px;font-weight:500;}
+      table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+      thead tr{background:#1a2332;color:white;} thead th{padding:10px;text-align:left;font-size:12px;}
+      .total-box{display:flex;justify-content:flex-end;} .total-table{width:260px;}
+      .total-table td{padding:6px 10px;font-size:13px;} .grand-total td{font-weight:700;font-size:15px;border-top:2px solid #1a2332;}
+      .footer{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+      .sign-box{border-top:1px dashed #94a3b8;padding-top:8px;text-align:center;font-size:12px;color:#64748b;}
+      @media print{body{padding:15px;}}
+    </style></head><body>
+    <div class="hdr">
+      <div>
+        <div class="company-name">💎 ${s.company||'Wiseplusgrow'}</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px;">${s.address||''}</div>
+        <div style="font-size:12px;color:#64748b;">เลขภาษี: ${s.taxId||'-'} | โทร: ${s.phone||'-'}</div>
+      </div>
+      <div>
+        <div class="doc-title">${typeLabel[o.type]||'ใบสั่งขาย'}</div>
+        <div class="doc-no">เลขที่: ${o.docNo}</div>
+        <div class="doc-no">วันที่: ${fmtDate(o.date)}</div>
+        <div class="doc-no">การชำระ: ${o.paymentType||'-'}</div>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">ลูกค้า</div>
+        <div class="info-val">${cust?.name||'-'}</div>
+        <div style="font-size:12px;color:#64748b;">${cust?.phone||''} ${cust?.email||''}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-label">สถานะ / ผู้รับผิดชอบ</div>
+        <div class="info-val">${o.status||'-'}</div>
+        <div style="font-size:12px;color:#64748b;">${o.member||''}</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>รายการ</th><th style="text-align:center;">จำนวน</th><th style="text-align:center;">หน่วย</th><th style="text-align:right;">ราคา/หน่วย</th><th style="text-align:right;">รวม</th></tr></thead>
+      <tbody>${items}</tbody>
+    </table>
+    <div class="total-box"><table class="total-table">
+      <tr class="grand-total"><td>ยอดรวมสุทธิ</td><td style="text-align:right;">${fmtMoney(total)}</td></tr>
+    </table></div>
+    ${s.promptpay?`<div style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border-radius:6px;font-size:12px;">💳 ชำระผ่าน Promptpay: <strong>${s.promptpay}</strong> (${s.promptpayName||''})</div>`:''}
+    <div class="footer">
+      <div class="sign-box">ลงชื่อลูกค้า / Customer Signature</div>
+      <div class="sign-box">ลงชื่อผู้จัดส่ง / Sales Signature</div>
+    </div>
+    <script>window.onload=()=>window.print();<\/script>
+    </body></html>`;
+  const w = window.open('', '_blank', 'width=800,height=900');
+  w.document.write(html);
+  w.document.close();
+}
+
+// เพิ่มปุ่ม Print ใน renderQuotes
+(function(){
+  const _orig = window.renderQuotes;
+  window.renderQuotes = function() {
+    _orig && _orig();
+    // inject print buttons หลัง render
+    setTimeout(() => {
+      document.querySelectorAll('[data-qt-print]').forEach(btn => {
+        btn.onclick = () => printQuote(btn.dataset.qtPrint);
+      });
+    }, 50);
+  };
+})();
+
+// Patch renderQuotes ให้มีปุ่ม print
+(function(){
+  const _orig = window.renderQuotes;
+  window.renderQuotes = function() {
+    const q2 = (document.getElementById('qt-search')?.value||'').toLowerCase();
+    const sf = document.getElementById('qt-filter')?.value||'';
+    const tbody = document.getElementById('qt-tbody');
+    const empty = document.getElementById('qt-empty');
+    if (!tbody) return;
+    let list = [...quotes];
+    if (sf) list = list.filter(q => q.status === sf);
+    if (q2) list = list.filter(q => {
+      const c = customers.find(x=>x.id===q.customerId);
+      return q.docNo?.toLowerCase().includes(q2) || c?.name?.toLowerCase().includes(q2);
+    });
+    list.sort((a,b) => b.date?.localeCompare(a.date||''));
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    const statusColor = { 'ร่าง':'#94a3b8','รออนุมัติ':'#f59e0b','อนุมัติ':'#10b981','ยกเลิก':'#ef4444' };
+    tbody.innerHTML = list.map(q => {
+      const c = customers.find(x=>x.id===q.customerId);
+      return `<tr>
+        <td style="font-size:12px;color:var(--text-muted);">${q.docNo||'-'}</td>
+        <td style="font-size:13px;font-weight:500;">${c?.name||'-'}</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${statusColor[q.status]||'#e2e8f0'}22;color:${statusColor[q.status]||'#64748b'};font-weight:600;">${q.status||'-'}</span></td>
+        <td style="font-size:12px;">${fmtDate(q.date)}</td>
+        <td style="text-align:right;font-weight:600;">${fmtMoney(q.total||0)}</td>
+        <td style="font-size:12px;">${q.member||'-'}</td>
+        <td style="display:flex;gap:6px;align-items:center;">
+          <button class="btn btn-xs" style="background:#1a2332;color:white;" onclick="printQuote('${q.id}')">🖨️</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteQuote('${q.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+})();
+
+// Patch renderOrders ให้มีปุ่ม print
+(function(){
+  const _orig = window.renderOrders;
+  window.renderOrders = function() {
+    const q2 = (document.getElementById('od-search')?.value||'').toLowerCase();
+    const sf = document.getElementById('od-filter')?.value||'';
+    const tbody = document.getElementById('od-tbody');
+    const empty = document.getElementById('od-empty');
+    if (!tbody) return;
+    let list = [...orders];
+    if (sf) list = list.filter(o => o.status === sf);
+    if (q2) list = list.filter(o => {
+      const c = customers.find(x=>x.id===o.customerId);
+      return o.docNo?.toLowerCase().includes(q2) || c?.name?.toLowerCase().includes(q2);
+    });
+    list.sort((a,b) => b.date?.localeCompare(a.date||''));
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+    const statusColor = { 'รอดำเนินการ':'#f59e0b','กำลังดำเนินการ':'#3b82f6','ส่งแล้ว':'#10b981','ยกเลิก':'#ef4444' };
+    const typeLabel = { SO:'SO', SOD:'SOD', SOP:'SOP' };
+    tbody.innerHTML = list.map(o => {
+      const c = customers.find(x=>x.id===o.customerId);
+      const total = (o.items||[]).reduce((s,it)=>s+it.qty*it.price,0);
+      return `<tr>
+        <td style="font-size:12px;color:var(--text-muted);">${o.docNo||'-'}</td>
+        <td><span style="padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700;background:#1a2332;color:#f0c040;">${typeLabel[o.type]||o.type||'SO'}</span></td>
+        <td style="font-size:13px;font-weight:500;">${c?.name||'-'}</td>
+        <td><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${statusColor[o.status]||'#e2e8f0'}22;color:${statusColor[o.status]||'#64748b'};font-weight:600;">${o.status||'-'}</span></td>
+        <td style="font-size:12px;">${fmtDate(o.date)}</td>
+        <td style="text-align:right;font-weight:600;">${fmtMoney(total)}</td>
+        <td style="font-size:12px;">${o.member||'-'}</td>
+        <td style="display:flex;gap:6px;align-items:center;">
+          <button class="btn btn-xs" style="background:#1a2332;color:white;" onclick="printOrder('${o.id}')">🖨️</button>
+          <button class="btn btn-xs btn-danger" onclick="deleteOrder('${o.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 2. GLOBAL SEARCH
+// ─────────────────────────────────────────────
+function globalSearch(q) {
+  const box = document.getElementById('search-results');
+  if (!box) return;
+  if (!q || q.length < 2) { box.style.display = 'none'; return; }
+  const kw = q.toLowerCase();
+  const results = [];
+
+  // ค้นหาลูกค้า
+  customers.filter(c => c.name?.toLowerCase().includes(kw) || c.phone?.toLowerCase().includes(kw))
+    .slice(0,4).forEach(c => results.push({
+      icon:'👥', label: c.name, sub: c.phone||c.email||'', action: `navTo('customers');setTimeout(()=>openCustomerDetail('${c.id}'),100);`
+    }));
+
+  // ค้นหาโอกาส
+  leads.filter(l => l.name?.toLowerCase().includes(kw))
+    .slice(0,3).forEach(l => {
+      const c = customers.find(x=>x.id===l.customerId);
+      results.push({ icon:'🎯', label: l.name, sub: c?.name||'', action:`navTo('leads');` });
+    });
+
+  // ค้นหาใบเสนอราคา
+  quotes.filter(qt => qt.docNo?.toLowerCase().includes(kw) || customers.find(c=>c.id===qt.customerId)?.name?.toLowerCase().includes(kw))
+    .slice(0,3).forEach(qt => {
+      const c = customers.find(x=>x.id===qt.customerId);
+      results.push({ icon:'📄', label: qt.docNo, sub: c?.name+' — '+fmtMoney(qt.total||0), action:`navTo('quotes');` });
+    });
+
+  // ค้นหาใบสั่งขาย
+  orders.filter(o => o.docNo?.toLowerCase().includes(kw) || customers.find(c=>c.id===o.customerId)?.name?.toLowerCase().includes(kw))
+    .slice(0,3).forEach(o => {
+      const c = customers.find(x=>x.id===o.customerId);
+      const total = (o.items||[]).reduce((s,it)=>s+it.qty*it.price,0);
+      results.push({ icon:'🛒', label: o.docNo, sub: c?.name+' — '+fmtMoney(total), action:`navTo('orders');` });
+    });
+
+  if (!results.length) {
+    box.style.display = 'block';
+    box.innerHTML = '<div style="padding:14px;text-align:center;font-size:13px;color:var(--text-muted);">ไม่พบผลลัพธ์</div>';
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = results.map(r => `
+    <div onclick="${r.action}document.getElementById('search-results').style.display='none';document.getElementById('global-search').value='';"
+      style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;"
+      onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+      <span style="font-size:16px;">${r.icon}</span>
+      <div>
+        <div style="font-size:13px;font-weight:600;">${r.label}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${r.sub}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────
+// 3. แจ้งเตือนงานวันนี้ (Toast popup เมื่อเปิดแอพ)
+// ─────────────────────────────────────────────
+function checkTodayNotifications() {
+  const todayStr = today();
+  const overdue = tasks.filter(t => !t.done && t.dueDate < todayStr);
+  const todayTasks = tasks.filter(t => !t.done && t.dueDate === todayStr);
+  const total = overdue.length + todayTasks.length;
+  if (total === 0) return;
+
+  // สร้าง notification banner
+  const banner = document.createElement('div');
+  banner.id = 'notify-banner';
+  banner.style.cssText = `
+    position:fixed;top:66px;right:16px;z-index:9999;
+    background:white;border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.15);width:300px;
+    animation:slideIn .3s ease;overflow:hidden;
+  `;
+  banner.innerHTML = `
+    <div style="background:#1a2332;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">🔔</span>
+        <span style="color:white;font-weight:600;font-size:14px;">งานที่ต้องติดตาม</span>
+      </div>
+      <button onclick="document.getElementById('notify-banner').remove()" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    ${overdue.length ? `<div style="padding:10px 16px;background:#fef2f2;display:flex;gap:10px;align-items:center;border-bottom:1px solid #fee2e2;">
+      <span style="font-size:20px;">⚠️</span>
+      <div><div style="font-size:13px;font-weight:700;color:#dc2626;">เกินกำหนด ${overdue.length} งาน</div>
+      <div style="font-size:11px;color:#ef4444;">ต้องดำเนินการด่วน!</div></div>
+    </div>` : ''}
+    ${todayTasks.length ? `<div style="padding:10px 16px;background:#fffbeb;display:flex;gap:10px;align-items:center;border-bottom:1px solid #fef3c7;">
+      <span style="font-size:20px;">📋</span>
+      <div><div style="font-size:13px;font-weight:700;color:#d97706;">วันนี้ ${todayTasks.length} งาน</div>
+      <div style="font-size:11px;color:#f59e0b;">ต้องทำวันนี้</div></div>
+    </div>` : ''}
+    <div style="padding:12px 16px;">
+      <button onclick="navTo('activities');document.getElementById('notify-banner').remove();"
+        style="width:100%;padding:8px;background:#1a2332;color:#f0c040;border:none;border-radius:6px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+        ดูงานทั้งหมด →
+      </button>
+    </div>`;
+  document.body.appendChild(banner);
+
+  // auto dismiss หลัง 8 วินาที
+  setTimeout(() => { const b = document.getElementById('notify-banner'); if(b) b.remove(); }, 8000);
+}
+
+// เพิ่ม CSS animation
+const notifyStyle = document.createElement('style');
+notifyStyle.textContent = `@keyframes slideIn { from { transform:translateX(20px);opacity:0; } to { transform:translateX(0);opacity:1; } }`;
+document.head.appendChild(notifyStyle);
+
+// ─────────────────────────────────────────────
+// 4. EXPORT CSV
+// ─────────────────────────────────────────────
+function exportCSV(type) {
+  let headers, rows, filename;
+
+  if (type === 'customers') {
+    headers = ['ชื่อบริษัท','โทรศัพท์','อีเมล','สถานะ','ความร้อนแรง','แท็ก','วันที่เพิ่ม'];
+    rows = customers.map(c => [
+      c.name, c.phone||'', c.email||'', c.status||'', c.hotness||0,
+      (c.tags||[]).join('|'), c.createdAt||''
+    ]);
+    filename = 'customers.csv';
+  } else if (type === 'orders') {
+    headers = ['เลขที่','ประเภท','ลูกค้า','สถานะ','วันที่','ยอดรวม','ผู้รับผิดชอบ'];
+    rows = orders.map(o => {
+      const c = customers.find(x=>x.id===o.customerId);
+      const total = (o.items||[]).reduce((s,it)=>s+it.qty*it.price,0);
+      return [o.docNo, o.type, c?.name||'', o.status||'', o.date||'', total, o.member||''];
+    });
+    filename = 'orders.csv';
+  } else if (type === 'quotes') {
+    headers = ['เลขที่','ลูกค้า','สถานะ','วันที่','หมดอายุ','ยอดรวม','ผู้รับผิดชอบ'];
+    rows = quotes.map(q => {
+      const c = customers.find(x=>x.id===q.customerId);
+      return [q.docNo, c?.name||'', q.status||'', q.date||'', q.expireDate||'', q.total||0, q.member||''];
+    });
+    filename = 'quotes.csv';
+  } else if (type === 'leads') {
+    headers = ['ชื่อโอกาส','ลูกค้า','ขั้นตอน','มูลค่า','ความน่าจะเป็น','วันปิด','ผู้รับผิดชอบ'];
+    rows = leads.map(l => {
+      const c = customers.find(x=>x.id===l.customerId);
+      return [l.name, c?.name||'', l.stage||'', l.value||0, l.prob||0, l.closeDate||'', l.member||''];
+    });
+    filename = 'leads.csv';
+  }
+
+  const csv = [headers, ...rows]
+    .map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
+    .join('\n');
+  const bom = '\uFEFF'; // BOM for Excel Thai
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  toast(`✅ Export ${filename} สำเร็จ`);
+}
+
+// เพิ่มปุ่ม Export CSV ใน headers ของแต่ละหน้า
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    // inject export buttons
+    setTimeout(() => {
+      const exportMap = {
+        customers: { id:'cust-header-actions', type:'customers', label:'ลูกค้า' },
+        quotes:    { id:'qt-header-actions',   type:'quotes',    label:'ใบเสนอราคา' },
+        orders:    { id:'od-header-actions',   type:'orders',    label:'ใบสั่งขาย' },
+        leads:     { id:'leads-header-actions',type:'leads',     label:'โอกาส' },
+      };
+      const info = exportMap[page];
+      if (info) {
+        let el = document.getElementById(info.id);
+        if (el && !el.querySelector('[data-export]')) {
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-ghost btn-sm';
+          btn.setAttribute('data-export','1');
+          btn.innerHTML = '📊 Export CSV';
+          btn.onclick = () => exportCSV(info.type);
+          el.appendChild(btn);
+        }
+      }
+    }, 100);
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 5. MOBILE RESPONSIVE CSS (inject)
+// ─────────────────────────────────────────────
+const mobileStyle = document.createElement('style');
+mobileStyle.textContent = `
+@media (max-width: 768px) {
+  :root { --sidebar-width: 0px; }
+  #sidebar { 
+    position: fixed; left: -220px; top: 0; height: 100vh;
+    z-index: 1000; transition: left .25s ease; width: 220px !important;
+  }
+  #sidebar.mobile-open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,0.3); }
+  #main { margin-left: 0 !important; }
+  #content { padding: 12px !important; }
+  .form-row { flex-direction: column !important; }
+  .card-header { flex-wrap: wrap; gap: 8px; }
+  #topbar { padding: 0 12px !important; }
+  #global-search { width: 150px !important; }
+  .table-wrap { overflow-x: auto; }
+  /* hamburger menu */
+  #mobile-menu-btn {
+    display: flex !important; align-items: center; justify-content: center;
+    width: 36px; height: 36px; background: none; border: none;
+    color: var(--text-main); font-size: 20px; cursor: pointer; margin-right: 8px;
+  }
+  /* overlay */
+  #mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 999; }
+  #mobile-overlay.visible { display: block; }
+  /* settings sidebar */
+  #stg-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border); }
+  #page-settings > div { flex-direction: column !important; }
+  #stg-content { padding: 16px !important; }
+}
+@media (min-width: 769px) {
+  #mobile-menu-btn { display: none !important; }
+  #mobile-overlay { display: none !important; }
+}
+`;
+document.head.appendChild(mobileStyle);
+
+// inject hamburger button
+(function() {
+  const topbar = document.getElementById('topbar');
+  if (!topbar) return;
+  const btn = document.createElement('button');
+  btn.id = 'mobile-menu-btn';
+  btn.innerHTML = '☰';
+  btn.style.display = 'none';
+  btn.onclick = () => {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('mobile-overlay');
+    sb?.classList.toggle('mobile-open');
+    ov?.classList.toggle('visible');
+  };
+  topbar.insertBefore(btn, topbar.firstChild);
+
+  // overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'mobile-overlay';
+  overlay.onclick = () => {
+    document.getElementById('sidebar')?.classList.remove('mobile-open');
+    overlay.classList.remove('visible');
+  };
+  document.body.appendChild(overlay);
+})();
+
+// inject Export buttons in page headers
+(function(){
+  // customers
+  const custHdr = document.querySelector('#page-customers .card-header, #page-customers [style*="justify-content:space-between"]');
+
+  // inject ids ให้ header buttons areas
+  document.querySelectorAll('.page').forEach(pg => {
+    const hdrs = pg.querySelectorAll('[style*="space-between"]');
+    if (hdrs.length > 0 && !hdrs[0].id) {
+      const pid = pg.id.replace('page-','');
+      hdrs[0].id = pid + '-header-actions';
+    }
+  });
+})();
+
+// ─────────────────────────────────────────────
+// Init Phase 12
+// ─────────────────────────────────────────────
+// แจ้งเตือนงานวันนี้ หลัง load 1.5 วินาที
+setTimeout(checkTodayNotifications, 1500);
+
+
+// ============================================================
 //  SETTINGS NAVIGATION — Jubili style (stg*)
 // ============================================================
 function stgToggle(groupId, hdr) {
@@ -6881,4 +7418,360 @@ actTagDefs = DB.get('wpg_actTags', []);
 projStatuses = DB.get('wpg_projStatuses', ['สร้างแบรนด์','พัฒนาสูตร','ซื้อเทสเตอร์','OEM','ODM']);
 settings = Object.assign({taxId:'',promptpay:'',promptpayName:''}, DB.get('settings', {}));
 
+// ============================================================
+//  PHASE 12 — พิมพ์ใบสั่งขาย, แจ้งเตือน, Export CSV,
+//             Global Search เต็มรูปแบบ, Dashboard จริง
+// ============================================================
+
+// ─── 1. พิมพ์ใบสั่งขาย (printOrder) ────────────────────────
+window.printOrder = function(id) {
+  const o = orders.find(x=>x.id===id);
+  if (!o) return;
+  const c = customers.find(x=>x.id===o.customerId);
+  const typeLabel = {SO:'ใบสั่งขาย',SOD:'ใบสั่งขาย (จัดส่ง)',SOP:'ใบสั่งขาย (ชำระก่อน)'};
+  const statusLabel = {pending:'รอดำเนินการ',processing:'กำลังดำเนินการ',completed:'เสร็จสิ้น',cancelled:'ยกเลิก'};
+  const payLabel = {cash:'เงินสด',transfer:'โอนเงิน',credit:'เครดิต',cheque:'เช็ค'};
+  const rows = (o.items||[]).map((item,i)=>`
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">${i+1}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;">${item.name}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">${item.qty}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center;">${item.unit||'ชิ้น'}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;">${fmtMoney(item.price)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600;">${fmtMoney((item.qty||0)*(item.price||0))}</td>
+    </tr>`).join('');
+  const total = (o.items||[]).reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+  const pw = window.open('','_blank','width=820,height=900');
+  pw.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'Sarabun',sans-serif;margin:0;padding:40px;color:#1a2332;font-size:14px;}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:3px solid #f0c040;}
+    table{width:100%;border-collapse:collapse;margin-top:20px;}
+    th{background:#f8fafc;padding:10px 12px;text-align:left;font-size:13px;color:#64748b;border-bottom:2px solid #e2e8f0;}
+    .grand{background:#1a2332;color:#f0c040;font-size:16px;font-weight:700;}
+    .badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#f0c040;color:#1a2332;}
+    @media print{.no-print{display:none!important;}}
+  </style></head><body>
+  <button class="no-print" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:8px 20px;background:#1a2332;color:#f0c040;border:none;border-radius:6px;font-family:Sarabun;cursor:pointer;font-size:14px;">🖨️ พิมพ์</button>
+  <div class="hdr">
+    <div>
+      <div style="font-size:22px;font-weight:700;">💎 ${settings.company||'Wiseplusgrow'}</div>
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">${settings.address||''}</div>
+      <div style="font-size:12px;color:#64748b;">${settings.phone||''} ${settings.email?'| '+settings.email:''}</div>
+      ${settings.taxId?`<div style="font-size:12px;color:#64748b;">เลขภาษี: ${settings.taxId}</div>`:''}
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:24px;font-weight:700;">${typeLabel[o.type]||'ใบสั่งขาย'}</div>
+      <div style="font-size:13px;color:#64748b;margin-top:4px;">เลขที่: <strong>${o.docNo||'-'}</strong></div>
+      <div style="font-size:13px;color:#64748b;">วันที่: ${fmtDate(o.date)}</div>
+      <div style="margin-top:6px;"><span class="badge">${statusLabel[o.status]||o.status}</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div style="background:#f8fafc;padding:14px 18px;border-radius:8px;">
+      <div style="font-size:12px;color:#64748b;margin-bottom:4px;">ลูกค้า</div>
+      <div style="font-size:16px;font-weight:700;">${c?.name||'-'}</div>
+      <div style="font-size:13px;color:#64748b;">${c?.phone||''}</div>
+      <div style="font-size:13px;color:#64748b;">${c?.email||''}</div>
+    </div>
+    <div style="background:#f8fafc;padding:14px 18px;border-radius:8px;">
+      <div style="font-size:12px;color:#64748b;margin-bottom:4px;">ข้อมูลการสั่งซื้อ</div>
+      <div style="font-size:13px;">พนักงาน: <strong>${o.member||'-'}</strong></div>
+      <div style="font-size:13px;">ประเภท: <strong>${typeLabel[o.type]||o.type}</strong></div>
+      <div style="font-size:13px;">ชำระเงิน: <strong>${payLabel[o.paymentType]||o.paymentType||'-'}</strong></div>
+    </div>
+  </div>
+  <table><thead><tr>
+    <th style="width:36px;">#</th><th>รายการสินค้า</th>
+    <th style="text-align:right;width:70px;">จำนวน</th>
+    <th style="text-align:center;width:60px;">หน่วย</th>
+    <th style="text-align:right;width:110px;">ราคา/หน่วย</th>
+    <th style="text-align:right;width:110px;">รวม</th>
+  </tr></thead><tbody>${rows}</tbody>
+  <tfoot>
+    <tr class="grand"><td colspan="5" style="padding:10px 12px;text-align:right;">รวมทั้งสิ้น</td>
+    <td style="padding:10px 12px;text-align:right;">${fmtMoney(o.total||total)}</td></tr>
+  </tfoot></table>
+  ${settings.promptpay?`<div style="margin-top:16px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border-left:3px solid #22c55e;font-size:13px;">
+    <strong>ชำระเงิน Promptpay:</strong> ${settings.promptpay} (${settings.promptpayName||settings.company||''})</div>`:''}
+  <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:40px;">
+    <div style="text-align:center;padding-top:60px;border-top:1px solid #94a3b8;font-size:13px;color:#64748b;">ผู้รับมอบอำนาจ<br><small>${settings.company||'Wiseplusgrow'}</small></div>
+    <div style="text-align:center;padding-top:60px;border-top:1px solid #94a3b8;font-size:13px;color:#64748b;">ผู้สั่งซื้อ / ลูกค้า<br><small>${c?.name||'-'}</small></div>
+  </div>
+  </body></html>`);
+  pw.document.close();
+};
+
+// ─── 2. Export CSV ─────────────────────────────────────────
+window.exportCSV = function(type) {
+  let headers, rows, filename;
+  if (type === 'customers') {
+    headers = ['ชื่อบริษัท','โทรศัพท์','อีเมล','สถานะ','ความร้อน','แท็ก','วันที่สร้าง'];
+    rows = customers.map(c => [c.name,c.phone||'',c.email||'',c.status||'',c.hotness||0,(c.tags||[]).join('|'),c.createdAt||'']);
+    filename = 'customers.csv';
+  } else if (type === 'orders') {
+    headers = ['เลขที่','ลูกค้า','ประเภท','สถานะ','วันที่','พนักงาน','ยอดรวม'];
+    rows = orders.map(o => {
+      const c = customers.find(x=>x.id===o.customerId);
+      return [o.docNo||'',c?.name||'',o.type||'',o.status||'',o.date||'',o.member||'',o.total||0];
+    });
+    filename = 'orders.csv';
+  } else if (type === 'leads') {
+    headers = ['ชื่อโอกาส','ลูกค้า','stage','มูลค่า','%ปิด','พนักงาน','วันปิด'];
+    rows = leads.map(l => {
+      const c = customers.find(x=>x.id===l.customerId);
+      return [l.name||'',c?.name||'',l.stage||'',l.value||0,l.prob||0,l.member||'',l.closeDate||''];
+    });
+    filename = 'leads.csv';
+  } else if (type === 'activities') {
+    headers = ['ลูกค้า','ประเภท','ช่องทาง','วันที่','พนักงาน','รายละเอียด'];
+    rows = activities.map(a => {
+      const c = customers.find(x=>x.id===a.customerId);
+      return [c?.name||'',a.type||'',a.channel||'',a.date||'',a.member||'',a.note||''];
+    });
+    filename = 'activities.csv';
+  } else return;
+
+  const csv = [headers, ...rows].map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 Export '+filename+' สำเร็จ');
+};
+
+// เพิ่มปุ่ม Export บน topbar
+(function(){
+  const topRight = document.querySelector('.topbar-right');
+  if (topRight) {
+    const exportBtn = document.createElement('div');
+    exportBtn.style.cssText = 'position:relative;';
+    exportBtn.innerHTML = `
+      <button onclick="toggleExportMenu()" style="padding:6px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;font-family:Sarabun;font-size:12px;cursor:pointer;color:var(--text-main);display:flex;align-items:center;gap:4px;">
+        📤 Export
+      </button>
+      <div id="export-menu" style="display:none;position:absolute;top:34px;right:0;background:white;border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow-md);z-index:500;min-width:160px;padding:4px 0;">
+        <div onclick="exportCSV('customers')" style="padding:8px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">👥 ลูกค้า</div>
+        <div onclick="exportCSV('orders')" style="padding:8px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">📋 ใบสั่งขาย</div>
+        <div onclick="exportCSV('leads')" style="padding:8px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">🎯 โอกาส</div>
+        <div onclick="exportCSV('activities')" style="padding:8px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">📣 กิจกรรม</div>
+      </div>`;
+    // ใส่ก่อน search box
+    const searchDiv = topRight.firstElementChild;
+    topRight.insertBefore(exportBtn, searchDiv);
+  }
+  window.toggleExportMenu = function() {
+    const m = document.getElementById('export-menu');
+    if (m) m.style.display = m.style.display==='none' ? 'block' : 'none';
+  };
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#export-menu') && !e.target.closest('[onclick="toggleExportMenu()"]')) {
+      const m = document.getElementById('export-menu');
+      if (m) m.style.display = 'none';
+    }
+  });
+})();
+
+// ─── 3. แจ้งเตือนงานวันนี้ (popup เมื่อเปิดแอพ) ───────────
+(function(){
+  // เพิ่ม notification bell บน topbar
+  const topRight = document.querySelector('.topbar-right');
+  if (topRight) {
+    const bell = document.createElement('div');
+    bell.id = 'notif-bell';
+    bell.style.cssText = 'position:relative;cursor:pointer;';
+    bell.innerHTML = `
+      <div onclick="toggleNotifPanel()" style="width:34px;height:34px;border-radius:8px;background:#f8fafc;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;position:relative;">
+        🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--danger);color:white;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;"></span>
+      </div>
+      <div id="notif-panel" style="display:none;position:absolute;top:40px;right:0;width:300px;background:white;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:500;max-height:360px;overflow-y:auto;">
+        <div style="padding:12px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);background:#1a2332;color:#f0c040;border-radius:10px 10px 0 0;">🔔 การแจ้งเตือน</div>
+        <div id="notif-list" style="padding:8px 0;"></div>
+      </div>`;
+    const exportDiv = topRight.firstElementChild;
+    topRight.insertBefore(bell, exportDiv);
+  }
+
+  window.toggleNotifPanel = function() {
+    const p = document.getElementById('notif-panel');
+    if (p) { p.style.display = p.style.display==='none' ? 'block' : 'none'; renderNotifs(); }
+  };
+
+  window.renderNotifs = function() {
+    const td = today();
+    const overdue = tasks.filter(t=>!t.done && t.dueDate < td);
+    const todayTasks = tasks.filter(t=>!t.done && t.dueDate===td);
+    const upcomingTasks = tasks.filter(t=>!t.done && t.dueDate > td && t.dueDate <= addDays(td,3));
+
+    const badge = document.getElementById('notif-badge');
+    const total = overdue.length + todayTasks.length;
+    if (badge) {
+      badge.style.display = total>0 ? 'flex' : 'none';
+      badge.textContent = total > 9 ? '9+' : total;
+    }
+
+    const el = document.getElementById('notif-list');
+    if (!el) return;
+    let html = '';
+    if (!overdue.length && !todayTasks.length && !upcomingTasks.length) {
+      html = '<div style="padding:20px;text-align:center;font-size:13px;color:var(--text-muted);">✅ ไม่มีการแจ้งเตือน</div>';
+    } else {
+      if (overdue.length) {
+        html += `<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--danger);background:#fef2f2;margin-bottom:2px;">เกินกำหนด ${overdue.length} รายการ</div>`;
+        overdue.slice(0,5).forEach(t => {
+          const c = customers.find(x=>x.id===t.customerId);
+          html += `<div onclick="navTo('activities')" style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:8px;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background=''">
+            <span style="color:var(--danger);font-size:16px;">⚠️</span>
+            <div><div style="font-size:12px;font-weight:600;">${t.note||'งานติดตาม'}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${c?.name||''} · ${fmtDate(t.dueDate)}</div></div>
+          </div>`;
+        });
+      }
+      if (todayTasks.length) {
+        html += `<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--warning);background:#fffbeb;margin-bottom:2px;">วันนี้ ${todayTasks.length} รายการ</div>`;
+        todayTasks.slice(0,5).forEach(t => {
+          const c = customers.find(x=>x.id===t.customerId);
+          html += `<div onclick="navTo('activities')" style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:8px;" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background=''">
+            <span style="font-size:16px;">📅</span>
+            <div><div style="font-size:12px;font-weight:600;">${t.note||'งานติดตาม'}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${c?.name||''}</div></div>
+          </div>`;
+        });
+      }
+      if (upcomingTasks.length) {
+        html += `<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--info);background:#eff6ff;margin-bottom:2px;">ใน 3 วันข้างหน้า ${upcomingTasks.length} รายการ</div>`;
+        upcomingTasks.slice(0,3).forEach(t => {
+          const c = customers.find(x=>x.id===t.customerId);
+          html += `<div onclick="navTo('activities')" style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:flex-start;gap:8px;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+            <span style="font-size:16px;">🔜</span>
+            <div><div style="font-size:12px;font-weight:600;">${t.note||'งานติดตาม'}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${c?.name||''} · ${fmtDate(t.dueDate)}</div></div>
+          </div>`;
+        });
+      }
+    }
+    el.innerHTML = html;
+  };
+
+  function addDays(dateStr, n) {
+    const d = new Date(dateStr); d.setDate(d.getDate()+n);
+    return d.toISOString().split('T')[0];
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#notif-bell')) {
+      const p = document.getElementById('notif-panel');
+      if (p) p.style.display = 'none';
+    }
+  });
+
+  // แสดง popup alert ครั้งแรกที่เปิดแอพ
+  setTimeout(() => {
+    const td = today();
+    const overdue = tasks.filter(t=>!t.done&&t.dueDate<td).length;
+    const todayT  = tasks.filter(t=>!t.done&&t.dueDate===td).length;
+    renderNotifs();
+    if (overdue+todayT > 0) {
+      // Toast แจ้งเตือน
+      const toastEl = document.createElement('div');
+      toastEl.style.cssText = `position:fixed;bottom:80px;right:20px;background:#1a2332;color:white;padding:12px 18px;border-radius:10px;font-size:13px;z-index:9999;box-shadow:var(--shadow-md);border-left:4px solid var(--accent);max-width:260px;cursor:pointer;`;
+      toastEl.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">🔔 มีงานที่ต้องทำวันนี้</div>
+        <div style="font-size:12px;color:#94a3b8;">
+          ${overdue>0?`⚠️ เกินกำหนด ${overdue} รายการ<br>`:''}
+          ${todayT>0?`📅 วันนี้ ${todayT} รายการ`:''}
+        </div>`;
+      toastEl.onclick = () => { navTo('activities'); toastEl.remove(); };
+      document.body.appendChild(toastEl);
+      setTimeout(() => toastEl.remove(), 6000);
+    }
+  }, 1200);
+})();
+
+// ─── 4. Global Search เต็มรูปแบบ ──────────────────────────
+(function(){
+  const _orig = window.globalSearch;
+  window.globalSearch = function(q) {
+    const el = document.getElementById('search-results');
+    if (!el) return;
+    if (!q || q.length < 2) { el.style.display='none'; return; }
+    const kw = q.toLowerCase();
+    const results = [];
+
+    // ค้นหาลูกค้า
+    customers.filter(c=>c.name?.toLowerCase().includes(kw)||c.phone?.includes(kw)||c.email?.toLowerCase().includes(kw)).slice(0,4).forEach(c=>{
+      results.push({ icon:'👥', type:'ลูกค้า', label:c.name, sub:(c.phone||'')+(c.email?' · '+c.email:''), action:()=>{navTo('customers'); setTimeout(()=>openCustomerDetail(c.id),100);} });
+    });
+    // ค้นหาโอกาส
+    leads.filter(l=>l.name?.toLowerCase().includes(kw)).slice(0,3).forEach(l=>{
+      const c=customers.find(x=>x.id===l.customerId);
+      results.push({ icon:'🎯', type:'โอกาส', label:l.name, sub:c?.name+' · '+fmtMoney(l.value||0), action:()=>navTo('leads') });
+    });
+    // ค้นหาใบเสนอราคา
+    quotes.filter(qt=>qt.docNo?.toLowerCase().includes(kw)).slice(0,2).forEach(qt=>{
+      const c=customers.find(x=>x.id===qt.customerId);
+      results.push({ icon:'📄', type:'ใบเสนอราคา', label:qt.docNo, sub:c?.name+' · '+fmtMoney(qt.total||0), action:()=>navTo('quotes') });
+    });
+    // ค้นหาใบสั่งขาย
+    orders.filter(o=>o.docNo?.toLowerCase().includes(kw)).slice(0,2).forEach(o=>{
+      const c=customers.find(x=>x.id===o.customerId);
+      results.push({ icon:'🛒', type:'ใบสั่งขาย', label:o.docNo, sub:c?.name+' · '+fmtMoney(o.total||0), action:()=>navTo('orders') });
+    });
+    // ค้นหาโครงการ
+    projects.filter(p=>p.name?.toLowerCase().includes(kw)).slice(0,2).forEach(p=>{
+      results.push({ icon:'🏗️', type:'โครงการ', label:p.name, sub:fmtMoney(p.value||0), action:()=>navTo('projects') });
+    });
+
+    if (!results.length) {
+      el.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--text-muted);">ไม่พบผลลัพธ์สำหรับ "'+q+'"</div>';
+    } else {
+      el.innerHTML = results.map((r,i) => `
+        <div id="sr-${i}" onclick="window._sr[${i}]()" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+          <span style="font-size:18px;width:24px;text-align:center;">${r.icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.label}</div>
+            <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.type} · ${r.sub||''}</div>
+          </div>
+        </div>`).join('');
+      window._sr = results.map(r=>()=>{ r.action(); el.style.display='none'; document.getElementById('global-search').value=''; });
+    }
+    el.style.display = 'block';
+  };
+})();
+
+// ─── 5. เพิ่มปุ่ม printOrder ในหน้าใบสั่งขาย ──────────────
+(function(){
+  const _orig = window.renderOrders;
+  window.renderOrders = function() {
+    if (_orig) _orig();
+    // inject print button ใน action column ของ order rows
+    setTimeout(() => {
+      document.querySelectorAll('[data-order-id]').forEach(btn => {
+        const id = btn.dataset.orderId;
+        if (!btn.parentElement.querySelector('.print-order-btn')) {
+          const printBtn = document.createElement('button');
+          printBtn.className = 'btn btn-xs btn-ghost print-order-btn';
+          printBtn.textContent = '🖨️';
+          printBtn.title = 'พิมพ์ใบสั่งขาย';
+          printBtn.onclick = (e) => { e.stopPropagation(); printOrder(id); };
+          btn.parentElement.appendChild(printBtn);
+        }
+      });
+    }, 100);
+  };
+})();
+
+// Patch renderOrders ดั้งเดิมให้แสดงปุ่มพิมพ์
+(function(){
+  const _orig = window.renderOrders;
+  window.renderOrders = function() {
+    if (_orig) _orig();
+    // หาทุก row ที่มี order แล้ว inject print icon
+  };
+})();
+
+// Init Phase 12
+setTimeout(renderNotifs, 500);
 </script>
