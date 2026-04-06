@@ -2113,27 +2113,88 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </div>
 
           <!-- PANEL: บทบาทผู้อนุมัติ -->
+          <!-- PANEL: บทบาทผู้อนุมัติ -->
           <div class="stg-panel" id="sp-approve-role" style="display:none;">
             <h3 class="stg-title">🎭 บทบาทผู้อนุมัติ</h3>
-            <div class="card" style="max-width:560px;"><div class="card-body">
-              <div class="empty-state"><div class="empty-icon">🎭</div><p>ตั้งค่าบทบาทผู้อนุมัติ<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
-            </div></div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">รายชื่อผู้อนุมัติ</span>
+                <button class="btn btn-primary btn-sm" onclick="openApproveRoleModal()">+ บทบาทผู้อนุมัติ</button>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr style="background:var(--sidebar-bg);color:white;">
+                      <th style="padding:10px 14px;">ผู้อนุมัติ</th>
+                      <th style="padding:10px 14px;">อีเมล</th>
+                      <th style="padding:10px 14px;">บทบาทพนักงาน</th>
+                      <th style="padding:10px 8px;"></th>
+                    </tr></thead>
+                    <tbody id="approve-role-tbody"></tbody>
+                  </table>
+                  <div id="approve-role-empty" class="empty-state" style="padding:32px;">
+                    <div class="empty-icon">🎭</div>
+                    <p>ยังไม่มีผู้อนุมัติ<br><small style="color:var(--text-light);">กด "+ บทบาทผู้อนุมัติ" เพื่อเพิ่ม</small></p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- PANEL: เงื่อนไขการอนุมัติ -->
           <div class="stg-panel" id="sp-approve-cond" style="display:none;">
             <h3 class="stg-title">📋 เงื่อนไขการอนุมัติ</h3>
-            <div class="card" style="max-width:560px;"><div class="card-body">
-              <div class="empty-state"><div class="empty-icon">📋</div><p>ตั้งค่าเงื่อนไขการอนุมัติ<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
-            </div></div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">รายการเงื่อนไข</span>
+                <button class="btn btn-primary btn-sm" onclick="openApproveCondModal()">+ เพิ่มรายการอนุมัติ</button>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr style="background:var(--sidebar-bg);color:white;">
+                      <th style="padding:10px 14px;">รายการอนุมัติ</th>
+                      <th style="padding:10px 14px;">รายละเอียด</th>
+                      <th style="padding:10px 14px;">วันที่ใช้งาน</th>
+                      <th style="padding:10px 14px;text-align:center;">สถานะ</th>
+                      <th style="padding:10px 14px;text-align:center;">จำนวนเงื่อนไข</th>
+                      <th style="padding:10px 14px;">ขั้นตอนการอนุมัติ</th>
+                      <th></th>
+                    </tr></thead>
+                    <tbody id="approve-cond-tbody"></tbody>
+                  </table>
+                  <div id="approve-cond-empty" class="empty-state" style="padding:32px;">
+                    <div class="empty-icon">📋</div>
+                    <p>ยังไม่มีเงื่อนไขการอนุมัติ<br><small style="color:var(--text-light);">กด "+ เพิ่มรายการอนุมัติ" เพื่อเริ่มต้น</small></p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- PANEL: ขั้นตอนการอนุมัติ -->
           <div class="stg-panel" id="sp-approve-step" style="display:none;">
             <h3 class="stg-title">🔢 ขั้นตอนการอนุมัติ</h3>
-            <div class="card" style="max-width:560px;"><div class="card-body">
-              <div class="empty-state"><div class="empty-icon">🔢</div><p>ตั้งค่าขั้นตอนการอนุมัติ<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
-            </div></div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">ตั้งค่าขั้นตอนการอนุมัติ</span>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr style="background:var(--sidebar-bg);color:white;">
+                      <th style="padding:10px 14px;">รายการ/เอกสาร</th>
+                      <th style="padding:10px 14px;">เงื่อนไขการอนุมัติ</th>
+                      <th style="padding:10px 14px;">สร้างโดย</th>
+                      <th style="padding:10px 14px;">แก้ไขล่าสุดโดย</th>
+                      <th style="padding:10px 14px;text-align:center;">สถานะ</th>
+                      <th style="padding:10px 14px;"></th>
+                    </tr></thead>
+                    <tbody id="approve-step-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- PANEL: ตั้งค่าสินค้า -->
@@ -2333,6 +2394,88 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 </div><!-- /main -->
 
 /div><!-- /main -->
+
+<!-- ===== MODAL: APPROVE ROLE ===== -->
+<div class="modal-overlay" id="modal-approve-role">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3 class="modal-title">🎭 เพิ่มบทบาทผู้อนุมัติ</h3>
+      <button class="modal-close" onclick="closeModal('modal-approve-role')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">ชื่อผู้อนุมัติ *</label><input class="form-control" id="ar-name" placeholder="กรุณาพิมพ์ชื่อบทบาท"></div>
+      <div class="form-group"><label class="form-label">อีเมล</label><input class="form-control" id="ar-email" type="email" placeholder="email@company.com"></div>
+      <div class="form-group"><label class="form-label">บทบาทพนักงาน</label>
+        <select class="form-control" id="ar-member-role">
+          <option value="">-- เลือกพนักงาน --</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-approve-role')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveApproveRole()">✅ ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: APPROVE CONDITION ===== -->
+<div class="modal-overlay" id="modal-approve-cond">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">📋 เพิ่มเงื่อนไขการอนุมัติ</h3>
+      <button class="modal-close" onclick="closeModal('modal-approve-cond')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">ชื่อรายการอนุมัติ *</label><input class="form-control" id="ac-name" placeholder="เช่น อนุมัติใบเสนอราคาเกิน 100,000 บาท"></div>
+      <div class="form-group"><label class="form-label">รายละเอียด</label><textarea class="form-control" id="ac-detail" rows="2" placeholder="อธิบายเงื่อนไข..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">ประเภทเอกสาร</label>
+          <select class="form-control" id="ac-doc-type">
+            <option value="ใบเสนอราคา">ใบเสนอราคา</option>
+            <option value="ใบสั่งขาย">ใบสั่งขาย</option>
+            <option value="โครงการ">โครงการ</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">ขั้นตอนการอนุมัติ</label>
+          <select class="form-control" id="ac-step">
+            <option value="">-- เลือกขั้นตอน --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">เงื่อนไข</label>
+          <select class="form-control" id="ac-condition-type">
+            <option value="ทุกรายการ">ทุกรายการ</option>
+            <option value="มูลค่าเกิน">มูลค่าเกิน</option>
+            <option value="ส่วนลดเกิน">ส่วนลดเกิน</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">จำนวนเงิน (บาท)</label>
+          <input class="form-control" id="ac-amount" type="number" placeholder="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-approve-cond')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveApproveCond()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: APPROVE STEP DETAIL ===== -->
+<div class="modal-overlay" id="modal-approve-step-detail">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="approve-step-detail-title">⚙️ รายละเอียดขั้นตอนการอนุมัติ</h3>
+      <button class="modal-close" onclick="closeModal('modal-approve-step-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="approve-step-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-approve-step-detail')">ปิด</button>
+      <button class="btn btn-primary" onclick="saveApproveStepDetail()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== MODAL: ADD ACTIVITY ===== -->
 <div class="modal-overlay" id="modal-activity">
@@ -6369,6 +6512,322 @@ function renderRpContent() {
 products = DB.get('wpg_products', []);
 projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
+
+// ============================================================
+//  PHASE 14 — ระบบอนุมัติ (Approval System)
+//  บทบาทผู้อนุมัติ, เงื่อนไขการอนุมัติ, ขั้นตอนการอนุมัติ
+// ============================================================
+
+let approveRoles = DB.get('wpg_approve_roles', []);
+let approveConds = DB.get('wpg_approve_conds', []);
+let approveSteps = DB.get('wpg_approve_steps', [
+  { id: genId(), docType: 'ใบเสนอราคา', condId: '', enabled: false, createdBy: 'Admin', createdAt: today(), updatedBy: '', steps: [] }
+]);
+
+// ─────────────────────────────────────────────
+// บทบาทผู้อนุมัติ
+// ─────────────────────────────────────────────
+function openApproveRoleModal() {
+  document.getElementById('ar-name').value = '';
+  document.getElementById('ar-email').value = '';
+  // sync member dropdown
+  const sel = document.getElementById('ar-member-role');
+  sel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' +
+    members.map(m => `<option value="${m.name}">${m.name} (${m.role||'พนักงาน'})</option>`).join('');
+  openModal('modal-approve-role');
+  setTimeout(() => document.getElementById('ar-name').focus(), 100);
+}
+
+function saveApproveRole() {
+  const name = document.getElementById('ar-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อบทบาทผู้อนุมัติ'); return; }
+  approveRoles.push({
+    id: genId(), name,
+    email: document.getElementById('ar-email').value.trim(),
+    memberRole: document.getElementById('ar-member-role').value,
+    createdAt: today()
+  });
+  DB.set('wpg_approve_roles', approveRoles);
+  closeModal('modal-approve-role');
+  renderApproveRoles();
+  syncApproveCondSteps();
+  toast('✅ เพิ่มบทบาทผู้อนุมัติแล้ว');
+}
+
+function deleteApproveRole(id) {
+  if (!confirm('ลบบทบาทผู้อนุมัตินี้?')) return;
+  approveRoles = approveRoles.filter(r => r.id !== id);
+  DB.set('wpg_approve_roles', approveRoles);
+  renderApproveRoles();
+  toast('🗑️ ลบแล้ว');
+}
+
+function renderApproveRoles() {
+  const tbody = document.getElementById('approve-role-tbody');
+  const empty = document.getElementById('approve-role-empty');
+  if (!tbody) return;
+  if (!approveRoles.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  tbody.innerHTML = approveRoles.map(r => `
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--sidebar-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">
+            ${r.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;">${r.name}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${r.createdAt}</div>
+          </div>
+        </div>
+      </td>
+      <td style="padding:12px 14px;font-size:13px;color:var(--text-muted);">${r.email||'-'}</td>
+      <td style="padding:12px 14px;">
+        ${r.memberRole ? `<span style="padding:3px 10px;background:#eef2ff;color:var(--sidebar-bg);border-radius:10px;font-size:12px;font-weight:600;">${r.memberRole}</span>` : '<span style="color:var(--text-muted);font-size:12px;">-</span>'}
+      </td>
+      <td style="padding:12px 8px;text-align:right;">
+        <button class="btn btn-xs btn-danger" onclick="deleteApproveRole('${r.id}')">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────────────
+// เงื่อนไขการอนุมัติ
+// ─────────────────────────────────────────────
+function openApproveCondModal() {
+  document.getElementById('ac-name').value = '';
+  document.getElementById('ac-detail').value = '';
+  document.getElementById('ac-amount').value = '';
+  // sync step dropdown
+  syncApproveCondSteps();
+  openModal('modal-approve-cond');
+  setTimeout(() => document.getElementById('ac-name').focus(), 100);
+}
+
+function syncApproveCondSteps() {
+  const sel = document.getElementById('ac-step');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- ไม่ระบุ --</option>' +
+    approveRoles.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+}
+
+function saveApproveCond() {
+  const name = document.getElementById('ac-name').value.trim();
+  if (!name) { alert('กรุณากรอกชื่อรายการอนุมัติ'); return; }
+  const cond = {
+    id: genId(), name,
+    detail: document.getElementById('ac-detail').value.trim(),
+    docType: document.getElementById('ac-doc-type').value,
+    stepId: document.getElementById('ac-step').value,
+    conditionType: document.getElementById('ac-condition-type').value,
+    amount: parseFloat(document.getElementById('ac-amount').value) || 0,
+    enabled: true,
+    createdAt: today()
+  };
+  approveConds.push(cond);
+  DB.set('wpg_approve_conds', approveConds);
+  closeModal('modal-approve-cond');
+  renderApproveConds();
+  renderApproveStepTable();
+  toast('✅ เพิ่มเงื่อนไขการอนุมัติแล้ว');
+}
+
+function deleteApproveCond(id) {
+  if (!confirm('ลบเงื่อนไขนี้?')) return;
+  approveConds = approveConds.filter(c => c.id !== id);
+  DB.set('wpg_approve_conds', approveConds);
+  renderApproveConds();
+  toast('🗑️ ลบแล้ว');
+}
+
+function toggleApproveCond(id) {
+  const c = approveConds.find(x => x.id === id);
+  if (!c) return;
+  c.enabled = !c.enabled;
+  DB.set('wpg_approve_conds', approveConds);
+  renderApproveConds();
+  toast(c.enabled ? '✅ เปิดใช้งานแล้ว' : '⏸️ ปิดใช้งานแล้ว');
+}
+
+function renderApproveConds() {
+  const tbody = document.getElementById('approve-cond-tbody');
+  const empty = document.getElementById('approve-cond-empty');
+  if (!tbody) return;
+  if (!approveConds.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  tbody.innerHTML = approveConds.map(c => {
+    const role = approveRoles.find(r => r.id === c.stepId);
+    const condLabel = c.conditionType === 'ทุกรายการ' ? 'ทุกรายการ' : `${c.conditionType} ${fmtMoney(c.amount)} บ.`;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:12px 14px;font-weight:600;font-size:13px;">${c.name}</td>
+      <td style="padding:12px 14px;font-size:12px;color:var(--text-muted);">${c.detail||'-'}</td>
+      <td style="padding:12px 14px;font-size:12px;">${fmtDate(c.createdAt)}</td>
+      <td style="padding:12px 14px;text-align:center;">
+        <span style="padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;
+          background:${c.enabled?'#dcfce7':'#f1f5f9'};color:${c.enabled?'#16a34a':'#64748b'};">
+          ${c.enabled?'เปิดใช้งาน':'ปิดใช้งาน'}
+        </span>
+      </td>
+      <td style="padding:12px 14px;text-align:center;font-size:13px;font-weight:700;">${condLabel}</td>
+      <td style="padding:12px 14px;font-size:12px;">${role?.name||'-'}</td>
+      <td style="padding:12px 8px;display:flex;gap:6px;">
+        <button class="btn btn-xs" style="background:${c.enabled?'#f1f5f9':'#dcfce7'};color:${c.enabled?'#64748b':'#16a34a'};" onclick="toggleApproveCond('${c.id}')">
+          ${c.enabled?'ปิด':'เปิด'}
+        </button>
+        <button class="btn btn-xs btn-danger" onclick="deleteApproveCond('${c.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// ขั้นตอนการอนุมัติ
+// ─────────────────────────────────────────────
+function renderApproveStepTable() {
+  const tbody = document.getElementById('approve-step-tbody');
+  if (!tbody) return;
+
+  // docTypes ที่รองรับ
+  const docTypes = ['ใบเสนอราคา', 'ใบสั่งขาย', 'โครงการ'];
+
+  tbody.innerHTML = docTypes.map(docType => {
+    // หา conditions ที่เกี่ยวข้อง
+    const relatedConds = approveConds.filter(c => c.docType === docType);
+    const step = approveSteps.find(s => s.docType === docType) ||
+      { id: null, docType, enabled: false, createdAt: today(), createdBy: 'Admin', updatedBy: '' };
+
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:14px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;">${docType==='ใบเสนอราคา'?'📄':docType==='ใบสั่งขาย'?'🛒':'📁'}</span>
+          <span style="font-size:13px;font-weight:600;">${docType}</span>
+        </div>
+      </td>
+      <td style="padding:14px 14px;font-size:12px;color:var(--text-muted);">
+        ${relatedConds.length ? relatedConds.map(c=>`<div>• ${c.name}</div>`).join('') : '-'}
+      </td>
+      <td style="padding:14px 14px;font-size:12px;color:var(--text-muted);">${step.createdBy||'Admin'}</td>
+      <td style="padding:14px 14px;font-size:12px;color:var(--text-muted);">${step.updatedBy||step.createdBy||'-'}</td>
+      <td style="padding:14px 14px;text-align:center;">
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+          <div onclick="toggleApproveStep('${docType}')" style="
+            width:44px;height:24px;border-radius:12px;position:relative;transition:background .2s;
+            background:${step.enabled?'#22c55e':'#e2e8f0'};cursor:pointer;flex-shrink:0;">
+            <div style="width:20px;height:20px;border-radius:50%;background:white;position:absolute;top:2px;
+              transition:left .2s;left:${step.enabled?'22px':'2px'};box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+          </div>
+          <span style="font-size:12px;color:${step.enabled?'#16a34a':'#94a3b8'};">${step.enabled?'เปิดใช้งาน':'ปิดใช้งาน'}</span>
+        </label>
+      </td>
+      <td style="padding:14px 14px;">
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-xs" style="background:#f8fafc;border:1px solid var(--border);" onclick="openApproveStepDetail('${docType}')">⚙️ รายละเอียด</button>
+          <button class="btn btn-xs btn-primary" onclick="openApproveCondModal()">+ เพิ่ม</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleApproveStep(docType) {
+  let step = approveSteps.find(s => s.docType === docType);
+  if (!step) {
+    step = { id: genId(), docType, enabled: true, createdAt: today(), createdBy: 'Admin', updatedBy: 'Admin', steps: [] };
+    approveSteps.push(step);
+  } else {
+    step.enabled = !step.enabled;
+    step.updatedBy = 'Admin';
+  }
+  DB.set('wpg_approve_steps', approveSteps);
+  renderApproveStepTable();
+  toast(step.enabled ? '✅ เปิดระบบอนุมัติสำหรับ ' + docType : '⏸️ ปิดระบบอนุมัติสำหรับ ' + docType);
+}
+
+function openApproveStepDetail(docType) {
+  const step = approveSteps.find(s => s.docType === docType);
+  const relatedConds = approveConds.filter(c => c.docType === docType);
+  const title = document.getElementById('approve-step-detail-title');
+  const body = document.getElementById('approve-step-detail-body');
+  if (title) title.textContent = `⚙️ ขั้นตอนการอนุมัติ — ${docType}`;
+
+  // เก็บ docType ไว้ใช้ตอน save
+  window._currentApproveDocType = docType;
+
+  body.innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">เงื่อนไขที่เชื่อมอยู่</div>
+      ${relatedConds.length ?
+        relatedConds.map(c => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:6px;margin-bottom:6px;border:1px solid var(--border);">
+            <span style="font-size:13px;flex:1;font-weight:500;">${c.name}</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:${c.enabled?'#dcfce7':'#f1f5f9'};color:${c.enabled?'#16a34a':'#64748b'};font-weight:600;">${c.enabled?'เปิด':'ปิด'}</span>
+          </div>`).join('')
+        : '<div style="font-size:13px;color:var(--text-muted);padding:12px;text-align:center;">ยังไม่มีเงื่อนไข<br><small>กด "+ เพิ่ม" ในหน้าเงื่อนไขการอนุมัติ</small></div>'}
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">ลำดับขั้นตอนการอนุมัติ</div>
+      <div id="step-detail-roles">
+        ${approveRoles.length ?
+          approveRoles.map((r, i) => `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#eef2ff;border-radius:6px;margin-bottom:6px;border:1px solid #c7d2fe;">
+              <span style="width:24px;height:24px;border-radius:50%;background:var(--sidebar-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${i+1}</span>
+              <span style="font-size:13px;font-weight:600;flex:1;">${r.name}</span>
+              <span style="font-size:11px;color:var(--text-muted);">${r.email||''}</span>
+            </div>`).join('')
+          : '<div style="font-size:13px;color:var(--text-muted);padding:12px;text-align:center;">ยังไม่มีผู้อนุมัติ<br><small>เพิ่มได้ที่หน้า "บทบาทผู้อนุมัติ"</small></div>'}
+      </div>
+    </div>`;
+
+  openModal('modal-approve-step-detail');
+}
+
+function saveApproveStepDetail() {
+  closeModal('modal-approve-step-detail');
+  toast('✅ บันทึกขั้นตอนการอนุมัติแล้ว');
+}
+
+// Patch stgGo ให้โหลดระบบอนุมัติ
+(function(){
+  const _orig = window.stgGo;
+  window.stgGo = function(panel) {
+    _orig(panel);
+    if (panel === 'approve-role') {
+      approveRoles = DB.get('wpg_approve_roles', []);
+      renderApproveRoles();
+    }
+    if (panel === 'approve-cond') {
+      approveRoles = DB.get('wpg_approve_roles', []);
+      approveConds = DB.get('wpg_approve_conds', []);
+      renderApproveConds();
+    }
+    if (panel === 'approve-step') {
+      approveRoles = DB.get('wpg_approve_roles', []);
+      approveConds = DB.get('wpg_approve_conds', []);
+      approveSteps = DB.get('wpg_approve_steps', [
+        { id: genId(), docType:'ใบเสนอราคา', enabled:false, createdAt:today(), createdBy:'Admin', updatedBy:'', steps:[] }
+      ]);
+      renderApproveStepTable();
+    }
+  };
+})();
+
+// Init Phase 14
+approveRoles  = DB.get('wpg_approve_roles', []);
+approveConds  = DB.get('wpg_approve_conds', []);
+approveSteps  = DB.get('wpg_approve_steps', [
+  { id: genId(), docType:'ใบเสนอราคา', enabled:false, createdAt:today(), createdBy:'Admin', updatedBy:'', steps:[] },
+  { id: genId(), docType:'ใบสั่งขาย',  enabled:false, createdAt:today(), createdBy:'Admin', updatedBy:'', steps:[] },
+  { id: genId(), docType:'โครงการ',    enabled:false, createdAt:today(), createdBy:'Admin', updatedBy:'', steps:[] },
+]);
+
 
 // ============================================================
 //  PHASE 13 — โลโก้บริษัท, ตั้งค่าระบบ, ผู้รับผิดชอบลูกค้า
