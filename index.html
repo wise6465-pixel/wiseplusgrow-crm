@@ -9224,54 +9224,145 @@ function clearImportFile() {
 function processImport() {
   if (!_importFile) { alert('กรุณาเลือกไฟล์ก่อน'); return; }
   const type = document.getElementById('import-type')?.value||'customers';
+  const isXlsx = _importFile.name.match(/\.xlsx?$/i);
+
+  if (isXlsx) {
+    // โหลด SheetJS ถ้ายังไม่มี
+    if (typeof XLSX === 'undefined') {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      script.onload = () => _doImportXlsx(type);
+      document.head.appendChild(script);
+    } else {
+      _doImportXlsx(type);
+    }
+  } else {
+    // CSV
+    const reader = new FileReader();
+    reader.onload = e => _doImportCSV(e.target.result, type);
+    reader.readAsText(_importFile, 'UTF-8');
+  }
+}
+
+function _doImportXlsx(type) {
   const reader = new FileReader();
   reader.onload = e => {
-    const text = e.target.result;
-    const lines = text.split('\n').filter(l=>l.trim());
-    if (lines.length < 2) { alert('ไฟล์ไม่มีข้อมูล หรือรูปแบบไม่ถูกต้อง'); return; }
-    const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,'').toLowerCase());
-    let count = 0;
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      if (!rows || rows.length < 2) { alert('ไฟล์ไม่มีข้อมูล'); return; }
 
-    if (type === 'customers') {
-      for (let i=1;i<lines.length;i++) {
-        const cols = lines[i].split(',').map(c=>c.trim().replace(/"/g,''));
-        const name = cols[headers.indexOf('ชื่อ')||headers.indexOf('name')||0]||'';
-        if (!name) continue;
-        if (!customers.find(c=>c.name===name)) {
-          customers.push({ id:genId(), name, phone:cols[1]||'', email:cols[2]||'', status:'เป้าหมาย', hotness:1, tags:[], contacts:[], createdAt:today() });
-          count++;
+      // หา header row — Jubili มักมี header ที่แถวแรกหรือแถวที่ 2
+      let headerRowIdx = 0;
+      for (let i = 0; i < Math.min(5, rows.length); i++) {
+        const r = rows[i].map(c => String(c||'').trim());
+        if (r.some(c => c.match(/ชื่อ|name|สินค้า|รหัส|prospect/i))) {
+          headerRowIdx = i;
+          break;
         }
       }
-      DB.set('customers', customers);
-    } else if (type === 'products') {
-      for (let i=1;i<lines.length;i++) {
-        const cols = lines[i].split(',').map(c=>c.trim().replace(/"/g,''));
-        const name = cols[0]||'';
-        if (!name) continue;
-        if (!products.find(p=>p.name===name)) {
-          products.push({ id:genId(), name, code:cols[1]||'', group:cols[2]||'', price:parseFloat(cols[3])||0, unit:cols[4]||'ชิ้น', createdAt:today() });
-          count++;
-        }
-      }
-      DB.set('wpg_products', products);
-    }
+      const headers = rows[headerRowIdx].map(c => String(c||'').trim().toLowerCase());
+      const dataRows = rows.slice(headerRowIdx + 1).filter(r => r.some(c => c));
 
-    // บันทึกประวัติ
-    importHistory.unshift({ id:genId(), filename:_importFile.name, count, type, createdAt:today() });
-    DB.set('wpg_import_history', importHistory);
-
-    const result = document.getElementById('import-result');
-    if (result) {
-      result.style.display='block';
-      result.innerHTML = `<div style="padding:12px 16px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac;">
-        ✅ <strong>นำเข้าสำเร็จ ${count} รายการ</strong> จากไฟล์ ${_importFile.name}
-      </div>`;
+      _processRows(headers, dataRows, type);
+    } catch(err) {
+      alert('อ่านไฟล์ Excel ไม่ได้: ' + err.message);
     }
-    renderImportHistory();
-    clearImportFile();
-    toast(`✅ Import ${type==='customers'?'ลูกค้า':'สินค้า'} ${count} รายการสำเร็จ`);
   };
-  reader.readAsText(_importFile, 'UTF-8');
+  reader.readAsArrayBuffer(_importFile);
+}
+
+function _doImportCSV(text, type) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { alert('ไฟล์ไม่มีข้อมูล'); return; }
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+  const dataRows = lines.slice(1).map(l => l.split(',').map(c => c.trim().replace(/"/g,'')));
+  _processRows(headers, dataRows, type);
+}
+
+function _getCol(headers, row, ...keys) {
+  for (const key of keys) {
+    const idx = headers.findIndex(h => h.includes(key));
+    if (idx >= 0 && row[idx] !== undefined && String(row[idx]).trim()) {
+      return String(row[idx]).trim();
+    }
+  }
+  return '';
+}
+
+function _processRows(headers, dataRows, type) {
+  let count = 0;
+
+  // แมป status จาก Jubili
+  const statusMap = {
+    'fresh':'ใหม่', 'ใหม่':'ใหม่',
+    'prospect':'เป้าหมาย', 'เป้าหมาย':'เป้าหมาย',
+    'existing':'ประจำ', 'ประจำ':'ประจำ',
+    'lapse':'ห่างหาย', 'ห่างหาย':'ห่างหาย',
+  };
+
+  if (type === 'customers') {
+    for (const row of dataRows) {
+      // รองรับ header ของ Jubili: ชื่อลูกค้า, ชื่อ, Name, prospect name
+      const name = _getCol(headers, row, 'ชื่อลูกค้า','ชื่อ','name','prospect');
+      if (!name || name.length < 1) continue;
+
+      const phone  = _getCol(headers, row, 'โทรศัพท์','เบอร์','phone','tel','mobile');
+      const email  = _getCol(headers, row, 'อีเมล','email');
+      const rawSt  = _getCol(headers, row, 'สถานะ','status','state');
+      const status = statusMap[rawSt?.toLowerCase()] || statusMap[rawSt] || 'เป้าหมาย';
+      const member = _getCol(headers, row, 'ผู้รับผิดชอบ','พนักงาน','member','owner','sale');
+      const channel= _getCol(headers, row, 'ช่องทาง','channel','แหล่ง');
+      const tag1   = _getCol(headers, row, 'แท็ก','tag','กลุ่ม');
+
+      if (!customers.find(c => c.name === name && c.phone === phone)) {
+        customers.push({
+          id: genId(), name, phone, email,
+          status, hotness: 1,
+          tags: tag1 ? [tag1] : [],
+          contacts: [],
+          member, channel,
+          createdAt: today()
+        });
+        count++;
+      }
+    }
+    DB.set('customers', customers);
+    if(typeof renderCustomers==='function') renderCustomers();
+    if(typeof updateCustStats==='function') updateCustStats();
+
+  } else if (type === 'products') {
+    for (const row of dataRows) {
+      const name  = _getCol(headers, row, 'ชื่อสินค้า','ชื่อ','name','สินค้า','item');
+      if (!name) continue;
+      const code  = _getCol(headers, row, 'รหัสสินค้า','รหัส','code','sku');
+      const group = _getCol(headers, row, 'กลุ่มสินค้า','กลุ่ม','group','category');
+      const price = parseFloat(_getCol(headers, row, 'ราคา','price','ราคาขาย')) || 0;
+      const unit  = _getCol(headers, row, 'หน่วย','unit') || 'ชิ้น';
+      if (!products.find(p => p.name === name)) {
+        products.push({ id:genId(), name, code, group, price, unit, createdAt:today() });
+        count++;
+      }
+    }
+    DB.set('wpg_products', products);
+  }
+
+  // บันทึกประวัติ
+  importHistory.unshift({ id:genId(), filename:_importFile.name, count, type, createdAt:today() });
+  DB.set('wpg_import_history', importHistory);
+
+  const result = document.getElementById('import-result');
+  if (result) {
+    result.style.display = 'block';
+    result.innerHTML = `<div style="padding:12px 16px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac;font-size:13px;">
+      ✅ <strong>นำเข้าสำเร็จ ${count} รายการ</strong> จากไฟล์ ${_importFile.name}
+      ${count===0?'<br><span style="color:#f59e0b;">⚠️ ไม่พบข้อมูลใหม่ — อาจเป็นเพราะข้อมูลซ้ำ หรือ header ไม่ตรง</span>':''}
+    </div>`;
+  }
+  renderImportHistory();
+  clearImportFile();
+  toast(`✅ Import ${type==='customers'?'ลูกค้า':'สินค้า'} ${count} รายการสำเร็จ`);
 }
 
 function renderImportHistory() {
