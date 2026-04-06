@@ -1836,6 +1836,24 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <h3 class="stg-title">ℹ️ ข้อมูลกิจการ</h3>
             <div class="card" style="max-width:640px;">
               <div class="card-body">
+                <!-- โลโก้บริษัท -->
+                <div class="form-group">
+                  <label class="form-label">โลโก้บริษัท</label>
+                  <div style="display:flex;align-items:center;gap:16px;">
+                    <div id="logo-preview-wrap" style="width:80px;height:80px;border-radius:10px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;background:#f8fafc;overflow:hidden;flex-shrink:0;">
+                      <img id="logo-preview" src="" alt="" style="width:100%;height:100%;object-fit:contain;display:none;">
+                      <span id="logo-placeholder" style="font-size:28px;">🏢</span>
+                    </div>
+                    <div>
+                      <label style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--sidebar-bg);color:var(--accent);border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">
+                        📁 เลือกรูปโลโก้
+                        <input type="file" id="logo-input" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
+                      </label>
+                      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">PNG, JPG ขนาดไม่เกิน 2MB<br>แนะนำ 200×200px ขึ้นไป</div>
+                      <button id="logo-remove-btn" onclick="removeLogo()" style="display:none;margin-top:6px;background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;">✕ ลบโลโก้</button>
+                    </div>
+                  </div>
+                </div>
                 <div class="form-group"><label class="form-label">ชื่อบริษัท</label><input class="form-control" id="set-company" placeholder="Wiseplusgrow"></div>
                 <div class="form-row">
                   <div class="form-group"><label class="form-label">อีเมล</label><input class="form-control" id="set-email" type="email"></div>
@@ -1951,9 +1969,90 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <!-- PANEL: ตั้งค่าระบบ -->
           <div class="stg-panel" id="sp-sys-setting" style="display:none;">
             <h3 class="stg-title">⚙️ ตั้งค่าระบบ</h3>
-            <div class="card" style="max-width:560px;"><div class="card-body">
-              <div class="empty-state"><div class="empty-icon">⚙️</div><p>ตั้งค่าระบบทั่วไป<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
-            </div></div>
+
+            <!-- อักษรนำหน้าเอกสาร -->
+            <div class="card" style="max-width:640px;margin-bottom:16px;">
+              <div class="card-header"><span class="card-title">📄 อักษรนำหน้าเอกสาร</span></div>
+              <div class="card-body">
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">กำหนด prefix ของเลขที่เอกสาร เช่น QT-2024-001, SO-2024-001</p>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">ใบเสนอราคา (Prefix)</label>
+                    <input class="form-control" id="sys-qt-prefix" placeholder="เช่น QT, QO">
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">ตัวอย่าง: <span id="sys-qt-preview" style="font-weight:600;color:var(--sidebar-bg);">QT-2025-001</span></div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">ใบสั่งขาย (Prefix)</label>
+                    <input class="form-control" id="sys-so-prefix" placeholder="เช่น SO, ORD">
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">ตัวอย่าง: <span id="sys-so-preview" style="font-weight:600;color:var(--sidebar-bg);">SO-2025-001</span></div>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">รูปแบบเลขที่</label>
+                    <select class="form-control" id="sys-doc-format">
+                      <option value="PREFIX-YYYY-NNN">PREFIX-YYYY-NNN (เช่น QT-2025-001)</option>
+                      <option value="PREFIX-YYMM-NNN">PREFIX-YYMM-NNN (เช่น QT-2501-001)</option>
+                      <option value="PREFIX-NNN">PREFIX-NNN (เช่น QT-001)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">เลขเริ่มต้น</label>
+                    <input class="form-control" id="sys-doc-start" type="number" placeholder="1" min="1">
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="saveSysDocSettings()">💾 บันทึก</button>
+              </div>
+            </div>
+
+            <!-- สกุลเงิน -->
+            <div class="card" style="max-width:640px;">
+              <div class="card-header"><span class="card-title">💰 ตั้งค่าสกุลเงิน</span></div>
+              <div class="card-body">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">สกุลเงินหลัก</label>
+                    <select class="form-control" id="sys-currency">
+                      <option value="THB">THB — บาทไทย (฿)</option>
+                      <option value="USD">USD — ดอลลาร์สหรัฐ ($)</option>
+                      <option value="EUR">EUR — ยูโร (€)</option>
+                      <option value="JPY">JPY — เยนญี่ปุ่น (¥)</option>
+                      <option value="CNY">CNY — หยวนจีน (¥)</option>
+                      <option value="SGD">SGD — ดอลลาร์สิงคโปร์ (S$)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">ตัวคั่นหลักพัน</label>
+                    <select class="form-control" id="sys-thousands-sep">
+                      <option value=",">, (จุลภาค)</option>
+                      <option value=".">. (จุด)</option>
+                      <option value=" ">  (ช่องว่าง)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">ตัวคั่นทศนิยม</label>
+                    <select class="form-control" id="sys-decimal-sep">
+                      <option value=".">. (จุด)</option>
+                      <option value=",">, (จุลภาค)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">จำนวนทศนิยม</label>
+                    <select class="form-control" id="sys-decimal-places">
+                      <option value="0">0 (เช่น 1,234)</option>
+                      <option value="2" selected>2 (เช่น 1,234.00)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="background:#f8fafc;padding:12px 16px;border-radius:8px;margin-bottom:14px;">
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">ตัวอย่างการแสดงผล</div>
+                  <div style="font-size:18px;font-weight:700;color:var(--sidebar-bg);" id="sys-currency-preview">฿1,234,567.00</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="saveSysCurrencySettings()">💾 บันทึก</button>
+              </div>
+            </div>
           </div>
 
           <!-- PANEL: ตั้งค่าการแจ้งเตือน -->
@@ -2096,9 +2195,48 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <!-- PANEL: ผู้รับผิดชอบลูกค้า -->
           <div class="stg-panel" id="sp-cust-owner" style="display:none;">
             <h3 class="stg-title">👤 ผู้รับผิดชอบลูกค้า</h3>
-            <div class="card" style="max-width:560px;"><div class="card-body">
-              <div class="empty-state"><div class="empty-icon">👤</div><p>กำหนดผู้รับผิดชอบลูกค้า<br><small style="color:var(--text-light);">Feature นี้อยู่ระหว่างพัฒนา</small></p></div>
-            </div></div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">ย้ายผู้รับผิดชอบลูกค้า</span>
+              </div>
+              <div class="card-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">เลือกลูกค้าแล้วเปลี่ยนพนักงานผู้รับผิดชอบ</p>
+                <div class="form-row" style="margin-bottom:12px;">
+                  <div class="form-group">
+                    <label class="form-label">🔍 ค้นหาลูกค้า</label>
+                    <input class="form-control" id="co-search" placeholder="พิมพ์ชื่อลูกค้า..." oninput="renderCustOwnerList()">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">👤 กรองตามพนักงาน</label>
+                    <select class="form-control" id="co-filter-member" onchange="renderCustOwnerList()">
+                      <option value="">ทั้งหมด</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="background:#f8fafc;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                  <span style="font-size:13px;font-weight:600;">เปลี่ยนผู้รับผิดชอบที่เลือกเป็น:</span>
+                  <select class="form-control" id="co-new-member" style="width:200px;">
+                    <option value="">-- เลือกพนักงาน --</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm" onclick="bulkChangeCustOwner()">🔄 เปลี่ยนที่เลือก</button>
+                  <span id="co-selected-count" style="font-size:12px;color:var(--text-muted);">เลือก 0 ราย</span>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr>
+                      <th style="width:36px;"><input type="checkbox" id="co-check-all" onclick="toggleAllCustOwner(this.checked)"></th>
+                      <th>ชื่อลูกค้า</th>
+                      <th>สถานะ</th>
+                      <th>ผู้รับผิดชอบปัจจุบัน</th>
+                    </tr></thead>
+                    <tbody id="co-tbody"></tbody>
+                  </table>
+                  <div id="co-empty" class="empty-state" style="padding:24px;display:none;">
+                    <div class="empty-icon">👤</div><p>ไม่พบลูกค้า</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- PANEL: แท็กลูกค้า -->
@@ -6231,6 +6369,280 @@ function renderRpContent() {
 products = DB.get('wpg_products', []);
 projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
+
+// ============================================================
+//  PHASE 13 — โลโก้บริษัท, ตั้งค่าระบบ, ผู้รับผิดชอบลูกค้า
+// ============================================================
+
+// ─────────────────────────────────────────────
+// 1. โลโก้บริษัท
+// ─────────────────────────────────────────────
+let companyLogo = DB.get('wpg_company_logo', '');
+
+function uploadLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert('ไฟล์ใหญ่เกิน 2MB กรุณาเลือกใหม่'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    companyLogo = e.target.result;
+    DB.set('wpg_company_logo', companyLogo);
+    showLogoPreview(companyLogo);
+    toast('✅ บันทึกโลโก้แล้ว');
+  };
+  reader.readAsDataURL(file);
+}
+
+function showLogoPreview(src) {
+  const img = document.getElementById('logo-preview');
+  const ph = document.getElementById('logo-placeholder');
+  const btn = document.getElementById('logo-remove-btn');
+  if (!img) return;
+  if (src) {
+    img.src = src; img.style.display = 'block';
+    if (ph) ph.style.display = 'none';
+    if (btn) btn.style.display = 'inline-block';
+  } else {
+    img.style.display = 'none'; img.src = '';
+    if (ph) ph.style.display = 'block';
+    if (btn) btn.style.display = 'none';
+  }
+}
+
+function removeLogo() {
+  companyLogo = '';
+  DB.set('wpg_company_logo', '');
+  showLogoPreview('');
+  toast('🗑️ ลบโลโก้แล้ว');
+}
+
+// Patch loadCompanyPanel ให้โหลดโลโก้
+(function(){
+  const _orig = window.loadCompanyPanel;
+  window.loadCompanyPanel = function() {
+    if (_orig) _orig();
+    companyLogo = DB.get('wpg_company_logo', '');
+    showLogoPreview(companyLogo);
+  };
+})();
+
+// Patch printQuote/printOrder ให้ใช้โลโก้จริง
+(function(){
+  const _origQ = window.printQuote;
+  window.printQuote = function(id) {
+    window._printLogo = DB.get('wpg_company_logo','');
+    _origQ(id);
+  };
+  const _origO = window.printOrder;
+  window.printOrder = function(id) {
+    window._printLogo = DB.get('wpg_company_logo','');
+    _origO(id);
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 2. ตั้งค่าระบบ — อักษรนำหน้าเอกสาร
+// ─────────────────────────────────────────────
+let sysSettings = DB.get('wpg_sys_settings', {
+  qtPrefix: 'QT', soPrefix: 'SO',
+  docFormat: 'PREFIX-YYYY-NNN', docStart: 1,
+  currency: 'THB', thousandsSep: ',', decimalSep: '.', decimalPlaces: 2
+});
+
+function loadSysSettingsPanel() {
+  const v = id => document.getElementById(id);
+  if(v('sys-qt-prefix'))       v('sys-qt-prefix').value       = sysSettings.qtPrefix||'QT';
+  if(v('sys-so-prefix'))       v('sys-so-prefix').value       = sysSettings.soPrefix||'SO';
+  if(v('sys-doc-format'))      v('sys-doc-format').value      = sysSettings.docFormat||'PREFIX-YYYY-NNN';
+  if(v('sys-doc-start'))       v('sys-doc-start').value       = sysSettings.docStart||1;
+  if(v('sys-currency'))        v('sys-currency').value        = sysSettings.currency||'THB';
+  if(v('sys-thousands-sep'))   v('sys-thousands-sep').value   = sysSettings.thousandsSep||',';
+  if(v('sys-decimal-sep'))     v('sys-decimal-sep').value     = sysSettings.decimalSep||'.';
+  if(v('sys-decimal-places'))  v('sys-decimal-places').value  = sysSettings.decimalPlaces||2;
+  updateDocPreview();
+  updateCurrencyPreview();
+  // bind live preview
+  ['sys-qt-prefix','sys-so-prefix','sys-doc-format'].forEach(id => {
+    const el = v(id);
+    if(el) el.oninput = el.onchange = updateDocPreview;
+  });
+  ['sys-currency','sys-thousands-sep','sys-decimal-sep','sys-decimal-places'].forEach(id => {
+    const el = v(id);
+    if(el) el.onchange = updateCurrencyPreview;
+  });
+}
+
+function updateDocPreview() {
+  const prefix = document.getElementById('sys-qt-prefix')?.value||'QT';
+  const soPrefix = document.getElementById('sys-so-prefix')?.value||'SO';
+  const fmt = document.getElementById('sys-doc-format')?.value||'PREFIX-YYYY-NNN';
+  const yr = new Date().getFullYear();
+  const ym = String(yr).slice(2) + String(new Date().getMonth()+1).padStart(2,'0');
+  const num = '001';
+  const makeNo = (p) => fmt.replace('PREFIX',p).replace('YYYY',yr).replace('YYMM',ym).replace('NNN',num);
+  const qtPrev = document.getElementById('sys-qt-preview');
+  const soPrev = document.getElementById('sys-so-preview');
+  if(qtPrev) qtPrev.textContent = makeNo(prefix);
+  if(soPrev) soPrev.textContent = makeNo(soPrefix);
+}
+
+function updateCurrencyPreview() {
+  const cur = document.getElementById('sys-currency')?.value||'THB';
+  const ts = document.getElementById('sys-thousands-sep')?.value||',';
+  const ds = document.getElementById('sys-decimal-sep')?.value||'.';
+  const dp = parseInt(document.getElementById('sys-decimal-places')?.value)||2;
+  const symbols = { THB:'฿', USD:'$', EUR:'€', JPY:'¥', CNY:'¥', SGD:'S$' };
+  const sym = symbols[cur]||'฿';
+  const num = 1234567;
+  const parts = num.toFixed(dp).split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ts);
+  const formatted = sym + (dp>0 ? parts.join(ds) : parts[0]);
+  const prev = document.getElementById('sys-currency-preview');
+  if(prev) prev.textContent = formatted;
+}
+
+function saveSysDocSettings() {
+  sysSettings.qtPrefix    = document.getElementById('sys-qt-prefix')?.value||'QT';
+  sysSettings.soPrefix    = document.getElementById('sys-so-prefix')?.value||'SO';
+  sysSettings.docFormat   = document.getElementById('sys-doc-format')?.value||'PREFIX-YYYY-NNN';
+  sysSettings.docStart    = parseInt(document.getElementById('sys-doc-start')?.value)||1;
+  DB.set('wpg_sys_settings', sysSettings);
+  toast('✅ บันทึกการตั้งค่าเอกสารแล้ว');
+}
+
+function saveSysCurrencySettings() {
+  sysSettings.currency      = document.getElementById('sys-currency')?.value||'THB';
+  sysSettings.thousandsSep  = document.getElementById('sys-thousands-sep')?.value||',';
+  sysSettings.decimalSep    = document.getElementById('sys-decimal-sep')?.value||'.';
+  sysSettings.decimalPlaces = parseInt(document.getElementById('sys-decimal-places')?.value)||2;
+  DB.set('wpg_sys_settings', sysSettings);
+  toast('✅ บันทึกการตั้งค่าสกุลเงินแล้ว');
+}
+
+// ฟังก์ชัน genDocNo ใหม่ที่ใช้ sysSettings
+function genDocNo(type) {
+  const s = sysSettings;
+  const prefix = type === 'QT' ? (s.qtPrefix||'QT') : (s.soPrefix||'SO');
+  const fmt = s.docFormat||'PREFIX-YYYY-NNN';
+  const yr = new Date().getFullYear();
+  const ym = String(yr).slice(2) + String(new Date().getMonth()+1).padStart(2,'0');
+  // หา running number
+  const allDocs = type === 'QT' ? quotes : orders;
+  const num = String((allDocs.length + (s.docStart||1))).padStart(3,'0');
+  return fmt.replace('PREFIX',prefix).replace('YYYY',yr).replace('YYMM',ym).replace('NNN',num);
+}
+
+// Patch stgGo ให้โหลด sys settings
+(function(){
+  const _orig = window.stgGo;
+  window.stgGo = function(panel) {
+    _orig(panel);
+    if (panel === 'sys-setting') loadSysSettingsPanel();
+    if (panel === 'cust-owner') renderCustOwnerList();
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 3. ผู้รับผิดชอบลูกค้า
+// ─────────────────────────────────────────────
+let selectedCustOwnerIds = new Set();
+
+function renderCustOwnerList() {
+  const q = (document.getElementById('co-search')?.value||'').toLowerCase();
+  const memberFilter = document.getElementById('co-filter-member')?.value||'';
+  const tbody = document.getElementById('co-tbody');
+  const empty = document.getElementById('co-empty');
+  if (!tbody) return;
+
+  // sync member dropdowns
+  const memberList = members.length ? members : [];
+  ['co-filter-member','co-new-member'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    if (id === 'co-filter-member') {
+      sel.innerHTML = '<option value="">ทั้งหมด</option>' +
+        memberList.map(m=>`<option value="${m.name}" ${m.name===cur?'selected':''}>${m.name}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">-- เลือกพนักงาน --</option>' +
+        memberList.map(m=>`<option value="${m.name}" ${m.name===cur?'selected':''}>${m.name}</option>`).join('');
+    }
+  });
+
+  let list = [...customers];
+  if (q) list = list.filter(c => c.name?.toLowerCase().includes(q) || (c.member||'').toLowerCase().includes(q));
+  if (memberFilter) list = list.filter(c => (c.member||'') === memberFilter);
+
+  if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+
+  const statusColor = { เป้าหมาย:'#64748b', ใหม่:'#3b82f6', ประจำ:'#10b981', ห่างหาย:'#f59e0b' };
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><input type="checkbox" class="co-check" value="${c.id}" ${selectedCustOwnerIds.has(c.id)?'checked':''} onchange="toggleCustOwnerCheck('${c.id}',this.checked)"></td>
+      <td style="font-size:13px;font-weight:500;">${c.name}</td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${statusColor[c.status]||'#e2e8f0'}22;color:${statusColor[c.status]||'#64748b'};font-weight:600;">${c.status||'-'}</span></td>
+      <td style="font-size:13px;">
+        <select class="form-control" style="font-size:12px;padding:4px 8px;height:auto;" onchange="changeSingleCustOwner('${c.id}',this.value)">
+          <option value="">ไม่มี</option>
+          ${memberList.map(m=>`<option value="${m.name}" ${(c.member||'')===m.name?'selected':''}>${m.name}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`).join('');
+
+  updateCustOwnerCount();
+}
+
+function toggleCustOwnerCheck(id, checked) {
+  if (checked) selectedCustOwnerIds.add(id);
+  else selectedCustOwnerIds.delete(id);
+  updateCustOwnerCount();
+}
+
+function toggleAllCustOwner(checked) {
+  document.querySelectorAll('.co-check').forEach(cb => {
+    cb.checked = checked;
+    if (checked) selectedCustOwnerIds.add(cb.value);
+    else selectedCustOwnerIds.delete(cb.value);
+  });
+  updateCustOwnerCount();
+}
+
+function updateCustOwnerCount() {
+  const el = document.getElementById('co-selected-count');
+  if (el) el.textContent = `เลือก ${selectedCustOwnerIds.size} ราย`;
+}
+
+function changeSingleCustOwner(custId, memberName) {
+  const c = customers.find(x => x.id === custId);
+  if (!c) return;
+  c.member = memberName;
+  DB.set('customers', customers);
+  toast(`✅ เปลี่ยนผู้รับผิดชอบ "${c.name}" แล้ว`);
+}
+
+function bulkChangeCustOwner() {
+  const newMember = document.getElementById('co-new-member')?.value;
+  if (!newMember) { alert('กรุณาเลือกพนักงานก่อน'); return; }
+  if (!selectedCustOwnerIds.size) { alert('กรุณาเลือกลูกค้าก่อน'); return; }
+  selectedCustOwnerIds.forEach(id => {
+    const c = customers.find(x => x.id === id);
+    if (c) c.member = newMember;
+  });
+  DB.set('customers', customers);
+  selectedCustOwnerIds.clear();
+  renderCustOwnerList();
+  toast(`✅ เปลี่ยนผู้รับผิดชอบ ${selectedCustOwnerIds.size||'ที่เลือก'} ราย เป็น "${newMember}" แล้ว`);
+}
+
+// Init Phase 13
+sysSettings = DB.get('wpg_sys_settings', {
+  qtPrefix:'QT', soPrefix:'SO',
+  docFormat:'PREFIX-YYYY-NNN', docStart:1,
+  currency:'THB', thousandsSep:',', decimalSep:'.', decimalPlaces:2
+});
+companyLogo = DB.get('wpg_company_logo', '');
+
 
 // ============================================================
 //  PHASE 12 — Print, Global Search, Notification, CSV Export, Mobile
