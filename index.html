@@ -6751,6 +6751,606 @@ projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
 
 // ============================================================
+//  PHASE 16 — Dashboard จริง, Customer filter/sort,
+//             Kanban DnD, รายงานกราฟจริง, Approval workflow
+// ============================================================
+
+// ─────────────────────────────────────────────
+// 1. DASHBOARD — ปรับปรุงให้ดึงข้อมูลจริงครบ
+// ─────────────────────────────────────────────
+(function(){
+  const _orig = window.updateDashboard;
+  window.updateDashboard = function() {
+    if(_orig) _orig();
+
+    const td = today();
+    const thisMonth = td.substring(0,7);
+    const lastMonth = new Date(new Date().setMonth(new Date().getMonth()-1)).toISOString().substring(0,7);
+
+    // ยอดขายจริง (รวมทุก orders)
+    const totalRevenue = orders.reduce((s,o) => {
+      const t = (o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0);
+      return s + t;
+    }, 0);
+    const monthRevenue = orders.filter(o=>o.date?.startsWith(thisMonth)).reduce((s,o) => {
+      return s + (o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0);
+    }, 0);
+    const lastMonthRevenue = orders.filter(o=>o.date?.startsWith(lastMonth)).reduce((s,o) => {
+      return s + (o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0);
+    }, 0);
+    const revenueGrowth = lastMonthRevenue > 0 ? Math.round((monthRevenue-lastMonthRevenue)/lastMonthRevenue*100) : 0;
+
+    const revenueEl = document.getElementById('db-revenue');
+    if(revenueEl) revenueEl.textContent = fmtMoney(monthRevenue);
+    const revCountEl = document.getElementById('db-revenue-count');
+    if(revCountEl) {
+      const growthColor = revenueGrowth >= 0 ? '#22c55e' : '#ef4444';
+      revCountEl.innerHTML = `<span style="color:${growthColor};font-weight:600;">${revenueGrowth>=0?'▲':'▼'} ${Math.abs(revenueGrowth)}%</span> vs เดือนที่แล้ว`;
+    }
+
+    // Goal bar update
+    const g = goals;
+    if (g.revenue > 0) {
+      const pct = Math.min(Math.round(monthRevenue/g.revenue*100),100);
+      const barEl = document.getElementById('db-goal-bar-revenue');
+      if(barEl) { barEl.style.width = pct+'%'; }
+      const pctEl = document.getElementById('db-goal-pct-revenue');
+      if(pctEl) pctEl.textContent = pct+'%';
+    }
+
+    // Activity summary chart (รายเดือน 6 เดือนล่าสุด)
+    const actChartEl = document.getElementById('db-act-chart');
+    if (actChartEl) {
+      const months = [];
+      for(let i=5;i>=0;i--) {
+        const d = new Date(); d.setMonth(d.getMonth()-i);
+        months.push(d.toISOString().substring(0,7));
+      }
+      const maxAct = Math.max(...months.map(m=>activities.filter(a=>a.date?.startsWith(m)).length),1);
+      actChartEl.innerHTML = `<div style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px;">
+        ${months.map(m => {
+          const cnt = activities.filter(a=>a.date?.startsWith(m)).length;
+          const h = Math.max(Math.round(cnt/maxAct*70),cnt>0?4:0);
+          const label = m.substring(5);
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+            <div style="font-size:10px;font-weight:700;color:var(--sidebar-bg);">${cnt||''}</div>
+            <div style="width:100%;height:${h}px;background:var(--accent);border-radius:3px 3px 0 0;min-height:${cnt>0?4:0}px;transition:height .3s;"></div>
+            <div style="font-size:9px;color:var(--text-muted);">${label}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    // Revenue trend chart (6 เดือน)
+    const revChartEl = document.getElementById('db-rev-chart');
+    if (revChartEl) {
+      const months = [];
+      for(let i=5;i>=0;i--) {
+        const d = new Date(); d.setMonth(d.getMonth()-i);
+        months.push(d.toISOString().substring(0,7));
+      }
+      const revData = months.map(m => orders.filter(o=>o.date?.startsWith(m)).reduce((s,o)=>{
+        return s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0);
+      },0));
+      const maxRev = Math.max(...revData,1);
+      const pts = revData.map((v,i) => `${i*(100/5)},${80-Math.round(v/maxRev*70)}`).join(' ');
+      revChartEl.innerHTML = `<svg viewBox="0 0 100 90" style="width:100%;height:80px;">
+        <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+        ${revData.map((v,i) => `<circle cx="${i*(100/5)}" cy="${80-Math.round(v/maxRev*70)}" r="2.5" fill="var(--sidebar-bg)"/>
+          <title>${fmtMoney(v)}</title>`).join('')}
+        ${months.map((m,i) => `<text x="${i*(100/5)}" y="88" font-size="7" text-anchor="middle" fill="#94a3b8">${m.substring(5)}</text>`).join('')}
+      </svg>`;
+    }
+
+    // Top customers by activity
+    const topCustEl = document.getElementById('db-top-customers');
+    if (topCustEl) {
+      const custAct = customers.map(c => ({
+        c, cnt: activities.filter(a=>a.customerId===c.id).length,
+        rev: orders.filter(o=>o.customerId===c.id).reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0)
+      })).sort((a,b)=>b.rev-a.rev).slice(0,5);
+
+      if (!custAct.length || custAct[0].rev === 0) {
+        topCustEl.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px;">ยังไม่มีข้อมูล</div>';
+      } else {
+        topCustEl.innerHTML = custAct.map((x,i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span style="width:20px;height:20px;border-radius:50%;background:${i===0?'var(--accent)':'#f1f5f9'};color:${i===0?'var(--sidebar-bg)':'var(--text-muted)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${i+1}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${x.c.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${x.cnt} กิจกรรม</div>
+            </div>
+            <div style="font-size:13px;font-weight:700;color:var(--sidebar-bg);">${fmtMoney(x.rev)}</div>
+          </div>`).join('');
+      }
+    }
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 2. CUSTOMERS — Sort + Advanced Filter
+// ─────────────────────────────────────────────
+let custSortBy = 'name'; // name, activity, revenue, hotness
+let custSortDir = 'asc';
+
+// เพิ่ม sort controls ใน customers header
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page === 'customers') {
+      setTimeout(injectCustSortBar, 100);
+    }
+  };
+})();
+
+function injectCustSortBar() {
+  const existing = document.getElementById('cust-sort-bar');
+  if (existing) return;
+  const header = document.querySelector('#page-customers .card-header, #page-customers [style*="space-between"]:first-child');
+  if (!header) return;
+
+  // หา container ที่ถูกต้อง
+  const container = document.querySelector('#page-customers > div:first-child');
+  if (!container) return;
+
+  const sortBar = document.createElement('div');
+  sortBar.id = 'cust-sort-bar';
+  sortBar.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;';
+  sortBar.innerHTML = `
+    <span style="font-size:12px;color:var(--text-muted);font-weight:600;">เรียงตาม:</span>
+    ${[['name','ชื่อ'],['activity','กิจกรรม'],['revenue','ยอดขาย'],['hotness','ความร้อนแรง'],['createdAt','วันที่เพิ่ม']].map(([v,l]) =>
+      `<button onclick="setCustSort('${v}')" id="cust-sort-${v}" class="btn btn-xs"
+        style="background:${custSortBy===v?'var(--sidebar-bg)':'#f1f5f9'};color:${custSortBy===v?'var(--accent)':'var(--text-muted)'};">
+        ${l} ${custSortBy===v?(custSortDir==='asc'?'↑':'↓'):''}
+      </button>`).join('')}
+  `;
+  container.insertBefore(sortBar, container.firstChild);
+}
+
+function setCustSort(by) {
+  if (custSortBy === by) custSortDir = custSortDir === 'asc' ? 'desc' : 'asc';
+  else { custSortBy = by; custSortDir = 'asc'; }
+  renderCustomers();
+  // อัพเดต button styles
+  ['name','activity','revenue','hotness','createdAt'].forEach(v => {
+    const btn = document.getElementById('cust-sort-'+v);
+    if (!btn) return;
+    btn.style.background = custSortBy===v ? 'var(--sidebar-bg)' : '#f1f5f9';
+    btn.style.color = custSortBy===v ? 'var(--accent)' : 'var(--text-muted)';
+    btn.textContent = ['name','ชื่อ','activity','กิจกรรม','revenue','ยอดขาย','hotness','ความร้อนแรง','createdAt','วันที่เพิ่ม']
+      .filter((_,i)=>i%2===0).map((v2,i)=>[v2,['ชื่อ','กิจกรรม','ยอดขาย','ความร้อนแรง','วันที่เพิ่ม'][i]])
+      .find(([v2])=>v2===v)?.[1] + (custSortBy===v?(custSortDir==='asc'?'↑':'↓'):'');
+  });
+}
+
+// Patch renderCustomers ให้ sort ได้
+(function(){
+  const _orig = window.renderCustomers;
+  window.renderCustomers = function() {
+    const q = document.getElementById('cust-search')?.value.toLowerCase()||'';
+    const tagFilter = document.getElementById('cust-filter-tag')?.value||'';
+
+    let list = customers.filter(c => {
+      const matchStatus = currentCustStatus==='all' || c.status===currentCustStatus;
+      const matchQ = !q || c.name.toLowerCase().includes(q) || (c.phone||'').includes(q) || (c.email||'').toLowerCase().includes(q);
+      const matchTag = !tagFilter || (c.tags||[]).includes(tagFilter);
+      return matchStatus && matchQ && matchTag;
+    });
+
+    // Sort
+    list.sort((a,b) => {
+      let va, vb;
+      if (custSortBy==='activity') { va=activities.filter(x=>x.customerId===a.id).length; vb=activities.filter(x=>x.customerId===b.id).length; }
+      else if (custSortBy==='revenue') {
+        va=orders.filter(o=>o.customerId===a.id).reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+        vb=orders.filter(o=>o.customerId===b.id).reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+      }
+      else if (custSortBy==='hotness') { va=a.hotness||0; vb=b.hotness||0; }
+      else if (custSortBy==='createdAt') { va=a.createdAt||''; vb=b.createdAt||''; }
+      else { va=a.name||''; vb=b.name||''; }
+      if (typeof va==='string') return custSortDir==='asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+      return custSortDir==='asc' ? va-vb : vb-va;
+    });
+
+    const grid = document.getElementById('customer-grid');
+    const empty = document.getElementById('cust-empty');
+    if (!list.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+    empty.style.display='none';
+
+    const statusLabel = { prospect:'🎯 เป้าหมาย', fresh:'🆕 ใหม่', existing:'⭐ ประจำ', lapse:'😴 ห่างหาย',
+      เป้าหมาย:'🎯 เป้าหมาย', ใหม่:'🆕 ใหม่', ประจำ:'⭐ ประจำ', ห่างหาย:'😴 ห่างหาย' };
+    const statusColor = { prospect:'badge-info', fresh:'badge-success', existing:'badge-warning', lapse:'badge-danger',
+      เป้าหมาย:'badge-info', ใหม่:'badge-success', ประจำ:'badge-warning', ห่างหาย:'badge-danger' };
+
+    grid.innerHTML = list.map(c => {
+      const actCnt = activities.filter(a=>a.customerId===c.id).length;
+      const rev = orders.filter(o=>o.customerId===c.id).reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+      return `<div class="customer-card" onclick="openCustomerDetail('${c.id}')">
+        <div class="customer-card-header">
+          <div style="display:flex;gap:10px;align-items:flex-start;">
+            <div class="customer-avatar">${c.name[0]?.toUpperCase()}</div>
+            <div>
+              <div class="customer-name">${c.name}</div>
+              <div class="customer-contact">${c.phone||''} ${c.email?'· '+c.email:''}</div>
+            </div>
+          </div>
+          <span class="badge ${statusColor[c.status]||'badge-gray'}">${statusLabel[c.status]||c.status}</span>
+        </div>
+        ${c.tags?.length ? `<div class="customer-tags">${renderTagBadges(c.tags)}</div>` : ''}
+        <div class="customer-footer">
+          <div>${hotnessStars(c.hotness)}</div>
+          <div style="font-size:12px;color:var(--text-light);display:flex;gap:10px;">
+            <span>📋 ${actCnt}</span>
+            ${rev>0?`<span style="font-weight:600;color:var(--sidebar-bg);">฿${fmtMoney(rev)}</span>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Update tab counts
+    const statuses = ['เป้าหมาย','ใหม่','ประจำ','ห่างหาย','prospect','fresh','existing','lapse'];
+    document.querySelectorAll('[data-status]').forEach(tab => {
+      const s = tab.dataset.status;
+      if (s==='all') tab.textContent = 'ทั้งหมด (' + customers.length + ')';
+      else {
+        const cnt = customers.filter(c=>c.status===s).length;
+        tab.textContent = (statusLabel[s]||s) + ' (' + cnt + ')';
+      }
+    });
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 3. KANBAN — Drag & Drop จริง
+// ─────────────────────────────────────────────
+let _dragLeadId = null;
+
+function enableKanbanDnD() {
+  // จัดการ drag events บน cards
+  document.querySelectorAll('.kanban-card').forEach(card => {
+    card.draggable = true;
+    card.ondragstart = (e) => {
+      _dragLeadId = card.dataset.id;
+      card.style.opacity = '0.5';
+      e.dataTransfer.effectAllowed = 'move';
+    };
+    card.ondragend = () => { card.style.opacity = '1'; };
+  });
+
+  // จัดการ drop events บน columns
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    col.ondragover = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      col.style.background = 'rgba(240,192,64,0.08)';
+      col.style.borderColor = 'var(--accent)';
+    };
+    col.ondragleave = () => {
+      col.style.background = '';
+      col.style.borderColor = '';
+    };
+    col.ondrop = (e) => {
+      e.preventDefault();
+      col.style.background = '';
+      col.style.borderColor = '';
+      const newStage = col.dataset.stage;
+      if (!_dragLeadId || !newStage) return;
+      const lead = leads.find(l => l.id === _dragLeadId);
+      if (!lead || lead.stage === newStage) return;
+      lead.stage = newStage;
+      DB.set('leads', leads);
+      renderLeads();
+      toast(`✅ ย้ายไป "${newStage}" แล้ว`);
+    };
+  });
+}
+
+// Patch renderLeads ให้ enable DnD หลัง render
+(function(){
+  const _orig = window.renderLeads;
+  window.renderLeads = function() {
+    if(_orig) _orig();
+    setTimeout(enableKanbanDnD, 100);
+  };
+})();
+
+// Patch navTo ให้ enable DnD เมื่อไปหน้า leads
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page==='leads') setTimeout(enableKanbanDnD, 300);
+    if (page==='customers') setTimeout(injectCustSortBar, 150);
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 4. รายงาน — กราฟจริงจากข้อมูล
+// ─────────────────────────────────────────────
+(function(){
+  const _orig = window.renderReports;
+  window.renderReports = function() {
+    if(_orig) _orig();
+
+    const yr = parseInt(document.getElementById('rp-year')?.value||new Date().getFullYear());
+    const mo = document.getElementById('rp-month')?.value||'';
+    const mem = document.getElementById('rp-member-filter')?.value||'';
+
+    // กรองข้อมูลตาม filter
+    let filtOrders = orders.filter(o => {
+      const d = o.date||'';
+      const matchY = d.startsWith(String(yr));
+      const matchM = !mo || d.startsWith(`${yr}-${mo.padStart(2,'0')}`);
+      const matchMem = !mem || o.member===mem;
+      return matchY && matchM && matchMem;
+    });
+    let filtActivities = activities.filter(a => {
+      const d = a.date||'';
+      const matchY = d.startsWith(String(yr));
+      const matchM = !mo || d.startsWith(`${yr}-${mo.padStart(2,'0')}`);
+      const matchMem = !mem || a.member===mem;
+      return matchY && matchM && matchMem;
+    });
+    let filtQuotes = quotes.filter(q => {
+      const d = q.date||'';
+      const matchY = d.startsWith(String(yr));
+      const matchM = !mo || d.startsWith(`${yr}-${mo.padStart(2,'0')}`);
+      return matchY && matchM;
+    });
+
+    // ยอดขายรายเดือน (12 เดือน)
+    const revByMonth = Array.from({length:12},(_,i)=>{
+      const m = String(i+1).padStart(2,'0');
+      return orders.filter(o=>o.date?.startsWith(`${yr}-${m}`)).reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+    });
+    renderBarChart('rp-revenue-chart', revByMonth, ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], '#1a2332');
+
+    // จำนวนกิจกรรมรายเดือน
+    const actByMonth = Array.from({length:12},(_,i)=>{
+      const m = String(i+1).padStart(2,'0');
+      return activities.filter(a=>a.date?.startsWith(`${yr}-${m}`)).length;
+    });
+    renderBarChart('rp-activity-chart', actByMonth, ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'], '#3b82f6');
+
+    // สรุป KPI cards
+    const totalRev = filtOrders.reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+    const totalAct = filtActivities.length;
+    const totalQt  = filtQuotes.length;
+    const totalCust = customers.filter(c=>c.createdAt?.startsWith(String(yr))).length;
+
+    ['rp-total-revenue','rp-total-activity','rp-total-quotes','rp-total-customers'].forEach((id,i) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = [fmtMoney(totalRev), totalAct+' ครั้ง', totalQt+' ใบ', totalCust+' ราย'][i];
+    });
+
+    // Top 5 พนักงาน by revenue
+    const staffRevEl = document.getElementById('rp-staff-revenue');
+    if (staffRevEl) {
+      const staffRev = members.map(m => ({
+        name: m.name,
+        rev: orders.filter(o=>o.member===m.name&&o.date?.startsWith(String(yr))).reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0)
+      })).sort((a,b)=>b.rev-a.rev).slice(0,5);
+      const maxRev = Math.max(...staffRev.map(s=>s.rev),1);
+      staffRevEl.innerHTML = staffRev.length ? staffRev.map((s,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <span style="width:18px;font-size:11px;font-weight:700;color:var(--text-muted);">${i+1}</span>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;">${s.name}</div>
+            <div style="height:6px;background:#f1f5f9;border-radius:3px;margin-top:4px;">
+              <div style="height:100%;width:${Math.round(s.rev/maxRev*100)}%;background:var(--sidebar-bg);border-radius:3px;"></div>
+            </div>
+          </div>
+          <span style="font-size:12px;font-weight:700;">${fmtMoney(s.rev)}</span>
+        </div>`).join('') : '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px;">ยังไม่มีข้อมูล</div>';
+    }
+  };
+})();
+
+function renderBarChart(elId, data, labels, color) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const max = Math.max(...data, 1);
+  el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:4px;height:100px;padding:0 4px;">
+    ${data.map((v,i) => {
+      const h = Math.max(Math.round(v/max*80), v>0?4:0);
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="${labels[i]}: ${v}">
+        <div style="width:100%;height:${h}px;background:${color};border-radius:3px 3px 0 0;min-height:${v>0?4:0}px;"></div>
+        <div style="font-size:9px;color:var(--text-muted);writing-mode:vertical-rl;transform:rotate(180deg);height:20px;">${labels[i]}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ─────────────────────────────────────────────
+// 5. APPROVAL WORKFLOW — ใบเสนอราคา
+// ─────────────────────────────────────────────
+
+// เพิ่ม approval status ให้ quotes
+// patch renderQuotes ให้แสดง approve button
+(function(){
+  const _orig = window.renderQuotes;
+  window.renderQuotes = function() {
+    const q2 = (document.getElementById('qt-search')?.value||'').toLowerCase();
+    const sf = document.getElementById('qt-filter')?.value||'';
+    const tbody = document.getElementById('qt-tbody');
+    const empty = document.getElementById('qt-empty');
+    if (!tbody) return;
+    let list = [...quotes];
+    if (sf) list = list.filter(q=>q.status===sf);
+    if (q2) list = list.filter(q=>{
+      const c=customers.find(x=>x.id===q.customerId);
+      return q.docNo?.toLowerCase().includes(q2)||c?.name?.toLowerCase().includes(q2);
+    });
+    list.sort((a,b)=>b.date?.localeCompare(a.date||''));
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    // เช็คว่ามีระบบอนุมัติเปิดอยู่ไหม
+    const approveSteps = DB.get('wpg_approve_steps',[]);
+    const qtStep = approveSteps.find(s=>s.docType==='ใบเสนอราคา');
+    const approvalEnabled = qtStep?.enabled || false;
+
+    const statusColor = { 'ร่าง':'#94a3b8','รออนุมัติ':'#f59e0b','รอตอบรับ':'#3b82f6','อนุมัติแล้ว':'#10b981','ยกเลิก':'#ef4444','sent':'#3b82f6' };
+    tbody.innerHTML = list.map(q => {
+      const c = customers.find(x=>x.id===q.customerId);
+      const approveStatus = q.approveStatus||'';
+      return `<tr>
+        <td style="font-size:12px;color:var(--text-muted);">${q.docNo||'-'}</td>
+        <td style="font-size:13px;font-weight:500;">${c?.name||'-'}</td>
+        <td>
+          <span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${statusColor[q.status]||'#e2e8f0'}22;color:${statusColor[q.status]||'#64748b'};font-weight:600;">${q.status||'-'}</span>
+          ${approvalEnabled && approveStatus ? `<span style="margin-left:4px;padding:2px 7px;border-radius:8px;font-size:10px;background:${approveStatus==='อนุมัติแล้ว'?'#dcfce7':approveStatus==='ปฏิเสธ'?'#fef2f2':'#fffbeb'};color:${approveStatus==='อนุมัติแล้ว'?'#16a34a':approveStatus==='ปฏิเสธ'?'#dc2626':'#d97706'};font-weight:600;">${approveStatus}</span>` : ''}
+        </td>
+        <td style="font-size:12px;">${fmtDate(q.date)}</td>
+        <td style="text-align:right;font-weight:600;">${fmtMoney(q.total||0)}</td>
+        <td style="font-size:12px;">${q.member||'-'}</td>
+        <td>
+          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-xs" style="background:#1a2332;color:white;" onclick="printQuote('${q.id}')">🖨️</button>
+            ${approvalEnabled && (!q.approveStatus||q.approveStatus==='รออนุมัติ') ?
+              `<button class="btn btn-xs" style="background:#22c55e;color:white;" onclick="approveQuote('${q.id}','อนุมัติแล้ว')">✅</button>
+               <button class="btn btn-xs" style="background:#ef4444;color:white;" onclick="approveQuote('${q.id}','ปฏิเสธ')">✕</button>` : ''}
+            ${approvalEnabled && !q.approveStatus ?
+              `<button class="btn btn-xs" style="background:#f59e0b;color:white;" onclick="submitApproval('${q.id}')">ส่งอนุมัติ</button>` : ''}
+            <button class="btn btn-xs btn-danger" onclick="deleteQuote('${q.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+})();
+
+function submitApproval(quoteId) {
+  const q = quotes.find(x=>x.id===quoteId);
+  if (!q) return;
+  q.approveStatus = 'รออนุมัติ';
+  q.approveSubmittedAt = today();
+  DB.set('quotes', quotes);
+  renderQuotes();
+  toast('📤 ส่งใบเสนอราคาเพื่ออนุมัติแล้ว');
+}
+
+function approveQuote(quoteId, decision) {
+  const q = quotes.find(x=>x.id===quoteId);
+  if (!q) return;
+  q.approveStatus = decision;
+  q.approvedAt = today();
+  q.approvedBy = DB.get('wpg_user_profile',{}).fname || 'Admin';
+  if (decision === 'อนุมัติแล้ว') q.status = 'อนุมัติแล้ว';
+  DB.set('quotes', quotes);
+  renderQuotes();
+  toast(decision==='อนุมัติแล้ว' ? '✅ อนุมัติใบเสนอราคาแล้ว' : '❌ ปฏิเสธใบเสนอราคาแล้ว');
+}
+
+// เพิ่ม KPI chart elements ใน dashboard ถ้ายังไม่มี
+(function(){
+  const addDashEl = (id, parentId, html) => {
+    if (!document.getElementById(id)) {
+      const parent = document.getElementById(parentId);
+      if (parent) parent.insertAdjacentHTML('beforeend', html);
+    }
+  };
+
+  // เพิ่ม top customers + activity chart + revenue chart หลัง dashboard โหลด
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page === 'dashboard') {
+      setTimeout(() => {
+        const dbContent = document.getElementById('page-dashboard');
+        if (!dbContent) return;
+
+        // เพิ่ม charts ถ้ายังไม่มี
+        if (!document.getElementById('db-act-chart')) {
+          const chartSection = document.createElement('div');
+          chartSection.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;';
+          chartSection.innerHTML = `
+            <div class="card">
+              <div class="card-header"><span class="card-title">📊 กิจกรรมรายเดือน</span></div>
+              <div class="card-body" style="padding:12px;"><div id="db-act-chart"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">💰 ยอดขายรายเดือน</span></div>
+              <div class="card-body" style="padding:12px;"><div id="db-rev-chart"></div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">🏆 ลูกค้า Top 5</span></div>
+              <div class="card-body" style="padding:0 12px;"><div id="db-top-customers"></div></div>
+            </div>`;
+          dbContent.appendChild(chartSection);
+        }
+
+        // เพิ่ม chart elements ในรายงานถ้ายังไม่มี
+        injectReportCharts();
+        updateDashboard();
+      }, 200);
+    }
+    if (page==='reports') setTimeout(injectReportCharts, 100);
+  };
+})();
+
+function injectReportCharts() {
+  if (document.getElementById('rp-revenue-chart')) return;
+  const rpPage = document.getElementById('page-reports');
+  if (!rpPage) return;
+
+  // หา container หลักของ reports
+  const kpiRow = document.createElement('div');
+  kpiRow.id = 'rp-kpi-row';
+  kpiRow.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;';
+  kpiRow.innerHTML = `
+    <div class="card" style="text-align:center;padding:16px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">💰 ยอดขาย</div>
+      <div id="rp-total-revenue" style="font-size:18px;font-weight:700;">-</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">📋 กิจกรรม</div>
+      <div id="rp-total-activity" style="font-size:18px;font-weight:700;">-</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">📄 ใบเสนอราคา</div>
+      <div id="rp-total-quotes" style="font-size:18px;font-weight:700;">-</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px;">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">👥 ลูกค้าใหม่</div>
+      <div id="rp-total-customers" style="font-size:18px;font-weight:700;">-</div>
+    </div>`;
+
+  const chartRow = document.createElement('div');
+  chartRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;';
+  chartRow.innerHTML = `
+    <div class="card">
+      <div class="card-header"><span class="card-title">💰 ยอดขายรายเดือน</span></div>
+      <div class="card-body" style="padding:12px;"><div id="rp-revenue-chart"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">📋 กิจกรรมรายเดือน</span></div>
+      <div class="card-body" style="padding:12px;"><div id="rp-activity-chart"></div></div>
+    </div>`;
+
+  const staffRow = document.createElement('div');
+  staffRow.innerHTML = `
+    <div class="card">
+      <div class="card-header"><span class="card-title">🏆 อันดับพนักงานตามยอดขาย</span></div>
+      <div class="card-body"><div id="rp-staff-revenue"></div></div>
+    </div>`;
+
+  const rpBody = rpPage.querySelector('[style*="padding"]') || rpPage;
+  rpBody.insertBefore(staffRow, rpBody.firstChild);
+  rpBody.insertBefore(chartRow, rpBody.firstChild);
+  rpBody.insertBefore(kpiRow, rpBody.firstChild);
+}
+
+// Init Phase 16
+setTimeout(() => {
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) {
+    setTimeout(updateDashboard, 300);
+  }
+}, 800);
+
+
+// ============================================================
 //  PHASE 15 — ตั้งค่าผู้ใช้งาน, หมายเหตุใบเสนอราคา, Import/Export
 // ============================================================
 
