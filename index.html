@@ -6786,6 +6786,662 @@ projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
 
 // ============================================================
+//  PHASE 19 — รายงาน R-00 ถึง R-09 ครบแบบ Jubili
+// ============================================================
+
+let _currentRpTab = 'r00';
+
+function setRpTab(tab) {
+  _currentRpTab = tab;
+  // อัพเดต tab styles
+  document.querySelectorAll('.rp-tab-btn').forEach(btn => {
+    const isActive = btn.id === 'rp-tab-' + tab;
+    btn.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
+    btn.style.color = isActive ? 'var(--sidebar-bg)' : 'var(--text-muted)';
+    btn.style.fontWeight = isActive ? '600' : '500';
+  });
+  renderRpContent();
+}
+
+function getFilteredData() {
+  const yr  = parseInt(document.getElementById('rp-year')?.value  || new Date().getFullYear());
+  const mo  = document.getElementById('rp-month')?.value || '';
+  const mem = document.getElementById('rp-member-filter')?.value || '';
+  const prefix = mo ? `${yr}-${mo.padStart(2,'0')}` : String(yr);
+
+  const filtOrders = orders.filter(o => {
+    const d = o.date||'';
+    return d.startsWith(prefix) && (!mem || o.member===mem);
+  });
+  const filtActivities = activities.filter(a => {
+    const d = a.date||'';
+    return d.startsWith(prefix) && (!mem || a.member===mem);
+  });
+  const filtQuotes = quotes.filter(q => (q.date||'').startsWith(prefix));
+  const filtLeads  = leads.filter(l  => (l.createdAt||'').startsWith(prefix));
+
+  return { yr, mo, mem, prefix, filtOrders, filtActivities, filtQuotes, filtLeads };
+}
+
+function getOrderTotal(o) {
+  return (o.items||[]).reduce((s,it)=>s+it.qty*it.price, 0);
+}
+
+// ─────────────────────────────────────────────
+// Main render dispatcher
+// ─────────────────────────────────────────────
+function renderRpContent() {
+  const el = document.getElementById('rp-content');
+  if (!el) return;
+  const d = getFilteredData();
+
+  switch(_currentRpTab) {
+    case 'r00': el.innerHTML = renderR00(d); break;
+    case 'r01': el.innerHTML = renderR01(d); break;
+    case 'r02': el.innerHTML = renderR02(d); break;
+    case 'r03': el.innerHTML = renderR03(d); break;
+    case 'r04': el.innerHTML = renderR04(d); break;
+    case 'r05': el.innerHTML = renderR05(d); break;
+    case 'r06': el.innerHTML = renderR06(d); break;
+    case 'r07': el.innerHTML = renderR07(d); break;
+    case 'r08': el.innerHTML = renderR08(d); break;
+    case 'r09': el.innerHTML = renderR09(d); break;
+    case 'r13': el.innerHTML = renderR13(d); break;
+    default:    el.innerHTML = renderR00(d);
+  }
+  // อัพเดต KPI header
+  updateRpKPI(d);
+}
+
+function updateRpKPI(d) {
+  const totalRev = d.filtOrders.reduce((s,o)=>s+getOrderTotal(o),0);
+  const won  = d.filtLeads.filter(l=>l.stage==='won').length;
+  const closed = d.filtLeads.filter(l=>l.stage==='won'||l.stage==='lost').length;
+  const wr = closed>0 ? Math.round(won/closed*100) : 0;
+  const newCust = customers.filter(c=>c.createdAt?.startsWith(d.prefix)).length;
+
+  const el = id => document.getElementById(id);
+  if(el('rp-revenue'))     el('rp-revenue').textContent     = fmtMoney(totalRev);
+  if(el('rp-order-count')) el('rp-order-count').textContent = d.filtOrders.length + ' ออเดอร์';
+  if(el('rp-acts'))        el('rp-acts').textContent        = d.filtActivities.length;
+  if(el('rp-new-cust'))    el('rp-new-cust').textContent    = newCust;
+  if(el('rp-winrate'))     el('rp-winrate').textContent     = wr + '%';
+  if(el('rp-winrate-sub')) el('rp-winrate-sub').textContent = won+'/'+closed+' โอกาส';
+}
+
+// ─────────────────────────────────────────────
+// R-00: รายงานสรุปยอดขายประจำปี
+// ─────────────────────────────────────────────
+function renderR00(d) {
+  const months = Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  const labels = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const curYr  = d.yr;
+  const prevYr = curYr - 1;
+
+  const rows = months.map((m,i) => {
+    const cur  = orders.filter(o=>o.date?.startsWith(`${curYr}-${m}`)).reduce((s,o)=>s+getOrderTotal(o),0);
+    const prev = orders.filter(o=>o.date?.startsWith(`${prevYr}-${m}`)).reduce((s,o)=>s+getOrderTotal(o),0);
+    const diff = cur - prev;
+    const pct  = prev>0 ? Math.round(diff/prev*100) : (cur>0?100:0);
+    return { label:labels[i], cur, prev, pct };
+  });
+
+  const totalCur  = rows.reduce((s,r)=>s+r.cur,0);
+  const totalPrev = rows.reduce((s,r)=>s+r.prev,0);
+  const totalPct  = totalPrev>0 ? Math.round((totalCur-totalPrev)/totalPrev*100) : 0;
+  const max = Math.max(...rows.map(r=>Math.max(r.cur,r.prev)),1);
+
+  return `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <span class="card-title">R-00 รายงานสรุปยอดขายประจำปี ${curYr} เทียบ ${prevYr}</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:20px;">
+          ${rows.map(r => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+              <div style="width:100%;display:flex;gap:2px;align-items:flex-end;height:90px;">
+                <div style="flex:1;background:var(--sidebar-bg);border-radius:3px 3px 0 0;height:${Math.round(r.cur/max*85)}px;min-height:${r.cur>0?3:0}px;" title="${fmtMoney(r.cur)}"></div>
+                <div style="flex:1;background:#e2e8f0;border-radius:3px 3px 0 0;height:${Math.round(r.prev/max*85)}px;min-height:${r.prev>0?3:0}px;" title="${fmtMoney(r.prev)}"></div>
+              </div>
+              <div style="font-size:9px;color:var(--text-muted);">${r.label}</div>
+            </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><div style="width:12px;height:12px;background:var(--sidebar-bg);border-radius:2px;"></div>ปี ${curYr}</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;"><div style="width:12px;height:12px;background:#e2e8f0;border-radius:2px;"></div>ปี ${prevYr}</div>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">เดือน</th>
+          <th style="padding:10px 14px;text-align:right;">ปี ${curYr}</th>
+          <th style="padding:10px 14px;text-align:right;">ปี ${prevYr}</th>
+          <th style="padding:10px 14px;text-align:right;">เพิ่ม/ลด</th>
+          <th style="padding:10px 14px;text-align:right;">%</th>
+        </tr></thead><tbody>
+          ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:9px 14px;font-size:13px;">${r.label}</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:600;">${fmtMoney(r.cur)}</td>
+            <td style="padding:9px 14px;text-align:right;color:var(--text-muted);">${fmtMoney(r.prev)}</td>
+            <td style="padding:9px 14px;text-align:right;color:${r.diff>=0?'#22c55e':'#ef4444'}">${r.diff>=0?'+':''}${fmtMoney(r.cur-r.prev)}</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:600;color:${r.pct>=0?'#22c55e':'#ef4444'}">${r.pct>=0?'+':''}${r.pct}%</td>
+          </tr>`).join('')}
+          <tr style="background:#f8fafc;font-weight:700;border-top:2px solid var(--sidebar-bg);">
+            <td style="padding:10px 14px;">รวมทั้งปี</td>
+            <td style="padding:10px 14px;text-align:right;">${fmtMoney(totalCur)}</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--text-muted);">${fmtMoney(totalPrev)}</td>
+            <td style="padding:10px 14px;text-align:right;color:${totalCur-totalPrev>=0?'#22c55e':'#ef4444'}">${totalCur-totalPrev>=0?'+':''}${fmtMoney(totalCur-totalPrev)}</td>
+            <td style="padding:10px 14px;text-align:right;color:${totalPct>=0?'#22c55e':'#ef4444'}">${totalPct>=0?'+':''}${totalPct}%</td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-01: สรุปยอดขายรายเดือนของกิจการ
+// ─────────────────────────────────────────────
+function renderR01(d) {
+  const months = Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  const labels = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const rows = months.map((m,i)=>{
+    const ords = orders.filter(o=>o.date?.startsWith(`${d.yr}-${m}`));
+    const rev  = ords.reduce((s,o)=>s+getOrderTotal(o),0);
+    const actCnt = activities.filter(a=>a.date?.startsWith(`${d.yr}-${m}`)).length;
+    const newCust = customers.filter(c=>c.createdAt?.startsWith(`${d.yr}-${m}`)).length;
+    return { label:labels[i], rev, orderCnt:ords.length, actCnt, newCust };
+  });
+  const maxRev = Math.max(...rows.map(r=>r.rev),1);
+  const total  = rows.reduce((s,r)=>({rev:s.rev+r.rev,orderCnt:s.orderCnt+r.orderCnt,actCnt:s.actCnt+r.actCnt,newCust:s.newCust+r.newCust}),{rev:0,orderCnt:0,actCnt:0,newCust:0});
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-01 สรุปยอดขายรายเดือน ปี ${d.yr}</span></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:flex-end;gap:4px;height:100px;margin-bottom:16px;">
+          ${rows.map(r=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+            <div style="width:100%;background:var(--accent);border-radius:3px 3px 0 0;height:${Math.round(r.rev/maxRev*80)}px;min-height:${r.rev>0?3:0}px;"></div>
+            <div style="font-size:9px;color:var(--text-muted);">${r.label}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">เดือน</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดขาย</th>
+          <th style="padding:10px 14px;text-align:center;">ออเดอร์</th>
+          <th style="padding:10px 14px;text-align:center;">กิจกรรม</th>
+          <th style="padding:10px 14px;text-align:center;">ลูกค้าใหม่</th>
+        </tr></thead><tbody>
+          ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:9px 14px;">${r.label}</td>
+            <td style="padding:9px 14px;text-align:right;font-weight:${r.rev>0?'600':'400'};color:${r.rev>0?'var(--sidebar-bg)':'var(--text-muted)'};">${fmtMoney(r.rev)}</td>
+            <td style="padding:9px 14px;text-align:center;">${r.orderCnt||'-'}</td>
+            <td style="padding:9px 14px;text-align:center;">${r.actCnt||'-'}</td>
+            <td style="padding:9px 14px;text-align:center;">${r.newCust||'-'}</td>
+          </tr>`).join('')}
+          <tr style="background:#f8fafc;font-weight:700;border-top:2px solid var(--sidebar-bg);">
+            <td style="padding:10px 14px;">รวมทั้งปี</td>
+            <td style="padding:10px 14px;text-align:right;">${fmtMoney(total.rev)}</td>
+            <td style="padding:10px 14px;text-align:center;">${total.orderCnt}</td>
+            <td style="padding:10px 14px;text-align:center;">${total.actCnt}</td>
+            <td style="padding:10px 14px;text-align:center;">${total.newCust}</td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-02: รายละเอียดยอดขายรายเดือน (รายบุคคล)
+// ─────────────────────────────────────────────
+function renderR02(d) {
+  const staffList = members.length ? members : [{ name:'ทั้งหมด' }];
+  const months = Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  const labels = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+  const staffRows = (members.length ? members.map(m=>m.name) : ['ทั้งหมด']).map(name => {
+    const ords = orders.filter(o => name==='ทั้งหมด' || o.member===name);
+    const monthly = months.map(m => ords.filter(o=>o.date?.startsWith(`${d.yr}-${m}`)).reduce((s,o)=>s+getOrderTotal(o),0));
+    const total = monthly.reduce((s,v)=>s+v,0);
+    return { name, monthly, total };
+  });
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-02 รายละเอียดยอดขายรายเดือน ปี ${d.yr} (รายบุคคล)</span></div>
+      <div class="card-body" style="padding:0;overflow-x:auto;">
+        <table style="min-width:900px;"><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;position:sticky;left:0;background:var(--sidebar-bg);">พนักงาน</th>
+          ${labels.map(l=>`<th style="padding:10px 8px;text-align:right;font-size:11px;">${l}</th>`).join('')}
+          <th style="padding:10px 14px;text-align:right;">รวม</th>
+        </tr></thead><tbody>
+          ${staffRows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:9px 14px;font-weight:600;position:sticky;left:0;background:white;">${r.name}</td>
+            ${r.monthly.map(v=>`<td style="padding:9px 8px;text-align:right;font-size:12px;color:${v>0?'var(--sidebar-bg)':'var(--text-muted)'};">${v>0?fmtMoney(v):'-'}</td>`).join('')}
+            <td style="padding:9px 14px;text-align:right;font-weight:700;">${fmtMoney(r.total)}</td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-03: รายละเอียดกิจกรรมการขาย
+// ─────────────────────────────────────────────
+function renderR03(d) {
+  const months = Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  const labels = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const actTypes = ['โทรศัพท์','Line','Facebook','Email','ประชุม','เยี่ยมลูกค้า','อื่นๆ'];
+
+  const rows = actTypes.map(type => {
+    const monthly = months.map(m => activities.filter(a=>a.date?.startsWith(`${d.yr}-${m}`)&&(a.channel===type||a.type===type)).length);
+    const total = monthly.reduce((s,v)=>s+v,0);
+    return { type, monthly, total };
+  });
+  const totals = months.map((_,i) => rows.reduce((s,r)=>s+r.monthly[i],0));
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-03 รายละเอียดกิจกรรมการขาย ปี ${d.yr}</span></div>
+      <div class="card-body" style="padding:0;overflow-x:auto;">
+        <table style="min-width:900px;"><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">ช่องทาง</th>
+          ${labels.map(l=>`<th style="padding:10px 8px;text-align:center;font-size:11px;">${l}</th>`).join('')}
+          <th style="padding:10px 14px;text-align:center;">รวม</th>
+        </tr></thead><tbody>
+          ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:9px 14px;font-weight:500;">${r.type}</td>
+            ${r.monthly.map(v=>`<td style="padding:9px 8px;text-align:center;font-size:12px;color:${v>0?'var(--sidebar-bg)':'var(--text-muted)'};">${v||'-'}</td>`).join('')}
+            <td style="padding:9px 14px;text-align:center;font-weight:700;">${r.total||'-'}</td>
+          </tr>`).join('')}
+          <tr style="background:#f8fafc;font-weight:700;border-top:2px solid var(--sidebar-bg);">
+            <td style="padding:10px 14px;">รวม</td>
+            ${totals.map(v=>`<td style="padding:10px 8px;text-align:center;">${v||'-'}</td>`).join('')}
+            <td style="padding:10px 14px;text-align:center;">${totals.reduce((s,v)=>s+v,0)}</td>
+          </tr>
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-04: สรุปสาเหตุที่ไม่ได้งาน (Lost reasons)
+// ─────────────────────────────────────────────
+function renderR04(d) {
+  const lostLeads = leads.filter(l=>l.stage==='lost' && (l.createdAt||'').startsWith(String(d.yr)));
+  const reasonMap = {};
+  lostLeads.forEach(l => {
+    const r = l.lostReason || 'ไม่ระบุ';
+    if (!reasonMap[r]) reasonMap[r] = { count:0, value:0 };
+    reasonMap[r].count++;
+    reasonMap[r].value += l.value||0;
+  });
+  const reasons = Object.entries(reasonMap).sort((a,b)=>b[1].count-a[1].count);
+  const total = lostLeads.length;
+  const maxCount = Math.max(...reasons.map(r=>r[1].count),1);
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-04 สรุปสาเหตุที่ไม่ได้งาน ปี ${d.yr}</span></div>
+      <div class="card-body">
+        ${!reasons.length ? `<div class="empty-state"><div class="empty-icon">✅</div><p>ไม่มีโอกาสที่ปิดไม่ได้ในปีนี้</p></div>` :
+        `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            ${reasons.map(([reason, data]) => {
+              const pct = total>0?Math.round(data.count/total*100):0;
+              const w = Math.round(data.count/maxCount*100);
+              return `<div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span style="font-size:13px;font-weight:500;">${reason}</span>
+                  <span style="font-size:12px;color:var(--text-muted);">${data.count} ราย (${pct}%)</span>
+                </div>
+                <div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                  <div style="height:100%;width:${w}%;background:#ef4444;border-radius:4px;"></div>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">มูลค่า: ${fmtMoney(data.value)}</div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div>
+            <div style="background:#f8fafc;padding:16px;border-radius:8px;">
+              <div style="font-size:13px;font-weight:600;margin-bottom:12px;">สรุป</div>
+              <div style="font-size:24px;font-weight:700;color:#ef4444;">${total}</div>
+              <div style="font-size:12px;color:var(--text-muted);">โอกาสที่ปิดไม่ได้</div>
+              <div style="margin-top:12px;font-size:24px;font-weight:700;color:var(--sidebar-bg);">${fmtMoney(lostLeads.reduce((s,l)=>s+(l.value||0),0))}</div>
+              <div style="font-size:12px;color:var(--text-muted);">มูลค่ารวมที่เสียไป</div>
+            </div>
+          </div>
+        </div>`}
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-05: วิเคราะห์รายลูกค้า (30/60/90/180 วัน)
+// ─────────────────────────────────────────────
+function renderR05(d) {
+  const now = new Date();
+  const dayAgo = (n) => {
+    const dt = new Date(now); dt.setDate(dt.getDate()-n);
+    return dt.toISOString().substring(0,10);
+  };
+  const periods = [
+    { label:'30 วันล่าสุด', from: dayAgo(30) },
+    { label:'60 วันล่าสุด', from: dayAgo(60) },
+    { label:'90 วันล่าสุด', from: dayAgo(90) },
+    { label:'180 วันล่าสุด', from: dayAgo(180) },
+  ];
+
+  const custData = customers.map(c => {
+    const cActs = activities.filter(a=>a.customerId===c.id);
+    const cOrds = orders.filter(o=>o.customerId===c.id);
+    const lastAct = cActs.sort((a,b)=>b.date?.localeCompare(a.date||''))[0];
+    const rev = cOrds.reduce((s,o)=>s+getOrderTotal(o),0);
+    return { c, lastActDate: lastAct?.date||'', actCnt: cActs.length, rev };
+  }).filter(x=>x.actCnt>0).sort((a,b)=>b.actCnt-a.actCnt).slice(0,20);
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-05 วิเคราะห์รายลูกค้า (ย้อนหลัง 30/60/90/180 วัน)</span></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">ลูกค้า</th>
+          <th style="padding:10px 14px;text-align:center;">กิจกรรมรวม</th>
+          <th style="padding:10px 14px;text-align:center;">ครั้งล่าสุด</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดขายรวม</th>
+          <th style="padding:10px 14px;text-align:center;">สถานะ</th>
+        </tr></thead><tbody>
+          ${!custData.length ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีข้อมูลกิจกรรม</td></tr>` :
+          custData.map(x => {
+            const daysSince = x.lastActDate ? Math.floor((now-new Date(x.lastActDate))/86400000) : 999;
+            const statusColor = daysSince<=30?'#22c55e':daysSince<=60?'#f59e0b':daysSince<=90?'#ef4444':'#94a3b8';
+            const statusLabel = daysSince<=30?'ปกติ':daysSince<=60?'ควรติดตาม':daysSince<=90?'เสี่ยง':'ห่างหาย';
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 14px;font-weight:500;">${x.c.name}</td>
+              <td style="padding:10px 14px;text-align:center;font-weight:700;">${x.actCnt}</td>
+              <td style="padding:10px 14px;text-align:center;font-size:12px;">${x.lastActDate?fmtDate(x.lastActDate)+` (${daysSince}วัน)`:'-'}</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:600;">${fmtMoney(x.rev)}</td>
+              <td style="padding:10px 14px;text-align:center;">
+                <span style="padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;background:${statusColor}22;color:${statusColor};">${statusLabel}</span>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-06: วิเคราะห์ตามแท็กลูกค้า
+// ─────────────────────────────────────────────
+function renderR06(d) {
+  const tagDefs = DB.get('wpg_tagDefs', []);
+  const allTags = [...new Set(customers.flatMap(c=>c.tags||[]))];
+
+  const rows = allTags.map(tag => {
+    const tagged = customers.filter(c=>(c.tags||[]).includes(tag));
+    const tagActs = activities.filter(a=>tagged.some(c=>c.id===a.customerId)&&(a.date||'').startsWith(String(d.yr)));
+    const tagRev  = orders.filter(o=>tagged.some(c=>c.id===o.customerId)&&(o.date||'').startsWith(String(d.yr))).reduce((s,o)=>s+getOrderTotal(o),0);
+    return { tag, custCnt: tagged.length, actCnt: tagActs.length, rev: tagRev };
+  }).sort((a,b)=>b.rev-a.rev);
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-06 วิเคราะห์ตามแท็กลูกค้า ปี ${d.yr}</span></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">แท็ก</th>
+          <th style="padding:10px 14px;text-align:center;">จำนวนลูกค้า</th>
+          <th style="padding:10px 14px;text-align:center;">กิจกรรม</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดขาย</th>
+          <th style="padding:10px 14px;text-align:right;">เฉลี่ย/ราย</th>
+        </tr></thead><tbody>
+          ${!rows.length ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีแท็กลูกค้า</td></tr>` :
+          rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:10px 14px;"><span style="padding:3px 10px;background:#eef2ff;color:var(--sidebar-bg);border-radius:10px;font-size:12px;font-weight:600;">${r.tag}</span></td>
+            <td style="padding:10px 14px;text-align:center;">${r.custCnt}</td>
+            <td style="padding:10px 14px;text-align:center;">${r.actCnt}</td>
+            <td style="padding:10px 14px;text-align:right;font-weight:600;">${fmtMoney(r.rev)}</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--text-muted);">${r.custCnt>0?fmtMoney(r.rev/r.custCnt):'-'}</td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-07: ยอดคาดการณ์และยอดขายตามกลุ่มสินค้า
+// ─────────────────────────────────────────────
+function renderR07(d) {
+  const prodGroups = DB.get('wpg_prodGroups', []);
+  const allGroups  = [...new Set([...products.map(p=>p.group||'ไม่ระบุกลุ่ม'), ...prodGroups.map(g=>g.name)])].filter(Boolean);
+
+  const rows = allGroups.map(group => {
+    const prods = products.filter(p=>(p.group||'ไม่ระบุกลุ่ม')===group);
+    const prodNames = prods.map(p=>p.name);
+    // ยอดคาดการณ์ = sum จาก leads ที่ยัง active
+    const fcVal = leads.filter(l=>l.stage!=='won'&&l.stage!=='lost').reduce((s,l)=>{
+      const hasGroupProd = (l.items||[]).some(it=>prodNames.includes(it.name));
+      return s + (hasGroupProd||prods.length===0 ? (l.value||0)*(l.prob||0)/100 : 0);
+    },0);
+    // ยอดขายจริง
+    const actVal = orders.filter(o=>(o.date||'').startsWith(String(d.yr))).reduce((s,o)=>{
+      const grpRev = (o.items||[]).filter(it=>prodNames.includes(it.name)).reduce((ss,it)=>ss+it.qty*it.price,0);
+      return s + grpRev;
+    },0);
+    return { group, prodCnt:prods.length, fcVal, actVal };
+  }).sort((a,b)=>b.actVal-a.actVal);
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-07 ยอดคาดการณ์และยอดขายตามกลุ่มสินค้า ปี ${d.yr}</span></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">กลุ่มสินค้า</th>
+          <th style="padding:10px 14px;text-align:center;">จำนวนสินค้า</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดคาดการณ์</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดขายจริง</th>
+          <th style="padding:10px 14px;text-align:right;">%ทำได้</th>
+        </tr></thead><tbody>
+          ${!rows.length ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีกลุ่มสินค้า</td></tr>` :
+          rows.map(r=>{
+            const pct = r.fcVal>0 ? Math.round(r.actVal/r.fcVal*100) : 0;
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 14px;font-weight:500;">${r.group}</td>
+              <td style="padding:10px 14px;text-align:center;">${r.prodCnt}</td>
+              <td style="padding:10px 14px;text-align:right;color:var(--text-muted);">${fmtMoney(r.fcVal)}</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:600;">${fmtMoney(r.actVal)}</td>
+              <td style="padding:10px 14px;text-align:right;">
+                <span style="font-weight:700;color:${pct>=100?'#22c55e':pct>=70?'#f59e0b':'#ef4444'}">${pct}%</span>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-08: รายงานการขายโครงการ
+// ─────────────────────────────────────────────
+function renderR08(d) {
+  const filtProj = projects.filter(p=>(p.createdAt||'').startsWith(String(d.yr)) || (p.startDate||'').startsWith(String(d.yr)));
+  const statusColor = { open:'#3b82f6', กำลังดำเนินการ:'#3b82f6', done:'#22c55e', เสร็จสิ้น:'#22c55e', hold:'#f59e0b', cancelled:'#ef4444' };
+  const statusLabel = { open:'กำลังดำเนินการ', done:'เสร็จสิ้น', hold:'รอดำเนินการ', cancelled:'ยกเลิก' };
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-08 รายงานการขายโครงการ ปี ${d.yr}</span></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">รหัสโครงการ</th>
+          <th style="padding:10px 14px;">โครงการ</th>
+          <th style="padding:10px 14px;">ลูกค้า</th>
+          <th style="padding:10px 14px;text-align:center;">ใบเสนอราคา</th>
+          <th style="padding:10px 14px;text-align:right;">มูลค่า</th>
+          <th style="padding:10px 14px;text-align:center;">สถานะ</th>
+          <th style="padding:10px 14px;">ผู้รับผิดชอบ</th>
+        </tr></thead><tbody>
+          ${!filtProj.length ? `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">ยังไม่มีโครงการในปีนี้</td></tr>` :
+          filtProj.map(p=>{
+            const cust = customers.find(c=>c.id===p.customerId);
+            const qtCnt = quotes.filter(q=>q.customerId===p.customerId).length;
+            const statusKey = p.status||'open';
+            const color = statusColor[statusKey]||'#94a3b8';
+            const label = statusLabel[statusKey]||statusKey;
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:10px 14px;font-size:12px;color:var(--text-muted);font-weight:600;">${genProjNo(p)}</td>
+              <td style="padding:10px 14px;font-weight:500;">${p.name}</td>
+              <td style="padding:10px 14px;font-size:12px;">${cust?.name||'-'}</td>
+              <td style="padding:10px 14px;text-align:center;">${qtCnt}</td>
+              <td style="padding:10px 14px;text-align:right;font-weight:600;">${fmtMoney(p.value||0)}</td>
+              <td style="padding:10px 14px;text-align:center;"><span style="padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;background:${color}22;color:${color};">${label}</span></td>
+              <td style="padding:10px 14px;font-size:12px;">${p.member||'-'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-09: ยอดคาดการณ์และยอดขายรายบุคคล
+// ─────────────────────────────────────────────
+function renderR09(d) {
+  const staffList = members.length ? members.map(m=>m.name) : ['ทั้งหมด'];
+  const g = goals;
+
+  const rows = staffList.map(name => {
+    const staffOrds = orders.filter(o=>(name==='ทั้งหมด'||o.member===name)&&(o.date||'').startsWith(String(d.yr)));
+    const rev = staffOrds.reduce((s,o)=>s+getOrderTotal(o),0);
+    const staffLeads = leads.filter(l=>(name==='ทั้งหมด'||l.member===name)&&l.stage!=='won'&&l.stage!=='lost');
+    const forecast = staffLeads.reduce((s,l)=>s+(l.value||0)*(l.prob||0)/100,0);
+    const target = g.revenue>0 ? g.revenue/staffList.length : 0;
+    const pct = target>0 ? Math.round(rev/target*100) : 0;
+    return { name, rev, forecast, target, pct };
+  }).sort((a,b)=>b.rev-a.rev);
+
+  return `
+    <div class="card">
+      <div class="card-header"><span class="card-title">R-09 ยอดคาดการณ์และยอดขายรายบุคคล ปี ${d.yr}</span></div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:10px 14px;">พนักงาน</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดขายจริง</th>
+          <th style="padding:10px 14px;text-align:right;">ยอดคาดการณ์</th>
+          <th style="padding:10px 14px;text-align:right;">เป้าหมาย</th>
+          <th style="padding:10px 14px;text-align:center;">%ทำได้</th>
+          <th style="padding:10px 14px;">Progress</th>
+        </tr></thead><tbody>
+          ${rows.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:10px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:${i<3?'var(--accent)':'#f1f5f9'};color:${i<3?'var(--sidebar-bg)':'var(--text-muted)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">${i+1}</span>
+                ${r.name}
+              </div>
+            </td>
+            <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--sidebar-bg);">${fmtMoney(r.rev)}</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--text-muted);">${fmtMoney(r.forecast)}</td>
+            <td style="padding:10px 14px;text-align:right;">${r.target>0?fmtMoney(r.target):'-'}</td>
+            <td style="padding:10px 14px;text-align:center;font-weight:700;color:${r.pct>=100?'#22c55e':r.pct>=70?'#f59e0b':'#ef4444'}">${r.target>0?r.pct+'%':'-'}</td>
+            <td style="padding:10px 14px;">
+              ${r.target>0?`<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${Math.min(r.pct,100)}%;background:${r.pct>=100?'#22c55e':r.pct>=70?'#f59e0b':'#3b82f6'};border-radius:4px;transition:width .3s;"></div>
+              </div>`:'-'}
+            </td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+// R-13: แผนงานติดตาม (bonus)
+// ─────────────────────────────────────────────
+function renderR13(d) {
+  const td = today();
+  const overdue = tasks.filter(t=>!t.done&&t.dueDate<td);
+  const todayTasks = tasks.filter(t=>!t.done&&t.dueDate===td);
+  const upcoming = tasks.filter(t=>!t.done&&t.dueDate>td);
+
+  const renderTaskList = (list, label, color) => {
+    if (!list.length) return '';
+    return `<div class="card" style="margin-bottom:12px;">
+      <div class="card-header" style="background:${color}11;border-bottom:2px solid ${color};">
+        <span class="card-title" style="color:${color};">${label} (${list.length})</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table><thead><tr style="background:var(--sidebar-bg);color:white;">
+          <th style="padding:8px 14px;">ลูกค้า</th>
+          <th style="padding:8px 14px;">หมายเหตุ</th>
+          <th style="padding:8px 14px;text-align:center;">กำหนด</th>
+          <th style="padding:8px 14px;text-align:center;">ความร้อนแรง</th>
+        </tr></thead><tbody>
+          ${list.slice(0,10).map(t=>{
+            const c = customers.find(x=>x.id===t.customerId);
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:8px 14px;font-weight:500;font-size:13px;">${c?.name||'-'}</td>
+              <td style="padding:8px 14px;font-size:12px;color:var(--text-muted);">${t.note||'-'}</td>
+              <td style="padding:8px 14px;text-align:center;font-size:12px;color:${t.dueDate<td?'#ef4444':'var(--text-main)'};">${fmtDate(t.dueDate)}</td>
+              <td style="padding:8px 14px;text-align:center;">${'🔥'.repeat(t.hotness||1)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+  };
+
+  return `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="stat-card" style="border-top:3px solid #ef4444;"><div class="stat-label">⚠️ เกินกำหนด</div><div class="stat-value" style="color:#ef4444;">${overdue.length}</div></div>
+      <div class="stat-card" style="border-top:3px solid #f59e0b;"><div class="stat-label">📋 วันนี้</div><div class="stat-value" style="color:#f59e0b;">${todayTasks.length}</div></div>
+      <div class="stat-card" style="border-top:3px solid #22c55e;"><div class="stat-label">📅 กำลังจะถึง</div><div class="stat-value" style="color:#22c55e;">${upcoming.length}</div></div>
+    </div>
+    ${renderTaskList(overdue,'⚠️ งานเกินกำหนด','#ef4444')}
+    ${renderTaskList(todayTasks,'📋 งานวันนี้','#f59e0b')}
+    ${renderTaskList(upcoming.slice(0,5),'📅 งานกำลังจะถึง','#22c55e')}`;
+}
+
+// ─────────────────────────────────────────────
+// Patch renderReports ให้ใช้ระบบใหม่
+// ─────────────────────────────────────────────
+(function(){
+  window.renderReports = function() {
+    // sync member dropdown
+    const sel = document.getElementById('rp-member-filter');
+    if (sel && sel.options.length <= 1) {
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.name; opt.textContent = m.name;
+        sel.appendChild(opt);
+      });
+    }
+    // sync year dropdown
+    const yrSel = document.getElementById('rp-year');
+    if (yrSel && yrSel.options.length === 0) {
+      const curYr = new Date().getFullYear();
+      for(let y=curYr+1; y>=curYr-3; y--) {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if(y===curYr) opt.selected = true;
+        yrSel.appendChild(opt);
+      }
+    }
+    renderRpContent();
+  };
+})();
+
+// init Phase 19
+setTimeout(() => {
+  if (document.getElementById('page-reports')?.classList.contains('active')) {
+    renderReports();
+  }
+}, 600);
+
+
+// ============================================================
 //  PHASE 18 — ลูกค้า tab ติดตาม, โครงการ PJ# + ตารางครบ,
 //             ใบสั่งขาย วันจัดส่ง + กำไร + KPI แบบ Jubili
 // ============================================================
