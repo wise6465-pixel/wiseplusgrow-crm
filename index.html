@@ -6786,6 +6786,385 @@ projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
 
 // ============================================================
+//  PHASE 17 — ลูกค้า tab ลำดับ, โอกาส LD# + ผู้ติดต่อ,
+//             ใบเสนอราคา tab เกินกำหนด + สินค้าในตาราง
+// ============================================================
+
+// ─────────────────────────────────────────────
+// 1. ลูกค้า — ปรับปรุง Ranking + รหัสลูกค้า
+// ─────────────────────────────────────────────
+
+// Patch renderRanking ให้สมบูรณ์แบบ Jubili
+(function(){
+  window.renderRanking = function() {
+    const sortBy = document.getElementById('rank-sort')?.value || 'acts';
+    const tbody = document.getElementById('ranking-tbody');
+    const empty = document.getElementById('ranking-empty');
+    if (!tbody) return;
+
+    const ranked = customers.map(c => {
+      const actCnt  = activities.filter(a=>a.customerId===c.id).length;
+      const qtCnt   = quotes.filter(q=>q.customerId===c.id).length;
+      const rev     = orders.filter(o=>o.customerId===c.id)
+                        .reduce((s,o)=>s+(o.items||[]).reduce((ss,it)=>ss+it.qty*it.price,0),0);
+      const lastAct = activities.filter(a=>a.customerId===c.id)
+                        .sort((a,b)=>b.date?.localeCompare(a.date||''))[0];
+      return { c, actCnt, qtCnt, rev, lastAct, hotness: c.hotness||0 };
+    });
+
+    if (sortBy==='acts')    ranked.sort((a,b)=>b.actCnt-a.actCnt);
+    else if (sortBy==='hotness') ranked.sort((a,b)=>b.hotness-a.hotness);
+    else if (sortBy==='quotes')  ranked.sort((a,b)=>b.qtCnt-a.qtCnt);
+    else if (sortBy==='revenue') ranked.sort((a,b)=>b.rev-a.rev);
+
+    if (!ranked.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    const statusColor = { prospect:'#3b82f6', fresh:'#22c55e', existing:'#f59e0b', lapse:'#ef4444',
+      เป้าหมาย:'#3b82f6', ใหม่:'#22c55e', ประจำ:'#f59e0b', ห่างหาย:'#ef4444' };
+    const statusLabel = { prospect:'เป้าหมาย', fresh:'ใหม่', existing:'ประจำ', lapse:'ห่างหาย',
+      เป้าหมาย:'เป้าหมาย', ใหม่:'ใหม่', ประจำ:'ประจำ', ห่างหาย:'ห่างหาย' };
+
+    tbody.innerHTML = ranked.map((x,i) => {
+      const rankIcon = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+      const custCode = x.c.code || `CUS${String(x.c.id||'').substring(0,6).toUpperCase()}`;
+      return `<tr style="border-bottom:1px solid var(--border);cursor:pointer;" onclick="openCustomerDetail('${x.c.id}')">
+        <td style="padding:12px 14px;text-align:center;font-size:${i<3?'20px':'14px'};font-weight:700;">${rankIcon}</td>
+        <td style="padding:12px 14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--sidebar-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">
+              ${x.c.name[0]?.toUpperCase()}
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;">${x.c.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${custCode} · ${x.c.phone||''}</div>
+            </div>
+          </div>
+        </td>
+        <td style="padding:12px 14px;">
+          <span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;
+            background:${statusColor[x.c.status]||'#e2e8f0'}22;color:${statusColor[x.c.status]||'#64748b'};">
+            ${statusLabel[x.c.status]||x.c.status||'-'}
+          </span>
+        </td>
+        <td style="padding:12px 14px;text-align:center;font-weight:700;font-size:14px;">${x.actCnt}</td>
+        <td style="padding:12px 14px;text-align:center;font-weight:700;font-size:14px;">${x.qtCnt}</td>
+        <td style="padding:12px 14px;text-align:center;">${hotnessStars(x.hotness)}</td>
+        <td style="padding:12px 14px;font-size:12px;color:var(--text-muted);">
+          ${x.lastAct ? `${fmtDate(x.lastAct.date)} · ${x.lastAct.type||''}` : '-'}
+        </td>
+      </tr>`;
+    }).join('');
+  };
+})();
+
+// เพิ่ม sort option revenue ใน rank view
+(function(){
+  setTimeout(() => {
+    const sel = document.getElementById('rank-sort');
+    if (sel && !sel.querySelector('[value="revenue"]')) {
+      sel.insertAdjacentHTML('beforeend', '<option value="revenue">เรียงตามยอดขาย</option>');
+    }
+  }, 500);
+})();
+
+// เพิ่มรหัสลูกค้าในหน้า customer detail
+(function(){
+  const _orig = window.openCustomerDetail;
+  window.openCustomerDetail = function(id) {
+    if(_orig) _orig(id);
+    // เพิ่ม รหัสลูกค้า ใน detail header ถ้ายังไม่มี
+    setTimeout(() => {
+      const cust = customers.find(c=>c.id===id);
+      if (!cust) return;
+      const code = cust.code || ('CUS-' + String(id).substring(0,6).toUpperCase());
+      const titleEl = document.getElementById('detail-cust-name');
+      if (titleEl) {
+        const codeEl = document.getElementById('detail-cust-code');
+        if (!codeEl) {
+          titleEl.insertAdjacentHTML('afterend',
+            `<div id="detail-cust-code" style="font-size:12px;color:var(--text-muted);margin-top:2px;">รหัส: ${code}</div>`);
+        } else {
+          codeEl.textContent = 'รหัส: ' + code;
+        }
+      }
+    }, 100);
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 2. โอกาส — หมายเลข LD# + ผู้ติดต่อ แบบ Jubili
+// ─────────────────────────────────────────────
+
+// Generate LD# สำหรับ leads
+function genLeadNo(lead) {
+  if (lead.leadNo) return lead.leadNo;
+  const d = lead.createdAt || today();
+  const yr = d.substring(2,4);
+  const mo = d.substring(5,7);
+  const day = d.substring(8,10);
+  const idx = String(leads.indexOf(lead)+1).padStart(4,'0');
+  return `LD#${yr}${mo}${day}-${idx}`;
+}
+
+// Patch renderLeadList ให้แสดง LD# + ผู้ติดต่อ + ผู้รับผิดชอบ แบบ Jubili
+(function(){
+  window.renderLeadList = function() {
+    const q = (document.getElementById('lead-list-search')?.value||'').toLowerCase();
+    const sf = document.getElementById('lead-list-stage')?.value||'';
+    const tbody = document.getElementById('lead-list-tbody');
+    const empty = document.getElementById('lead-list-empty');
+    if (!tbody) return;
+
+    let list = [...leads];
+    if (sf) list = list.filter(l=>l.stage===sf);
+    if (q) list = list.filter(l=>{
+      const c = customers.find(x=>x.id===l.customerId);
+      return l.name?.toLowerCase().includes(q) || c?.name?.toLowerCase().includes(q) ||
+             genLeadNo(l).toLowerCase().includes(q);
+    });
+    list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    const stageColor = { prospect:'#94a3b8', contact:'#3b82f6', quote:'#f59e0b',
+      negotiate:'#8b5cf6', won:'#22c55e', lost:'#ef4444' };
+    const stageLabel = { prospect:'🔍 ค้นหา', contact:'📞 ติดต่อ', quote:'📄 เสนอราคา',
+      negotiate:'🤝 เจรจา', won:'✅ ปิดได้', lost:'❌ ปิดไม่ได้' };
+
+    tbody.innerHTML = list.map(l => {
+      const cust = customers.find(x=>x.id===l.customerId);
+      const leadNo = genLeadNo(l);
+      // ผู้ติดต่อ (contact person จาก customer contacts)
+      const contacts = cust?.contacts || [];
+      const contact = contacts[0];
+      return `<tr style="border-bottom:1px solid var(--border);cursor:pointer;" onclick="openLeadDetail && openLeadDetail('${l.id}')">
+        <td style="padding:10px 14px;">
+          <span style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:14px;">${l.stage==='won'?'👍':l.stage==='lost'?'❌':'👍'}</span>
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;">${leadNo}</span>
+          </span>
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;font-weight:600;">${l.name||'-'}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${fmtDate(l.createdAt)}</div>
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;font-weight:500;">${cust?.name||'-'}</div>
+          ${contact ? `<div style="font-size:11px;color:var(--text-muted);">${contact.name||''} · ${contact.phone||''}</div>` : ''}
+        </td>
+        <td style="padding:10px 14px;">
+          <span style="padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;
+            background:${stageColor[l.stage]||'#e2e8f0'}22;color:${stageColor[l.stage]||'#64748b'};">
+            ${stageLabel[l.stage]||l.stage||'-'}
+          </span>
+        </td>
+        <td style="padding:10px 14px;font-size:13px;font-weight:700;">${fmtMoney(l.value||0)}</td>
+        <td style="padding:10px 14px;text-align:center;">
+          <span style="font-size:13px;font-weight:600;color:${(l.prob||0)>=70?'#22c55e':'var(--text-main)'};">${l.prob||0}%</span>
+        </td>
+        <td style="padding:10px 14px;font-size:12px;color:var(--text-muted);">${l.closeDate?fmtDate(l.closeDate):'-'}</td>
+        <td style="padding:10px 14px;font-size:12px;">${l.member||'-'}</td>
+        <td style="padding:10px 8px;">
+          <button class="btn btn-xs btn-danger" onclick="event.stopPropagation();deleteLead('${l.id}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  };
+})();
+
+// patch lead list table header ให้มี column ผู้ติดต่อ + ผู้รับผิดชอบ
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page === 'leads') {
+      setTimeout(() => {
+        const thead = document.querySelector('#lead-list-tbody')?.closest('table')?.querySelector('thead tr');
+        if (thead && thead.children.length < 9) {
+          thead.innerHTML = `
+            <th style="padding:10px 14px;">เลขที่</th>
+            <th style="padding:10px 14px;">ชื่อโอกาส</th>
+            <th style="padding:10px 14px;">ลูกค้า / ผู้ติดต่อ</th>
+            <th style="padding:10px 14px;">สถานะ</th>
+            <th style="padding:10px 14px;">มูลค่า</th>
+            <th style="padding:10px 14px;text-align:center;">โอกาส%</th>
+            <th style="padding:10px 14px;">คาดปิด</th>
+            <th style="padding:10px 14px;">ผู้รับผิดชอบ</th>
+            <th></th>`;
+        }
+        enableKanbanDnD && enableKanbanDnD();
+      }, 150);
+    }
+  };
+})();
+
+// ─────────────────────────────────────────────
+// 3. ใบเสนอราคา — tab เกินกำหนด + สินค้าในตาราง
+// ─────────────────────────────────────────────
+
+// inject tabs ใบเสนอราคา แบบ Jubili (ทั้งหมด + เกินกำหนด)
+(function(){
+  const _orig = window.navTo;
+  window.navTo = function(page) {
+    _orig(page);
+    if (page === 'quotes') {
+      setTimeout(() => {
+        if (!document.getElementById('qt-tab-all')) {
+          injectQuoteTabs();
+        }
+        renderQuotes();
+      }, 100);
+    }
+  };
+})();
+
+function injectQuoteTabs() {
+  const qtPage = document.getElementById('page-quotes');
+  if (!qtPage) return;
+  const card = qtPage.querySelector('.card');
+  if (!card) return;
+  const cardHeader = card.querySelector('.card-header');
+  if (!cardHeader || document.getElementById('qt-tab-all')) return;
+
+  // เพิ่ม tabs หน้า filter bar
+  const tabsEl = document.createElement('div');
+  tabsEl.style.cssText = 'display:flex;border-bottom:1px solid var(--border);margin-bottom:0;';
+  tabsEl.innerHTML = `
+    <div id="qt-tab-all" onclick="setQtTab('all')" style="padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--sidebar-bg);color:var(--sidebar-bg);">
+      📄 ใบเสนอราคาทั้งหมด
+    </div>
+    <div id="qt-tab-overdue" onclick="setQtTab('overdue')" style="padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);">
+      ⚠️ ใบเสนอราคาเกินกำหนด <span id="qt-overdue-count" style="background:#fef2f2;color:#ef4444;padding:1px 6px;border-radius:8px;font-size:11px;">0</span>
+    </div>`;
+  card.insertBefore(tabsEl, cardHeader);
+}
+
+let _qtTab = 'all';
+function setQtTab(tab) {
+  _qtTab = tab;
+  const allEl = document.getElementById('qt-tab-all');
+  const ovEl  = document.getElementById('qt-tab-overdue');
+  if (allEl) { allEl.style.borderBottomColor = tab==='all'?'var(--sidebar-bg)':'transparent'; allEl.style.color = tab==='all'?'var(--sidebar-bg)':'var(--text-muted)'; }
+  if (ovEl)  { ovEl.style.borderBottomColor  = tab==='overdue'?'#ef4444':'transparent'; ovEl.style.color  = tab==='overdue'?'#ef4444':'var(--text-muted)'; }
+  renderQuotes();
+}
+
+// Patch renderQuotes ให้แสดง tab เกินกำหนด + สินค้าในตาราง
+(function(){
+  const _orig = window.renderQuotes;
+  window.renderQuotes = function() {
+    const q2    = (document.getElementById('qt-search')?.value||'').toLowerCase();
+    const sf    = document.getElementById('qt-filter')?.value||'';
+    const tbody = document.getElementById('qt-tbody');
+    const empty = document.getElementById('qt-empty');
+    if (!tbody) return;
+
+    const td = today();
+    let list = [...quotes];
+
+    // กรองตาม tab
+    if (_qtTab === 'overdue') {
+      list = list.filter(q => q.expireDate && q.expireDate < td && q.status !== 'ยกเลิก' && q.status !== 'อนุมัติแล้ว');
+    }
+    if (sf) list = list.filter(q=>q.status===sf);
+    if (q2) list = list.filter(q=>{
+      const c=customers.find(x=>x.id===q.customerId);
+      return q.docNo?.toLowerCase().includes(q2)||c?.name?.toLowerCase().includes(q2);
+    });
+    list.sort((a,b)=>b.date?.localeCompare(a.date||''));
+
+    // อัพเดต overdue count
+    const overdueCnt = quotes.filter(q=>q.expireDate&&q.expireDate<td&&q.status!=='ยกเลิก'&&q.status!=='อนุมัติแล้ว').length;
+    const ovEl = document.getElementById('qt-overdue-count');
+    if (ovEl) ovEl.textContent = overdueCnt;
+
+    if (!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+    if(empty) empty.style.display='none';
+
+    // เช็คว่ามีระบบอนุมัติเปิดอยู่ไหม
+    const approveSteps = DB.get('wpg_approve_steps',[]);
+    const qtStep = approveSteps.find(s=>s.docType==='ใบเสนอราคา');
+    const approvalEnabled = qtStep?.enabled || false;
+
+    const statusColor = { 'ร่าง':'#94a3b8','รออนุมัติ':'#f59e0b','รอตอบรับ':'#3b82f6','อนุมัติแล้ว':'#10b981','ยกเลิก':'#ef4444','sent':'#3b82f6' };
+
+    tbody.innerHTML = list.map(q => {
+      const c = customers.find(x=>x.id===q.customerId);
+      const isOverdue = q.expireDate && q.expireDate < td;
+      // สินค้า (แสดงสั้นๆ 2 รายการแรก)
+      const itemNames = (q.items||[]).slice(0,2).map(it=>it.name).join(', ') + ((q.items||[]).length>2?` +${(q.items||[]).length-2} อื่นๆ`:'');
+      const approveStatus = q.approveStatus||'';
+
+      return `<tr style="border-bottom:1px solid var(--border);${isOverdue?'background:#fff5f5;':''}">
+        <td style="padding:10px 14px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:14px;">👍</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text-muted);">${q.docNo||'-'}</span>
+            ${q.items?.length?`<span style="font-size:10px;background:#f1f5f9;color:var(--text-muted);padding:1px 5px;border-radius:4px;">📎</span>`:''}
+          </div>
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;font-weight:600;">${c?.name||'-'}</div>
+          ${itemNames ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${itemNames}</div>` : ''}
+        </td>
+        <td style="padding:10px 14px;">
+          <span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${statusColor[q.status]||'#e2e8f0'}22;color:${statusColor[q.status]||'#64748b'};">${q.status||'-'}</span>
+          ${approvalEnabled && approveStatus ? `<span style="margin-left:4px;padding:1px 6px;border-radius:6px;font-size:10px;background:${approveStatus==='อนุมัติแล้ว'?'#dcfce7':approveStatus==='ปฏิเสธ'?'#fef2f2':'#fffbeb'};color:${approveStatus==='อนุมัติแล้ว'?'#16a34a':approveStatus==='ปฏิเสธ'?'#dc2626':'#d97706'};font-weight:600;">${approveStatus}</span>` : ''}
+        </td>
+        <td style="padding:10px 14px;font-size:12px;">
+          ${fmtDate(q.date)}
+          ${isOverdue ? `<div style="font-size:10px;color:#ef4444;font-weight:600;">⚠️ เกินกำหนด ${fmtDate(q.expireDate)}</div>` : (q.expireDate?`<div style="font-size:10px;color:var(--text-muted);">หมด ${fmtDate(q.expireDate)}</div>`:'')}
+        </td>
+        <td style="padding:10px 14px;">
+          <div style="font-size:13px;font-weight:700;">${fmtMoney(q.total||0)}</div>
+          ${q.hotness?`<div style="font-size:11px;">${'🔥'.repeat(q.hotness||0)}</div>`:''}
+        </td>
+        <td style="padding:10px 14px;font-size:12px;">${q.member||'-'}</td>
+        <td style="padding:10px 8px;">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button class="btn btn-xs" style="background:#1a2332;color:white;" onclick="printQuote('${q.id}')">🖨️</button>
+            ${approvalEnabled && !q.approveStatus ? `<button class="btn btn-xs" style="background:#f59e0b;color:white;" onclick="submitApproval('${q.id}')">ส่ง</button>` : ''}
+            ${approvalEnabled && q.approveStatus==='รออนุมัติ' ? `<button class="btn btn-xs" style="background:#22c55e;color:white;" onclick="approveQuote('${q.id}','อนุมัติแล้ว')">✅</button><button class="btn btn-xs" style="background:#ef4444;color:white;" onclick="approveQuote('${q.id}','ปฏิเสธ')">✕</button>` : ''}
+            <button class="btn btn-xs btn-danger" onclick="deleteQuote('${q.id}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // อัพเดต thead ให้มี column สินค้า
+    const thead = tbody.closest('table')?.querySelector('thead tr');
+    if (thead && thead.children.length < 7) {
+      thead.innerHTML = `
+        <th style="padding:10px 14px;">เลขที่</th>
+        <th style="padding:10px 14px;">ลูกค้า / สินค้า</th>
+        <th style="padding:10px 14px;">สถานะ</th>
+        <th style="padding:10px 14px;">วันที่ / หมดอายุ</th>
+        <th style="padding:10px 14px;">มูลค่า / 🔥</th>
+        <th style="padding:10px 14px;">ผู้รับผิดชอบ</th>
+        <th style="padding:10px 8px;"></th>`;
+    }
+
+    // อัพเดต stats
+    const allQt = quotes;
+    const el = id => document.getElementById(id);
+    if(el('qt-all'))     el('qt-all').textContent     = allQt.length;
+    if(el('qt-pending')) el('qt-pending').textContent  = allQt.filter(q=>q.status==='รอตอบรับ'||q.status==='sent').length;
+    if(el('qt-approved'))el('qt-approved').textContent = allQt.filter(q=>q.status==='อนุมัติแล้ว').length;
+    if(el('qt-value'))   el('qt-value').textContent    = fmtMoney(allQt.reduce((s,q)=>s+(q.total||0),0));
+  };
+})();
+
+// Init Phase 17 — inject tabs เมื่อ load ถ้าอยู่หน้า quotes
+setTimeout(() => {
+  if (document.getElementById('page-quotes')?.classList.contains('active')) {
+    injectQuoteTabs();
+  }
+}, 600);
+
+
+// ============================================================
 //  NOTIFICATION SETTINGS FIX — ตั้งค่าการแจ้งเตือนแบบ Jubili
 // ============================================================
 let notifSettings = DB.get('wpg_notif_settings', {
