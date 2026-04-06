@@ -2095,34 +2095,69 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <!-- PANEL: ตั้งค่าการแจ้งเตือน -->
           <div class="stg-panel" id="sp-notification" style="display:none;">
             <h3 class="stg-title">🔔 ตั้งค่าการแจ้งเตือน</h3>
-            <div class="card" style="max-width:560px;"><div class="card-body">
-              <div style="display:flex;flex-direction:column;gap:12px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
-                  <div>
-                    <div style="font-size:13px;font-weight:600;">🏷️ ลูกค้าเป้าหมาย</div>
-                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการติดต่อกัน แต่ยังไปเป็นลูกค้าสั้งซื้อ ควรมีการติดตาม ประมาณ 1 ครั้งต่อเดือน</div>
+            <div class="card" style="max-width:680px;">
+              <div class="card-body">
+                <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px;">สถานะลูกค้า</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+
+                  <!-- ลูกค้าเป้าหมาย -->
+                  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f8fafc;border-radius:10px;border:1px solid var(--border);">
+                    <div style="width:40px;height:40px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🎯</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:700;margin-bottom:2px;">ลูกค้าเป้าหมาย</div>
+                      <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการติดต่อกัน แต่ยังไม่เคยสั่งซื้อ<br>ควรมีการติดตาม ประมาณ 1 ครั้งต่อเดือน</div>
+                    </div>
                   </div>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
-                  <div>
-                    <div style="font-size:13px;font-weight:600;">🆕 ลูกค้าใหม่</div>
-                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อน้อยกว่า 3 ครั้ง ควรติดตามใกล้ชิด เพื่อเปลี่ยนเป็นลูกค้าประจำ ติดตาม 2 ครั้งต่อเดือน</div>
+
+                  <!-- ลูกค้าใหม่ -->
+                  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#f8fafc;border-radius:10px;border:1px solid var(--border);">
+                    <div style="width:40px;height:40px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🆕</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:700;margin-bottom:2px;">ลูกค้าใหม่</div>
+                      <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อน้อยกว่า <strong id="notif-new-count-display">3</strong> ครั้ง<br>ควรติดตามใกล้ชิด เพื่อเปลี่ยนเป็นลูกค้าประจำ ติดตาม 2 ครั้งต่อเดือน</div>
+                    </div>
                   </div>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
-                  <div>
-                    <div style="font-size:13px;font-weight:600;">⭐ ลูกค้าประจำ</div>
-                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อครั้งที่ 3 ขึ้นไป ควรรักษาและเพิ่มความสัมพันธ์ ติดตามอย่างน้อยสม่ำเสมอ 1 ครั้งต่อเดือน</div>
+
+                  <!-- ลูกค้าประจำ -->
+                  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fffbeb;border-radius:10px;border:1px solid #fef3c7;">
+                    <div style="width:40px;height:40px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">⭐</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:700;margin-bottom:2px;">ลูกค้าประจำ</div>
+                      <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อครั้งที่ <strong id="notif-regular-count-display">3</strong> ขึ้นไป<br>ควรรักษาและเพิ่มความสัมพันธ์ ติดตามอย่างสม่ำเสมอ 1 ครั้งต่อเดือน</div>
+                    </div>
+                    <button class="btn btn-xs" onclick="openNotifSettingModal('regular')"
+                      style="background:#f59e0b;color:white;white-space:nowrap;flex-shrink:0;">⚙️ ตั้งค่า</button>
                   </div>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
-                  <div>
-                    <div style="font-size:13px;font-weight:600;">😴 ลูกค้าห่างหาย</div>
-                    <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่ไม่มีการสั่งซื้อซ้ำภายในระยะเวลา 3 เดือน ควรติดตามให้กลับมาซื้ออีกครั้ง อย่างน้อย 1 ครั้งต่อเดือน</div>
+
+                  <!-- ลูกค้าห่างหาย -->
+                  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
+                    <div style="width:40px;height:40px;border-radius:8px;background:#fecaca;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">😴</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:700;margin-bottom:2px;">ลูกค้าห่างหาย</div>
+                      <div style="font-size:12px;color:var(--text-muted);">กลุ่มลูกค้าที่ไม่มีการสั่งซื้อซ้ำภายใน <strong id="notif-lapse-month-display">3</strong> เดือน<br>ควรติดตามให้กลับมาซื้ออีกครั้ง อย่างน้อย 1 ครั้งต่อเดือน</div>
+                    </div>
+                    <button class="btn btn-xs" onclick="openNotifSettingModal('lapse')"
+                      style="background:#ef4444;color:white;white-space:nowrap;flex-shrink:0;">⚙️ ตั้งค่า</button>
                   </div>
+
                 </div>
               </div>
-            </div></div>
+            </div>
+          </div>
+
+          <!-- MODAL: Notification Setting (inside settings panel) -->
+          <div id="modal-notif-setting" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:none;align-items:center;justify-content:center;">
+            <div style="background:white;border-radius:12px;width:440px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+              <div id="modal-notif-header" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:15px;font-weight:700;color:white;" id="modal-notif-title">ตั้งค่า</div>
+                <button onclick="closeNotifModal()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+              </div>
+              <div style="padding:20px 24px;" id="modal-notif-body"></div>
+              <div style="padding:12px 20px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--border);">
+                <button class="btn btn-ghost btn-sm" onclick="closeNotifModal()">ยกเลิก</button>
+                <button class="btn btn-primary btn-sm" onclick="saveNotifSetting()">บันทึก</button>
+              </div>
+            </div>
           </div>
 
           <!-- PANEL: ตั้งค่าเหตุผลการ lost -->
@@ -6749,6 +6784,105 @@ function renderRpContent() {
 products = DB.get('wpg_products', []);
 projTypes = DB.get('wpg_projTypes', ['OEM','ODM','เจ้านายบวน','พัฒนาสูตร','สั่งทดสอบ']);
 lostReasons = DB.get('wpg_lostReasons', ['ราคาสูงเกิน','เลือกคู่แข่ง','งบประมาณไม่พอ','ยังไม่พร้อม','ไม่ตอบรับ']);
+
+// ============================================================
+//  NOTIFICATION SETTINGS FIX — ตั้งค่าการแจ้งเตือนแบบ Jubili
+// ============================================================
+let notifSettings = DB.get('wpg_notif_settings', {
+  regularOrderCount: 3,  // ลูกค้าประจำ = สั่งซื้อ >= X ครั้ง
+  lapseMonths: 3         // ลูกค้าห่างหาย = ไม่ซื้อนาน >= X เดือน
+});
+
+let _currentNotifType = '';
+
+function openNotifSettingModal(type) {
+  _currentNotifType = type;
+  const modal = document.getElementById('modal-notif-setting');
+  const header = document.getElementById('modal-notif-header');
+  const title  = document.getElementById('modal-notif-title');
+  const body   = document.getElementById('modal-notif-body');
+  if (!modal) return;
+
+  if (type === 'regular') {
+    header.style.background = '#f59e0b';
+    title.innerHTML = `<span style="font-size:18px;">⭐</span> ตั้งค่า ลูกค้าประจำ สำหรับกิจการของคุณ`;
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;padding:16px;background:#fffbeb;border-radius:10px;border:1px solid #fef3c7;margin-bottom:4px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">⭐</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;">
+          <span style="color:var(--text-muted);">กลุ่มลูกค้าที่มีการสั่งซื้อ</span>
+          <input type="number" id="notif-regular-input" min="1" max="100" value="${notifSettings.regularOrderCount}"
+            style="width:60px;padding:6px 10px;border:2px solid #f59e0b;border-radius:6px;font-size:15px;font-weight:700;text-align:center;color:#d97706;">
+          <span style="color:var(--text-muted);">ครั้ง ขึ้นไป</span>
+        </div>
+      </div>`;
+  } else {
+    header.style.background = '#ef4444';
+    title.innerHTML = `<span style="font-size:18px;">😴</span> ตั้งค่า ลูกค้าห่างหาย สำหรับกิจการของคุณ`;
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;padding:16px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;margin-bottom:4px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#fecaca;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">😴</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;">
+          <span style="color:var(--text-muted);">กลุ่มลูกค้าที่ไม่มีการสั่งซื้อซ้ำภายใน</span>
+          <input type="number" id="notif-lapse-input" min="1" max="24" value="${notifSettings.lapseMonths}"
+            style="width:60px;padding:6px 10px;border:2px solid #ef4444;border-radius:6px;font-size:15px;font-weight:700;text-align:center;color:#dc2626;">
+          <span style="color:var(--text-muted);">เดือน</span>
+        </div>
+      </div>`;
+  }
+
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    const inp = document.getElementById(type==='regular'?'notif-regular-input':'notif-lapse-input');
+    if(inp) { inp.focus(); inp.select(); }
+  }, 100);
+}
+
+function closeNotifModal() {
+  const modal = document.getElementById('modal-notif-setting');
+  if(modal) modal.style.display = 'none';
+}
+
+function saveNotifSetting() {
+  if (_currentNotifType === 'regular') {
+    const val = parseInt(document.getElementById('notif-regular-input')?.value)||3;
+    notifSettings.regularOrderCount = Math.max(1, val);
+    DB.set('wpg_notif_settings', notifSettings);
+    // อัพเดต display
+    const el = document.getElementById('notif-regular-count-display');
+    if(el) el.textContent = notifSettings.regularOrderCount;
+    toast(`✅ ตั้งค่าลูกค้าประจำ: สั่งซื้อ ${notifSettings.regularOrderCount} ครั้งขึ้นไป`);
+  } else {
+    const val = parseInt(document.getElementById('notif-lapse-input')?.value)||3;
+    notifSettings.lapseMonths = Math.max(1, val);
+    DB.set('wpg_notif_settings', notifSettings);
+    const el = document.getElementById('notif-lapse-month-display');
+    if(el) el.textContent = notifSettings.lapseMonths;
+    toast(`✅ ตั้งค่าลูกค้าห่างหาย: ไม่ซื้อนาน ${notifSettings.lapseMonths} เดือน`);
+  }
+  closeNotifModal();
+}
+
+// โหลดค่าเมื่อเปิด panel notification
+(function(){
+  const _orig = window.stgGo;
+  window.stgGo = function(panel) {
+    _orig(panel);
+    if (panel === 'notification') {
+      notifSettings = DB.get('wpg_notif_settings', { regularOrderCount:3, lapseMonths:3 });
+      const rc = document.getElementById('notif-regular-count-display');
+      const lm = document.getElementById('notif-lapse-month-display');
+      const nc = document.getElementById('notif-new-count-display');
+      if(rc) rc.textContent = notifSettings.regularOrderCount;
+      if(lm) lm.textContent = notifSettings.lapseMonths;
+      if(nc) nc.textContent = notifSettings.regularOrderCount; // ลูกค้าใหม่ = น้อยกว่า X ครั้ง
+    }
+  };
+})();
+
+// Init notification settings
+notifSettings = DB.get('wpg_notif_settings', { regularOrderCount:3, lapseMonths:3 });
+
 
 // ============================================================
 //  PHASE 16 — Dashboard จริง, Customer filter/sort,
