@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>เก็บ Lead ลูกค้า — Wiseplusgrow CRM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Sarabun',sans-serif;background:#f5f7fa;margin:0;padding:0;color:#1a2332;line-height:1.5}
+    .topbar{background:#1a2332;color:#fff;padding:14px 22px;border-bottom:3px solid #f0c040;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .brand{font-size:15px;font-weight:600}
+    .topbar a{color:#f0c040;text-decoration:none;font-weight:600;font-size:13px}
+    .container{max-width:560px;margin:20px auto;padding:0 14px}
+    .card{background:#fff;border-radius:14px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:14px}
+    h1{margin:0 0 4px;font-size:22px}
+    .sub{color:#64748b;font-size:13px;margin-bottom:18px}
+    .meta{background:#fef3c7;border-left:4px solid #f0c040;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:18px;color:#92400e}
+    .meta strong{color:#1a2332}
+    label{display:block;font-size:12px;font-weight:600;margin:14px 0 4px;color:#374151}
+    label .req{color:#ef4444;margin-left:3px}
+    input,select,textarea{width:100%;padding:11px 13px;border:1.5px solid #e5e7eb;border-radius:9px;font:inherit;background:#fff;transition:border-color .15s}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:#f0c040;box-shadow:0 0 0 3px #fef3c7}
+    textarea{min-height:70px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media(max-width:480px){.row{grid-template-columns:1fr}}
+    .btn{background:#f0c040;color:#1a2332;border:none;padding:14px 22px;font-size:16px;font-weight:700;border-radius:10px;cursor:pointer;font-family:inherit;width:100%;margin-top:18px;transition:transform .1s}
+    .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 14px rgba(240,192,64,.4)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .channel-icons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+    .channel-icons label{cursor:pointer;background:#f8fafc;border:2px solid #e5e7eb;border-radius:10px;padding:10px 4px;text-align:center;margin:0;font-size:11px;font-weight:600;transition:.15s}
+    .channel-icons label input{display:none}
+    .channel-icons label:has(input:checked){background:#fef3c7;border-color:#f0c040;color:#92400e}
+    .channel-icons .emoji{display:block;font-size:22px;margin-bottom:2px}
+    .ok{background:#d1fae5;border-left:4px solid #10b981;padding:16px 18px;border-radius:10px;color:#065f46}
+    .err{background:#fee2e2;border-left:4px solid #ef4444;padding:14px;border-radius:10px;color:#991b1b;font-size:13px;margin-top:12px}
+    .small{font-size:12px;color:#64748b;margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">💎 Wiseplusgrow CRM — Lead Intake</div>
+    <a href="./">↩ ไป CRM</a>
+  </div>
+
+  <div class="container">
+
+    <div class="card" id="form-card">
+      <h1>📥 เก็บ Lead ลูกค้า</h1>
+      <div class="sub">เก็บข้อมูลลูกค้าที่ทักมาจาก social/ออฟไลน์ ลงเข้า CRM ทันที</div>
+
+      <div id="meta-strip" class="meta" style="display:none"></div>
+
+      <form id="lead-form" autocomplete="off">
+        <label>ชื่อลูกค้า / กิจการ <span class="req">*</span></label>
+        <input type="text" id="f-name" required placeholder="เช่น คุณสมศรี · บริษัท ABC จำกัด">
+
+        <div class="row">
+          <div>
+            <label>เบอร์โทร / LINE ID <span class="req">*</span></label>
+            <input type="text" id="f-phone" required placeholder="0812345678">
+          </div>
+          <div>
+            <label>อีเมล (ถ้ามี)</label>
+            <input type="email" id="f-email" placeholder="customer@example.com">
+          </div>
+        </div>
+
+        <label>ช่องทางที่ทักมา <span class="req">*</span></label>
+        <div class="channel-icons">
+          <label><input type="radio" name="channel" value="TikTok" required><span class="emoji">🎵</span>TikTok</label>
+          <label><input type="radio" name="channel" value="Instagram"><span class="emoji">📷</span>Instagram</label>
+          <label><input type="radio" name="channel" value="Facebook"><span class="emoji">📘</span>Facebook</label>
+          <label><input type="radio" name="channel" value="LINE"><span class="emoji">💚</span>LINE</label>
+          <label><input type="radio" name="channel" value="YouTube"><span class="emoji">▶️</span>YouTube</label>
+          <label><input type="radio" name="channel" value="Phone"><span class="emoji">📞</span>โทร</label>
+          <label><input type="radio" name="channel" value="Walk-in"><span class="emoji">🚶</span>เดินเข้า</label>
+          <label><input type="radio" name="channel" value="Other"><span class="emoji">🌐</span>อื่น</label>
+        </div>
+
+        <label>👤 ชื่อคนที่รับ lead (พนักงาน) <span class="req">*</span></label>
+        <input type="text" id="f-employee" required placeholder="ชื่อพนักงาน / เซลส์ที่รับเรื่อง">
+
+        <label>สนใจสินค้า/บริการ</label>
+        <input type="text" id="f-interest" placeholder="เช่น OEM ครีม, น้ำหอม">
+
+        <label>โน้ตเพิ่มเติม</label>
+        <textarea id="f-note" placeholder="รายละเอียดที่ลูกค้าบอก / สิ่งที่ต้องตามต่อ"></textarea>
+
+        <label>ความสำคัญ</label>
+        <select id="f-hotness">
+          <option value="3">🔥 ร้อน (ตามด่วน)</option>
+          <option value="2" selected>⚡ ปานกลาง</option>
+          <option value="1">😐 เย็น (ตามทีหลัง)</option>
+        </select>
+
+        <button type="submit" class="btn" id="submit-btn">💾 เก็บเข้า CRM</button>
+        <div id="err-box" class="err" style="display:none"></div>
+      </form>
+
+      <div class="small" style="margin-top:14px;text-align:center;">
+        ⚙️ Tip: ส่ง URL พร้อม <code>?employee=ชื่อ&channel=TikTok</code> ให้พนักงานเปิด — ฟอร์มจะ pre-fill ให้
+      </div>
+    </div>
+
+    <div class="card" id="success-card" style="display:none">
+      <div class="ok">
+        <strong style="font-size:18px;">✅ เก็บ Lead เข้า CRM แล้ว!</strong>
+        <div id="ok-summary" style="margin-top:8px;font-size:14px"></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" onclick="resetForm()" style="background:#e5e7eb;color:#1a2332">➕ เก็บอีกคน</button>
+        <a class="btn" href="./" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">↩ ไป CRM</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+// CRM uses DB layer that prepends 'wpg_' — must match
+const DB = {
+  get(k, def){ try{ const v = localStorage.getItem('wpg_'+k); return v ? JSON.parse(v) : (def ?? null);} catch(e){ return def ?? null; } },
+  set(k, v){ localStorage.setItem('wpg_'+k, JSON.stringify(v)); }
+};
+function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function now(){ return new Date().toISOString(); }
+
+// One-time migration (in case anyone still has old wrong keys)
+(function(){
+  const moves = [['customers','wpg_customers'],['wpg_products','wpg_wpg_products'],['wpg_import_history','wpg_wpg_import_history']];
+  for (const [o,n] of moves){
+    const d = localStorage.getItem(o);
+    if (d === null) continue;
+    const e = localStorage.getItem(n);
+    if (e === null || e === '[]') localStorage.setItem(n, d);
+    localStorage.removeItem(o);
+  }
+})();
+
+// URL params pre-fill
+const params = new URLSearchParams(location.search);
+const preEmployee = params.get('employee') || params.get('emp') || '';
+const preChannel  = params.get('channel')  || params.get('ch')  || '';
+if (preEmployee) document.getElementById('f-employee').value = preEmployee;
+if (preChannel) {
+  const radio = document.querySelector('input[name="channel"][value="' + preChannel + '"]');
+  if (radio) radio.checked = true;
+}
+if (preEmployee || preChannel) {
+  const meta = document.getElementById('meta-strip');
+  meta.style.display = 'block';
+  meta.innerHTML = '📌 พรีเซ็ตจาก URL: ' +
+    (preEmployee ? '<strong>พนักงาน:</strong> ' + preEmployee + ' · ' : '') +
+    (preChannel ? '<strong>ช่อง:</strong> ' + preChannel : '');
+}
+
+function getChannel(){
+  const r = document.querySelector('input[name="channel"]:checked');
+  return r ? r.value : '';
+}
+function showErr(msg){
+  const e = document.getElementById('err-box');
+  e.style.display='block';
+  e.textContent = '❌ ' + msg;
+}
+function hideErr(){ document.getElementById('err-box').style.display='none'; }
+
+document.getElementById('lead-form').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  hideErr();
+  const name = document.getElementById('f-name').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const channel = getChannel();
+  const employee = document.getElementById('f-employee').value.trim();
+  if (!name) return showErr('กรุณากรอกชื่อลูกค้า');
+  if (!phone) return showErr('กรุณากรอกเบอร์โทร/LINE');
+  if (!channel) return showErr('เลือกช่องทาง');
+  if (!employee) return showErr('กรอกชื่อพนักงานที่รับ');
+
+  const email = document.getElementById('f-email').value.trim();
+  const interest = document.getElementById('f-interest').value.trim();
+  const noteText = document.getElementById('f-note').value.trim();
+  const hotness = parseInt(document.getElementById('f-hotness').value) || 2;
+
+  // tags
+  const tags = [channel, 'employee:' + employee];
+  if (interest) tags.push('สนใจ:' + interest);
+
+  // note
+  const noteParts = [];
+  noteParts.push('🎯 มาจาก ' + channel);
+  noteParts.push('รับโดย ' + employee);
+  if (interest) noteParts.push('สนใจ ' + interest);
+  if (noteText) noteParts.push(noteText);
+  noteParts.push('· เก็บผ่าน Lead Intake ' + new Date().toLocaleString('th-TH'));
+
+  const cust = {
+    id: genId(),
+    name,
+    refId: '',          // ไม่มี Jubili Prospect ID (lead จาก social)
+    phone,
+    email,
+    tax: '',
+    status: 'fresh',    // lead ใหม่ → fresh
+    address: '',
+    province: '',
+    note: noteParts.join(' · '),
+    hotness,
+    tags,
+    contacts: [{ id: genId(), name, position: '', phone, email }],
+    createdAt: today(),
+    updatedAt: today(),
+    lastContactAt: now(),
+    source: 'lead_intake',           // marker ระบบ
+    sourceChannel: channel,          // เผื่อใช้ filter/report
+    sourceEmployee: employee
+  };
+
+  // Write to CRM's actual key (with wpg_ prefix via DB.set)
+  const customers = DB.get('customers', []) || [];
+  // dedupe by phone (ถ้ามีคนเบอร์เดียวกัน — ข้าม + แจ้ง)
+  const existing = customers.find(c => (c.phone || '').replace(/\D/g,'') === phone.replace(/\D/g,''));
+  if (existing) {
+    if (!confirm('⚠️ เบอร์ ' + phone + ' มีอยู่แล้ว (' + existing.name + ')\n\nกด OK = เพิ่ม lead อีกราย (ต่างคน เบอร์เหมือนกัน)\nกด Cancel = ไม่บันทึก')) {
+      return;
+    }
+  }
+  customers.push(cust);
+  DB.set('customers', customers);
+
+  // log to history
+  const hist = DB.get('wpg_import_history', []) || [];
+  hist.unshift({
+    id: genId(),
+    filename: 'Lead Intake: ' + name + ' (' + channel + ')',
+    count: 1,
+    type: 'customers',
+    createdAt: today()
+  });
+  DB.set('wpg_import_history', hist);
+
+  // success UI
+  document.getElementById('form-card').style.display = 'none';
+  document.getElementById('success-card').style.display = 'block';
+  document.getElementById('ok-summary').innerHTML =
+    '👤 <strong>' + name + '</strong><br>' +
+    '📱 ' + phone + (email ? ' · ✉️ ' + email : '') + '<br>' +
+    '🎯 ' + channel + ' · 👤 รับโดย ' + employee + '<br>' +
+    'รวมลูกค้าใน CRM ตอนนี้: <strong>' + customers.length.toLocaleString() + '</strong> ราย';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function resetForm(){
+  document.getElementById('lead-form').reset();
+  if (preEmployee) document.getElementById('f-employee').value = preEmployee;
+  if (preChannel) {
+    const radio = document.querySelector('input[name="channel"][value="' + preChannel + '"]');
+    if (radio) radio.checked = true;
+  }
+  document.getElementById('form-card').style.display = 'block';
+  document.getElementById('success-card').style.display = 'none';
+  document.getElementById('f-name').focus();
+}
+</script>
+</body>
+</html>
