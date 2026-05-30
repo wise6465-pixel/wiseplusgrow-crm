@@ -11570,3 +11570,55 @@ window.exportCSV = function(type) {
 // Init Phase 12
 setTimeout(renderNotifs, 500);
 </script>
+
+<!-- ============================================================
+     WPG Debug Overlay v1 (added 2026-05-30 to diagnose Jubili import)
+     Shows localStorage vs in-memory state. Click banner to force-refresh.
+     ============================================================ -->
+<script>
+(function wpgDebugOverlay() {
+  setTimeout(function() {
+    try {
+      var ls_c = (JSON.parse(localStorage.getItem('customers') || '[]') || []).length;
+      var ls_p = (JSON.parse(localStorage.getItem('wpg_products') || '[]') || []).length;
+      var ls_h = (JSON.parse(localStorage.getItem('wpg_import_history') || '[]') || []).length;
+      var mem_c = (typeof customers !== 'undefined' && Array.isArray(customers)) ? customers.length : '?';
+      var mem_p = (typeof products !== 'undefined' && Array.isArray(products)) ? products.length : '?';
+      var ok = (ls_c === mem_c && ls_p === mem_p);
+      var bg = ok ? '#22c55e' : (ls_c > mem_c ? '#f0c040' : '#ef4444');
+      var fg = ok ? '#fff' : '#1a2332';
+      var d = document.createElement('div');
+      d.id = 'wpg-debug-overlay';
+      d.style.cssText =
+        'position:fixed;top:0;right:0;z-index:99999;background:' + bg + ';color:' + fg + ';' +
+        'padding:10px 16px;font:600 12px/1.4 Sarabun,sans-serif;border-radius:0 0 0 12px;' +
+        'box-shadow:-2px 4px 12px rgba(0,0,0,.25);cursor:pointer;max-width:340px';
+      d.innerHTML =
+        '🔍 <strong>Storage Debug</strong><br>' +
+        'localStorage: <strong>c=' + ls_c + ' p=' + ls_p + ' h=' + ls_h + '</strong><br>' +
+        'in-memory: <strong>c=' + mem_c + ' p=' + mem_p + '</strong><br>' +
+        (ok ? '✅ synced' : '⚠️ ไม่ตรง — <u>คลิกที่นี่</u>เพื่อ sync');
+      d.title = 'คลิกเพื่อ sync ตัวแปรในหน่วยความจำกับ localStorage แล้ว reload';
+      d.onclick = function() {
+        try {
+          if (typeof customers !== 'undefined' && Array.isArray(customers)) {
+            customers.length = 0;
+            var freshC = JSON.parse(localStorage.getItem('customers') || '[]');
+            for (var i=0;i<freshC.length;i++) customers.push(freshC[i]);
+          }
+          if (typeof products !== 'undefined' && Array.isArray(products)) {
+            products.length = 0;
+            var freshP = JSON.parse(localStorage.getItem('wpg_products') || '[]');
+            for (var j=0;j<freshP.length;j++) products.push(freshP[j]);
+          }
+          alert('🔄 Sync แล้ว!\ncustomers=' + (typeof customers !== 'undefined' ? customers.length : '?') +
+                '\nproducts=' + (typeof products !== 'undefined' ? products.length : '?') +
+                '\n\nกด OK เพื่อ reload');
+          location.reload();
+        } catch (e) { alert('Sync error: ' + e.message); }
+      };
+      document.body.appendChild(d);
+    } catch (e) { console.error('WPG debug overlay error:', e); }
+  }, 700);
+})();
+</script>
