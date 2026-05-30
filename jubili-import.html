@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>นำเข้าจาก Jubili — Wiseplusgrow CRM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Sarabun',sans-serif;background:#f5f7fa;margin:0;padding:0;color:#1a2332;line-height:1.5}
+    .topbar{background:#1a2332;color:#fff;padding:14px 28px;border-bottom:3px solid #f0c040;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .topbar .brand{font-size:16px;font-weight:600}
+    .topbar a{color:#f0c040;text-decoration:none;font-weight:600;font-size:14px}
+    .topbar a:hover{text-decoration:underline}
+    .container{max-width:820px;margin:32px auto;padding:0 20px}
+    h1{margin:0 0 6px;font-size:26px;color:#1a2332}
+    .sub{color:#64748b;margin-bottom:24px;font-size:14px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+    .card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .card .label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+    .card .num{font-size:30px;font-weight:700;color:#1a2332;margin-top:4px;line-height:1.1}
+    .card .det{font-size:12px;color:#64748b;margin-top:2px}
+    .card.add{border-left:4px solid #22c55e}
+    .card.add .num{color:#22c55e}
+    .card.skip{border-left:4px solid #94a3b8}
+    .card.skip .num{color:#94a3b8}
+    .section{background:#fff;border-radius:12px;padding:22px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eef2f7;font-size:14px}
+    .row:last-child{border-bottom:none}
+    .row .k{color:#64748b}
+    .row .v{font-weight:600;color:#1a2332}
+    .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+    .btn{background:#f0c040;color:#1a2332;border:none;padding:13px 28px;font-size:16px;font-weight:700;border-radius:10px;cursor:pointer;font-family:inherit;transition:transform .1s}
+    .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(240,192,64,.4)}
+    .btn:disabled{opacity:.4;cursor:not-allowed}
+    .btn.secondary{background:#e5e7eb;color:#1a2332}
+    .info{font-size:13px;color:#64748b;margin:14px 0;padding:12px;background:#f1f5f9;border-radius:8px}
+    .alert{padding:14px 18px;border-radius:10px;margin-bottom:16px;font-size:14px}
+    .alert.info{background:#dbeafe;color:#1e40af}
+    .alert.success{background:#d1fae5;color:#065f46;border-left:4px solid #10b981}
+    .alert.warning{background:#fef3c7;color:#92400e}
+    .alert.error{background:#fee2e2;color:#991b1b;border-left:4px solid #ef4444}
+    .meta{font-size:12px;color:#94a3b8;margin-top:8px}
+    a.linkbtn{display:inline-block;margin-top:10px;color:#065f46;font-weight:600;text-decoration:none}
+    a.linkbtn:hover{text-decoration:underline}
+    @media (max-width:600px){.cards{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">💎 Wiseplusgrow CRM — นำเข้าจาก Jubili</div>
+    <a href="./">↩ กลับไป CRM</a>
+  </div>
+
+  <div class="container">
+    <h1>📥 นำเข้าข้อมูลจาก Jubili</h1>
+    <div class="sub">ระบบจะเปรียบเทียบข้อมูลในไฟล์ ↔ ข้อมูลใน CRM ปัจจุบัน · แสดง preview ให้คุณตรวจก่อนยืนยัน</div>
+
+    <div id="loading" class="alert info">⏳ กำลังโหลดข้อมูล...</div>
+    <div id="error" class="alert error" style="display:none"></div>
+
+    <div id="main" style="display:none">
+      <div class="cards">
+        <div class="card">
+          <div class="label">📁 ในไฟล์</div>
+          <div class="num"><span id="payloadCust">—</span></div>
+          <div class="det">ลูกค้า · <span id="payloadProd">—</span> สินค้า</div>
+        </div>
+        <div class="card add">
+          <div class="label">🆕 จะเพิ่มใหม่</div>
+          <div class="num">+<span id="addCust">—</span></div>
+          <div class="det">+<span id="addProd">—</span> สินค้า</div>
+        </div>
+        <div class="card skip">
+          <div class="label">⏭️ ข้าม (มีอยู่)</div>
+          <div class="num"><span id="skipCust">—</span></div>
+          <div class="det"><span id="skipProd">—</span> สินค้า</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="row"><span class="k">📊 ใน CRM ตอนนี้</span><span class="v"><span id="curCust">—</span> ลูกค้า · <span id="curProd">—</span> สินค้า</span></div>
+        <div class="row"><span class="k">✨ หลัง import</span><span class="v"><span id="afterCust">—</span> ลูกค้า · <span id="afterProd">—</span> สินค้า</span></div>
+        <div class="row"><span class="k">📅 ไฟล์ที่ generate</span><span class="v" id="genAt">—</span></div>
+
+        <div class="info">
+          ℹ️ <strong>Dedupe rules:</strong> ลูกค้าเช็คด้วย Prospect ID (refId) · สินค้าเช็คด้วยรหัสสินค้า → ทนต่อ Jubili แก้ชื่อ ไม่ duplicate
+          <br>🛡️ <strong>ปลอดภัย:</strong> ข้อมูลที่คุณเพิ่มเองใน CRM ไม่ถูกแตะต้อง · เก็บประวัติใน "ตั้งค่า → Import/Export → ประวัติ" อัตโนมัติ
+        </div>
+
+        <div class="actions">
+          <button id="btnImport" class="btn">⬇ นำเข้าตอนนี้</button>
+          <button onclick="location.href='./'" class="btn secondary">ยกเลิก</button>
+        </div>
+      </div>
+
+      <div id="result" style="display:none"></div>
+    </div>
+
+    <div class="meta">
+      Wiseplusgrow CRM · Jubili Importer v1 · same-origin localStorage write · ไม่ส่งข้อมูลออกนอก browser
+    </div>
+  </div>
+
+<script>
+const DB = {
+  get(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : (fallback ?? null); }
+    catch(e) { return fallback ?? null; }
+  },
+  set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+};
+
+async function load() {
+  try {
+    const r = await fetch('./jubili-import-data.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('โหลดไฟล์ข้อมูลไม่ได้ (HTTP ' + r.status + ') · อาจ deploy ยังไม่ขึ้น GitHub Pages — รอ 1-2 นาทีแล้ว refresh');
+    const payload = await r.json();
+    window._payload = payload;
+    document.getElementById('genAt').textContent = payload.generatedAt || '—';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    renderPreview();
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error');
+    err.textContent = '❌ ' + e.message;
+    err.style.display = 'block';
+  }
+}
+
+function computeDelta() {
+  const payload = window._payload;
+  const ex = DB.get('customers', []);
+  const exRef  = new Set(ex.filter(c => c.refId).map(c => String(c.refId)));
+  const exName = new Set(ex.filter(c => !c.refId && c.name).map(c => String(c.name).trim()));
+  let add = [], skip = 0;
+  for (const c of payload.customers) {
+    const ref = c.refId ? String(c.refId) : '';
+    const nm  = (c.name || '').trim();
+    if ((ref && exRef.has(ref)) || (!ref && exName.has(nm))) { skip++; continue; }
+    add.push(c);
+  }
+  const exP = DB.get('wpg_products', []);
+  const exCd = new Set(exP.filter(p => p.code).map(p => String(p.code).trim()));
+  const exPn = new Set(exP.filter(p => !p.code && p.name).map(p => String(p.name).trim()));
+  let pAdd = [], pSkip = 0;
+  for (const p of payload.products) {
+    const cd = (p.code || '').trim();
+    const nm = (p.name || '').trim();
+    if ((cd && exCd.has(cd)) || (!cd && exPn.has(nm))) { pSkip++; continue; }
+    pAdd.push(p);
+  }
+  return { add, skip, pAdd, pSkip, ex, exP };
+}
+
+function renderPreview() {
+  const p = window._payload;
+  const d = computeDelta();
+  const f = n => Number(n || 0).toLocaleString('th-TH');
+  document.getElementById('payloadCust').textContent = f(p.customers.length);
+  document.getElementById('payloadProd').textContent = f(p.products.length);
+  document.getElementById('addCust').textContent     = f(d.add.length);
+  document.getElementById('addProd').textContent     = f(d.pAdd.length);
+  document.getElementById('skipCust').textContent    = f(d.skip);
+  document.getElementById('skipProd').textContent    = f(d.pSkip);
+  document.getElementById('curCust').textContent     = f(d.ex.length);
+  document.getElementById('curProd').textContent     = f(d.exP.length);
+  document.getElementById('afterCust').textContent   = f(d.ex.length + d.add.length);
+  document.getElementById('afterProd').textContent   = f(d.exP.length + d.pAdd.length);
+  if (d.add.length === 0 && d.pAdd.length === 0) {
+    const b = document.getElementById('btnImport');
+    b.disabled = true;
+    b.textContent = '✓ ข้อมูลล่าสุดแล้ว ไม่มีรายการใหม่';
+  }
+}
+
+function doImport() {
+  const d = computeDelta();
+  const msg = 'ยืนยันการนำเข้า:\n\n' +
+              '👥 ลูกค้าใหม่: ' + d.add.length.toLocaleString() + '\n' +
+              '📦 สินค้าใหม่: ' + d.pAdd.length.toLocaleString() + '\n\n' +
+              'กด OK เพื่อยืนยัน · Cancel เพื่อยกเลิก';
+  if (!confirm(msg)) return;
+
+  DB.set('customers',    d.ex.concat(d.add));
+  DB.set('wpg_products', d.exP.concat(d.pAdd));
+
+  const hist = DB.get('wpg_import_history', []);
+  const stamp = new Date().toISOString().slice(0, 10);
+  const fn = 'Jubili sync (' + new Date().toLocaleString('th-TH') + ')';
+  if (d.add.length)  hist.unshift({ id: 'jub' + Date.now() + 'c', filename: fn, count: d.add.length,  type: 'customers', createdAt: stamp });
+  if (d.pAdd.length) hist.unshift({ id: 'jub' + Date.now() + 'p', filename: fn, count: d.pAdd.length, type: 'products',  createdAt: stamp });
+  DB.set('wpg_import_history', hist);
+
+  const result = document.getElementById('result');
+  result.innerHTML = '<div class="alert success">' +
+    '<strong>✅ นำเข้าสำเร็จ!</strong><br>' +
+    'เพิ่มลูกค้า ' + d.add.length.toLocaleString() + ' ราย · เพิ่มสินค้า ' + d.pAdd.length.toLocaleString() + ' รายการ' +
+    '<br><a class="linkbtn" href="./">→ ไปที่ CRM ดูข้อมูล</a>' +
+    '</div>';
+  result.style.display = 'block';
+  const b = document.getElementById('btnImport');
+  b.disabled = true;
+  b.textContent = '✓ นำเข้าแล้ว';
+  setTimeout(() => location.href = './', 2500);
+}
+
+document.getElementById('btnImport').addEventListener('click', doImport);
+load();
+</script>
+</body>
+</html>
