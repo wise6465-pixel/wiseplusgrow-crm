@@ -2542,6 +2542,33 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <!-- PANEL: อัพโหลด/ดาวน์โหลด -->
           <div class="stg-panel" id="sp-import-export" style="display:none;">
             <h3 class="stg-title">☁️ อัพโหลด/ดาวน์โหลด</h3>
+
+            <!-- ✨ Jubili Auto Import (NEW) -->
+            <div class="card" style="border:2px solid #f0c040;background:linear-gradient(135deg,#fffbeb 0%,#fff 100%);margin-bottom:18px;max-width:900px;">
+              <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+                <span class="card-title">✨ Jubili Auto Import</span>
+                <span style="background:#f0c040;color:#1a2332;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">แนะนำ</span>
+              </div>
+              <div class="card-body">
+                <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+                  ลากไฟล์ Excel จาก Jubili → ระบบตรวจหาทั้ง <strong>รายชื่อลูกค้า</strong> และ <strong>รายการสินค้า</strong> ให้เอง · merge ผู้ติดต่อ · map สถานะ · dedupe ด้วย Prospect ID (ปลอดภัยที่จะรัน sync ซ้ำได้ตลอด)
+                </p>
+                <div id="jubili-dropzone"
+                  onclick="document.getElementById('jubili-file-input').click()"
+                  ondragover="this.style.borderColor='#f0c040';this.style.background='#fef3c7';event.preventDefault();"
+                  ondragleave="this.style.borderColor='#d1d5db';this.style.background='#f8fafc';"
+                  ondrop="handleJubiliDrop(event)"
+                  style="border:2px dashed #d1d5db;border-radius:10px;padding:28px;text-align:center;cursor:pointer;background:#f8fafc;transition:.2s;margin-bottom:12px;">
+                  <div style="font-size:36px;margin-bottom:6px;">📥</div>
+                  <div style="font-size:14px;font-weight:700;color:#1a2332;">วางไฟล์ Jubili .xlsx ที่นี่</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin:4px 0;">หรือคลิกเพื่อเลือกไฟล์</div>
+                  <div style="font-size:11px;color:var(--text-muted);">รองรับทั้งไฟล์ลูกค้า (มี sheet 'รายชื่อลูกค้า') และไฟล์สินค้า (มี sheet 'ItemList')</div>
+                  <input type="file" id="jubili-file-input" accept=".xlsx" style="display:none;" onchange="handleJubiliFile(this)">
+                </div>
+                <div id="jubili-result" style="display:none;"></div>
+              </div>
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;">
 
               <!-- อัพโหลด -->
@@ -11569,79 +11596,233 @@ window.exportCSV = function(type) {
 
 // Init Phase 12
 setTimeout(renderNotifs, 500);
-</script>
 
+// ============================================================
+// ✨ Jubili Auto Import — drag-drop Excel inside CRM
+// (Added 2026-05-30, knows Jubili schema, dedupes by Prospect ID)
+// ============================================================
+function _wpgStatusMap(s) {
+  s = (s || '').trim();
+  if (s === 'ลูกค้าเป้าหมาย' || s === 'เป้าหมาย') return 'prospect';
+  if (s === 'ลูกค้าใหม่' || s === 'ใหม่') return 'fresh';
+  if (s === 'ลูกค้าประจำ' || s === 'ประจำ') return 'existing';
+  if (s === 'ลูกค้าห่างหาย' || s === 'ห่างหาย') return 'lapse';
+  return 'prospect';
+}
+function _wpgParseDate(s) {
+  if (!s) return today();
+  s = String(s).trim();
+  const m = s.match(/^(\d{1,2})\s+(\w+)\s+(\d{4})/);
+  if (!m) return today();
+  const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+  const mm = months[m[2].substring(0,3)] || '01';
+  return `${m[3]}-${mm}-${m[1].padStart(2,'0')}`;
+}
+function _wpgRowsToObjs(rows) {
+  if (!rows || !rows.length) return [];
+  const headers = rows[0];
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const obj = {};
+    for (let j = 0; j < headers.length; j++) obj[headers[j]] = rows[i][j];
+    if (Object.values(obj).some(v => v !== '' && v != null)) out.push(obj);
+  }
+  return out;
+}
+function handleJubiliDrop(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = '#d1d5db';
+  e.currentTarget.style.background = '#f8fafc';
+  const f = e.dataTransfer.files[0];
+  if (f) processJubiliFile(f);
+}
+function handleJubiliFile(input) {
+  if (input.files[0]) processJubiliFile(input.files[0]);
+  input.value = '';
+}
+async function processJubiliFile(file) {
+  const resultEl = document.getElementById('jubili-result');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div style="padding:14px;background:#dbeafe;border-radius:8px;color:#1e40af;">⏳ กำลังอ่านไฟล์ ' + file.name + ' ...</div>';
+
+  // ensure SheetJS loaded
+  if (typeof XLSX === 'undefined') {
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheets = wb.SheetNames;
+
+    let parsedCust = [], parsedProd = [];
+    let hasCust = sheets.includes('รายชื่อลูกค้า');
+    let hasProd = sheets.includes('ItemList');
+
+    if (!hasCust && !hasProd) {
+      resultEl.innerHTML = '<div style="padding:14px;background:#fee2e2;border-radius:8px;color:#991b1b;">❌ ไม่ใช่ไฟล์ Jubili (ไม่พบ sheet "รายชื่อลูกค้า" หรือ "ItemList")<br><small>Sheets ที่เจอ: ' + sheets.join(', ') + '</small></div>';
+      return;
+    }
+
+    // ---- Customers ----
+    if (hasCust) {
+      const custRows = XLSX.utils.sheet_to_json(wb.Sheets['รายชื่อลูกค้า'], { header: 1, defval: '' });
+      const custObjs = _wpgRowsToObjs(custRows);
+      const contactsByRef = {};
+      if (sheets.includes('รายชื่อผู้ติดต่อ')) {
+        const ctRows = XLSX.utils.sheet_to_json(wb.Sheets['รายชื่อผู้ติดต่อ'], { header: 1, defval: '' });
+        const ctObjs = _wpgRowsToObjs(ctRows);
+        for (const ct of ctObjs) {
+          const pid = String(ct['Prospect ID'] || '').trim();
+          if (!pid) continue;
+          const name = (ct['ชื่อผู้ติดต่อ'] || ct['ชื่อผู้ติดต่อหลัก'] || '').toString().trim();
+          const phone = String(ct['เบอร์โทรผู้ติดต่อ'] || '').trim();
+          const email = String(ct['อีเมลผู้ติดต่อ'] || '').trim();
+          if (!name && !phone && !email) continue;
+          (contactsByRef[pid] = contactsByRef[pid] || []).push({
+            id: genId(), name, position: String(ct['ตำแหน่ง'] || '').trim(), phone, email
+          });
+        }
+      }
+      for (const r of custObjs) {
+        const name = String(r['ชื่อกิจการ'] || '').trim();
+        if (!name) continue;
+        const pid = String(r['Prospect ID'] || '').trim();
+        const tags = String(r['ชื่อแท็ก'] || '').split(/[,;|/]/).map(t => t.trim()).filter(Boolean);
+        const owner = String(r['ผู้รับผิดชอบ'] || '').trim();
+        const unfollow = String(r['เลิกติดตาม'] || '').trim().toUpperCase() === 'Y';
+        const noteParts = [];
+        if (owner) noteParts.push('ผู้รับผิดชอบ: ' + owner);
+        if (pid) noteParts.push('Jubili Prospect ID: ' + pid);
+        if (unfollow) noteParts.push('เลิกติดตาม (จาก Jubili)');
+        parsedCust.push({
+          id: genId(),
+          name,
+          refId: pid,
+          phone: String(r['เบอร์โทรกิจการ'] || '').trim(),
+          email: String(r['อีเมลกิจการ'] || '').trim(),
+          tax: String(r['เลขประจำตัวผู้เสียภาษี'] || '').trim(),
+          status: _wpgStatusMap(r['สถานะ']),
+          address: String(r['ที่อยู่'] || '').trim(),
+          province: String(r['จังหวัด'] || '').trim(),
+          note: noteParts.join(' · '),
+          hotness: parseInt(r['ความสำคัญ']) || 0,
+          tags,
+          contacts: contactsByRef[pid] || [],
+          createdAt: _wpgParseDate(r['วันที่สร้าง']),
+          updatedAt: _wpgParseDate(r['วันที่แก้ไขล่าสุด'])
+        });
+      }
+    }
+
+    // ---- Products ----
+    if (hasProd) {
+      const prodRows = XLSX.utils.sheet_to_json(wb.Sheets['ItemList'], { header: 1, defval: '' });
+      const prodObjs = _wpgRowsToObjs(prodRows);
+      for (const r of prodObjs) {
+        const name = String(r['ชื่อสินค้า'] || '').trim();
+        if (!name) continue;
+        const grp = String(r['กลุ่มสินค้า'] || '').trim();
+        parsedProd.push({
+          id: genId(),
+          name,
+          code: String(r['รหัสสินค้า'] || '').trim(),
+          group: grp === '-' ? '' : grp,
+          price: parseFloat(r['ราคา/หน่วย']) || 0,
+          unit: String(r['หน่วย'] || 'ชิ้น').trim() || 'ชิ้น',
+          createdAt: today()
+        });
+      }
+    }
+
+    // ---- Dedupe ----
+    const exCust = customers || [];
+    const exCustRef = new Set(exCust.filter(c => c.refId).map(c => String(c.refId)));
+    const exCustName = new Set(exCust.filter(c => !c.refId).map(c => (c.name || '').trim()));
+    let addCust = 0, skipCust = 0;
+    const toAddCust = [];
+    for (const c of parsedCust) {
+      const ref = c.refId, nm = c.name.trim();
+      if ((ref && exCustRef.has(ref)) || (!ref && exCustName.has(nm))) { skipCust++; }
+      else { toAddCust.push(c); addCust++; }
+    }
+    const exProd = products || [];
+    const exProdCode = new Set(exProd.filter(p => p.code).map(p => String(p.code).trim()));
+    const exProdName = new Set(exProd.filter(p => !p.code).map(p => (p.name || '').trim()));
+    let addProd = 0, skipProd = 0;
+    const toAddProd = [];
+    for (const p of parsedProd) {
+      const cd = p.code, nm = p.name.trim();
+      if ((cd && exProdCode.has(cd)) || (!cd && exProdName.has(nm))) { skipProd++; }
+      else { toAddProd.push(p); addProd++; }
+    }
+
+    // ---- Confirm ----
+    const msg = '✨ Jubili Auto Import — ตรวจไฟล์เสร็จ\n\n' +
+      '📁 ไฟล์: ' + file.name + '\n' +
+      'พบ sheet: ' + (hasCust ? '✓ ลูกค้า ' : '') + (hasProd ? '✓ สินค้า ' : '') + '\n\n' +
+      '👥 ลูกค้า: เพิ่มใหม่ ' + addCust + ' · ข้าม ' + skipCust + ' (มีอยู่แล้ว)\n' +
+      '📦 สินค้า: เพิ่มใหม่ ' + addProd + ' · ข้าม ' + skipProd + ' (มีอยู่แล้ว)\n\n' +
+      'กด OK เพื่อยืนยัน · Cancel เพื่อยกเลิก';
+    if (!confirm(msg)) {
+      resultEl.innerHTML = '<div style="padding:14px;background:#fef3c7;border-radius:8px;color:#92400e;">⛔ ยกเลิกการ import แล้ว</div>';
+      return;
+    }
+
+    // ---- Write ----
+    if (toAddCust.length) { for (const c of toAddCust) customers.push(c); DB.set('customers', customers); }
+    if (toAddProd.length) { for (const p of toAddProd) products.push(p); DB.set('wpg_products', products); }
+    importHistory = DB.get('wpg_import_history', []);
+    const stamp = today();
+    const fn = 'Jubili Auto (' + file.name + ')';
+    if (toAddCust.length) importHistory.unshift({ id: genId(), filename: fn, count: toAddCust.length, type: 'customers', createdAt: stamp });
+    if (toAddProd.length) importHistory.unshift({ id: genId(), filename: fn, count: toAddProd.length, type: 'products', createdAt: stamp });
+    DB.set('wpg_import_history', importHistory);
+
+    // ---- Refresh UI ----
+    if (typeof renderCustomers === 'function') try { renderCustomers(); } catch(e){}
+    if (typeof updateCustStats === 'function') try { updateCustStats(); } catch(e){}
+    if (typeof renderProducts === 'function') try { renderProducts(); } catch(e){}
+    if (typeof renderImportHistory === 'function') try { renderImportHistory(); } catch(e){}
+
+    resultEl.innerHTML =
+      '<div style="padding:14px;background:#d1fae5;border-radius:8px;color:#065f46;border-left:4px solid #10b981;">' +
+      '<strong>✅ Import สำเร็จ!</strong><br>' +
+      'เพิ่มลูกค้า ' + addCust + ' ราย · เพิ่มสินค้า ' + addProd + ' รายการ<br>' +
+      'รวมตอนนี้: ' + customers.length + ' ลูกค้า · ' + products.length + ' สินค้า' +
+      '</div>';
+    toast('✅ Jubili Import: +' + addCust + ' ลูกค้า, +' + addProd + ' สินค้า');
+  } catch (err) {
+    resultEl.innerHTML = '<div style="padding:14px;background:#fee2e2;border-radius:8px;color:#991b1b;">❌ Error: ' + (err.message || err) + '</div>';
+  }
+}
+</script>
 <!-- ============================================================
-     WPG Debug Overlay v1 (added 2026-05-30 to diagnose Jubili import)
-     Shows localStorage vs in-memory state. Click banner to force-refresh.
+     WPG key-migration helper (one-time)
+     Migrates data from old wrong-prefix keys to CRM's actual keys.
+     Safe no-op if nothing to migrate.
      ============================================================ -->
 <script>
-(function wpgDebugOverlay() {
-  // 🔧 Migrate data from old wrong-prefix keys to correct keys
-  // (Earlier versions of jubili-import.html wrote without the wpg_ prefix
-  //  that CRM's DB layer requires — this fixes that automatically)
+(function wpgKeyMigrate() {
   try {
     var moves = [
       ['customers',          'wpg_customers'],
       ['wpg_products',       'wpg_wpg_products'],
       ['wpg_import_history', 'wpg_wpg_import_history']
     ];
-    for (var mi = 0; mi < moves.length; mi++) {
-      var oldK = moves[mi][0], newK = moves[mi][1];
+    for (var i = 0; i < moves.length; i++) {
+      var oldK = moves[i][0], newK = moves[i][1];
       var oldD = localStorage.getItem(oldK);
       if (oldD === null) continue;
       var newD = localStorage.getItem(newK);
-      if (newD === null || newD === '[]') {
-        localStorage.setItem(newK, oldD);
-        try { console.log('[migrate]', oldK, '→', newK, ':', JSON.parse(oldD).length, 'items'); } catch(e){}
-      }
+      if (newD === null || newD === '[]') localStorage.setItem(newK, oldD);
       localStorage.removeItem(oldK);
     }
-  } catch (e) { console.error('migration error', e); }
-
-  setTimeout(function() {
-    try {
-      // CRM's DB prepends 'wpg_' to all keys — we MUST read the actual storage keys
-      var ls_c = (JSON.parse(localStorage.getItem('wpg_customers') || '[]') || []).length;
-      var ls_p = (JSON.parse(localStorage.getItem('wpg_wpg_products') || '[]') || []).length;
-      var ls_h = (JSON.parse(localStorage.getItem('wpg_wpg_import_history') || '[]') || []).length;
-      var mem_c = (typeof customers !== 'undefined' && Array.isArray(customers)) ? customers.length : '?';
-      var mem_p = (typeof products !== 'undefined' && Array.isArray(products)) ? products.length : '?';
-      var ok = (ls_c === mem_c && ls_p === mem_p);
-      var bg = ok ? '#22c55e' : (ls_c > mem_c ? '#f0c040' : '#ef4444');
-      var fg = ok ? '#fff' : '#1a2332';
-      var d = document.createElement('div');
-      d.id = 'wpg-debug-overlay';
-      d.style.cssText =
-        'position:fixed;top:0;right:0;z-index:99999;background:' + bg + ';color:' + fg + ';' +
-        'padding:10px 16px;font:600 12px/1.4 Sarabun,sans-serif;border-radius:0 0 0 12px;' +
-        'box-shadow:-2px 4px 12px rgba(0,0,0,.25);cursor:pointer;max-width:340px';
-      d.innerHTML =
-        '🔍 <strong>Storage Debug</strong><br>' +
-        'localStorage: <strong>c=' + ls_c + ' p=' + ls_p + ' h=' + ls_h + '</strong><br>' +
-        'in-memory: <strong>c=' + mem_c + ' p=' + mem_p + '</strong><br>' +
-        (ok ? '✅ synced' : '⚠️ ไม่ตรง — <u>คลิกที่นี่</u>เพื่อ sync');
-      d.title = 'คลิกเพื่อ sync ตัวแปรในหน่วยความจำกับ localStorage แล้ว reload';
-      d.onclick = function() {
-        try {
-          if (typeof customers !== 'undefined' && Array.isArray(customers)) {
-            customers.length = 0;
-            var freshC = JSON.parse(localStorage.getItem('wpg_customers') || '[]');
-            for (var i=0;i<freshC.length;i++) customers.push(freshC[i]);
-          }
-          if (typeof products !== 'undefined' && Array.isArray(products)) {
-            products.length = 0;
-            var freshP = JSON.parse(localStorage.getItem('wpg_wpg_products') || '[]');
-            for (var j=0;j<freshP.length;j++) products.push(freshP[j]);
-          }
-          alert('🔄 Sync แล้ว!\ncustomers=' + (typeof customers !== 'undefined' ? customers.length : '?') +
-                '\nproducts=' + (typeof products !== 'undefined' ? products.length : '?') +
-                '\n\nกด OK เพื่อ reload');
-          location.reload();
-        } catch (e) { alert('Sync error: ' + e.message); }
-      };
-      document.body.appendChild(d);
-    } catch (e) { console.error('WPG debug overlay error:', e); }
-  }, 700);
+  } catch (e) { console.error('key migration error', e); }
 })();
 </script>
