@@ -241,14 +241,92 @@ function showFail(msg) {
 
 document.getElementById('btnImport').addEventListener('click', () => doImport());
 
+// ----- FORCE MODE (?force=1) → bypass everything, overwrite + verify + report -----
+const FORCE = new URLSearchParams(location.search).has('force');
+
+async function forceImport() {
+  await load();
+  if (!window._payload) return;
+  const p = window._payload;
+  // capture BEFORE
+  const before = {
+    customers: (DB.get('customers', []) || []).length,
+    products:  (DB.get('wpg_products', []) || []).length,
+    history:   (DB.get('wpg_import_history', []) || []).length,
+  };
+  // direct overwrite (no dedupe)
+  let writeError = null;
+  try {
+    localStorage.setItem('customers',    JSON.stringify(p.customers));
+    localStorage.setItem('wpg_products', JSON.stringify(p.products));
+  } catch (e) { writeError = e.message; }
+  // capture AFTER
+  const after = {
+    customers: (DB.get('customers', []) || []).length,
+    products:  (DB.get('wpg_products', []) || []).length,
+  };
+  // history append
+  const hist = DB.get('wpg_import_history', []);
+  const stamp = new Date().toISOString().slice(0, 10);
+  const fn = 'Jubili FORCE sync (' + new Date().toLocaleString('th-TH') + ')';
+  hist.unshift({ id:'jub'+Date.now()+'c', filename:fn, count:p.customers.length, type:'customers', createdAt:stamp });
+  hist.unshift({ id:'jub'+Date.now()+'p', filename:fn, count:p.products.length, type:'products', createdAt:stamp });
+  try { DB.set('wpg_import_history', hist); } catch(e) {}
+  // storage diagnostics
+  let storageBytes = 0;
+  for (const k in localStorage) {
+    if (Object.prototype.hasOwnProperty.call(localStorage, k)) {
+      storageBytes += (localStorage[k]?.length || 0) + k.length;
+    }
+  }
+  const ok = after.customers === p.customers.length && after.products === p.products.length;
+  const report =
+    '🔧 FORCE IMPORT MODE — Diagnostic Report\n\n' +
+    'Origin:        ' + location.origin + '\n' +
+    'Path:          ' + location.pathname + '\n' +
+    'Storage type:  localStorage\n' +
+    'Storage size:  ~' + (storageBytes/1024).toFixed(1) + ' KB\n' +
+    'UserAgent:     ' + navigator.userAgent.substring(0, 80) + '\n\n' +
+    '┌─ BEFORE ─────────────────────┐\n' +
+    '│ customers       : ' + String(before.customers).padStart(6) + '       │\n' +
+    '│ wpg_products    : ' + String(before.products).padStart(6) + '       │\n' +
+    '│ import_history  : ' + String(before.history).padStart(6) + '       │\n' +
+    '└──────────────────────────────┘\n\n' +
+    '┌─ FILE PAYLOAD ───────────────┐\n' +
+    '│ customers       : ' + String(p.customers.length).padStart(6) + '       │\n' +
+    '│ products        : ' + String(p.products.length).padStart(6) + '       │\n' +
+    '└──────────────────────────────┘\n\n' +
+    '┌─ AFTER WRITE ────────────────┐\n' +
+    '│ customers       : ' + String(after.customers).padStart(6) + '       │\n' +
+    '│ wpg_products    : ' + String(after.products).padStart(6) + '       │\n' +
+    '└──────────────────────────────┘\n\n' +
+    (writeError ? '⚠️ Write error: ' + writeError + '\n\n' : '') +
+    'STATUS: ' + (ok ? '✅ SUCCESS — โหลดข้อมูลเข้า localStorage แล้ว' : '❌ FAILED — เขียนไม่ติด!\nสาเหตุเป็นไปได้: browser block localStorage / private mode / ext block / quota เต็ม');
+
+  const main = document.getElementById('main');
+  document.getElementById('loading').style.display = 'none';
+  main.style.display = 'block';
+  main.innerHTML =
+    '<div class="alert ' + (ok ? 'success' : 'error') + '" style="margin-bottom:18px"><strong>' +
+    (ok ? '✅ Force import สำเร็จ' : '❌ Force import ล้มเหลว') +
+    '</strong></div>' +
+    '<pre style="background:#0f172a;color:#e2e8f0;padding:18px;border-radius:10px;overflow:auto;font-size:13px;line-height:1.6;white-space:pre">' +
+    report.replace(/</g,'&lt;') +
+    '</pre>' +
+    '<div class="actions" style="margin-top:18px">' +
+    '<a href="./" class="btn">→ ไปที่ CRM ดูข้อมูล</a>' +
+    '<a href="?" class="btn secondary">เปิดโหมดปกติ</a>' +
+    '</div>';
+  if (ok) setTimeout(() => location.href = './', 4500);
+}
+
 // ----- AUTO-RUN: ถ้า CRM ว่าง (ทั้ง customers + products) → import อัตโนมัติทันที -----
 async function autoRunIfEmpty() {
   await load();
-  if (!window._payload) return;       // โหลด data ไม่ผ่าน — รอ manual
+  if (!window._payload) return;
   const ex  = DB.get('customers', []);
   const exP = DB.get('wpg_products', []);
   if (ex.length === 0 && exP.length === 0) {
-    // CRM ว่างเปล่า → auto-import
     const banner = document.createElement('div');
     banner.className = 'alert info';
     banner.innerHTML = '🤖 ตรวจพบ CRM ว่าง — กำลัง <strong>นำเข้าอัตโนมัติ</strong> ใน 1.5 วินาที... <a href="javascript:void(0)" onclick="window._cancel=true;this.parentNode.remove()" style="color:#1e40af;font-weight:600;margin-left:8px">[ยกเลิก]</a>';
@@ -260,7 +338,8 @@ async function autoRunIfEmpty() {
     }, 1500);
   }
 }
-autoRunIfEmpty();
+
+if (FORCE) { forceImport(); } else { autoRunIfEmpty(); }
 </script>
 </body>
 </html>
