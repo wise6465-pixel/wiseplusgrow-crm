@@ -11577,11 +11577,34 @@ setTimeout(renderNotifs, 500);
      ============================================================ -->
 <script>
 (function wpgDebugOverlay() {
+  // 🔧 Migrate data from old wrong-prefix keys to correct keys
+  // (Earlier versions of jubili-import.html wrote without the wpg_ prefix
+  //  that CRM's DB layer requires — this fixes that automatically)
+  try {
+    var moves = [
+      ['customers',          'wpg_customers'],
+      ['wpg_products',       'wpg_wpg_products'],
+      ['wpg_import_history', 'wpg_wpg_import_history']
+    ];
+    for (var mi = 0; mi < moves.length; mi++) {
+      var oldK = moves[mi][0], newK = moves[mi][1];
+      var oldD = localStorage.getItem(oldK);
+      if (oldD === null) continue;
+      var newD = localStorage.getItem(newK);
+      if (newD === null || newD === '[]') {
+        localStorage.setItem(newK, oldD);
+        try { console.log('[migrate]', oldK, '→', newK, ':', JSON.parse(oldD).length, 'items'); } catch(e){}
+      }
+      localStorage.removeItem(oldK);
+    }
+  } catch (e) { console.error('migration error', e); }
+
   setTimeout(function() {
     try {
-      var ls_c = (JSON.parse(localStorage.getItem('customers') || '[]') || []).length;
-      var ls_p = (JSON.parse(localStorage.getItem('wpg_products') || '[]') || []).length;
-      var ls_h = (JSON.parse(localStorage.getItem('wpg_import_history') || '[]') || []).length;
+      // CRM's DB prepends 'wpg_' to all keys — we MUST read the actual storage keys
+      var ls_c = (JSON.parse(localStorage.getItem('wpg_customers') || '[]') || []).length;
+      var ls_p = (JSON.parse(localStorage.getItem('wpg_wpg_products') || '[]') || []).length;
+      var ls_h = (JSON.parse(localStorage.getItem('wpg_wpg_import_history') || '[]') || []).length;
       var mem_c = (typeof customers !== 'undefined' && Array.isArray(customers)) ? customers.length : '?';
       var mem_p = (typeof products !== 'undefined' && Array.isArray(products)) ? products.length : '?';
       var ok = (ls_c === mem_c && ls_p === mem_p);
@@ -11603,12 +11626,12 @@ setTimeout(renderNotifs, 500);
         try {
           if (typeof customers !== 'undefined' && Array.isArray(customers)) {
             customers.length = 0;
-            var freshC = JSON.parse(localStorage.getItem('customers') || '[]');
+            var freshC = JSON.parse(localStorage.getItem('wpg_customers') || '[]');
             for (var i=0;i<freshC.length;i++) customers.push(freshC[i]);
           }
           if (typeof products !== 'undefined' && Array.isArray(products)) {
             products.length = 0;
-            var freshP = JSON.parse(localStorage.getItem('wpg_products') || '[]');
+            var freshP = JSON.parse(localStorage.getItem('wpg_wpg_products') || '[]');
             for (var j=0;j<freshP.length;j++) products.push(freshP[j]);
           }
           alert('🔄 Sync แล้ว!\ncustomers=' + (typeof customers !== 'undefined' ? customers.length : '?') +

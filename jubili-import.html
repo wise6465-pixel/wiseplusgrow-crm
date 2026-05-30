@@ -103,13 +103,35 @@
   </div>
 
 <script>
+// ⚠️ CRM's DB layer prepends 'wpg_' to all keys (see index.html line ~3452)
+// We MUST use the same convention or data ends up in wrong localStorage keys.
 const DB = {
   get(key, fallback) {
-    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : (fallback ?? null); }
+    try { const v = localStorage.getItem('wpg_' + key); return v ? JSON.parse(v) : (fallback ?? null); }
     catch(e) { return fallback ?? null; }
   },
-  set(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+  set(key, val) { localStorage.setItem('wpg_' + key, JSON.stringify(val)); }
 };
+
+// One-time migration: previous versions of this importer wrote to wrong (un-prefixed) keys.
+// Copy any data found there to the correct (prefixed) keys, then delete the wrong ones.
+(function migrateWrongKeys() {
+  const moves = [
+    ['customers',          'wpg_customers'],          // customers data
+    ['wpg_products',       'wpg_wpg_products'],       // products data (CRM uses DB.set('wpg_products') which double-prefixes)
+    ['wpg_import_history', 'wpg_wpg_import_history']  // import history
+  ];
+  for (const [oldKey, newKey] of moves) {
+    const oldData = localStorage.getItem(oldKey);
+    if (oldData === null) continue;
+    const existing = localStorage.getItem(newKey);
+    if (existing === null || existing === '[]') {
+      localStorage.setItem(newKey, oldData);
+      try { console.log('[migrate]', oldKey, '→', newKey, ':', JSON.parse(oldData).length, 'items'); } catch(e){}
+    }
+    localStorage.removeItem(oldKey);
+  }
+})();
 
 async function load() {
   try {
