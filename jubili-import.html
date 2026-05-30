@@ -175,17 +175,42 @@ function renderPreview() {
   }
 }
 
-function doImport() {
+function doImport(opts) {
+  opts = opts || {};
   const d = computeDelta();
-  const msg = 'ยืนยันการนำเข้า:\n\n' +
-              '👥 ลูกค้าใหม่: ' + d.add.length.toLocaleString() + '\n' +
-              '📦 สินค้าใหม่: ' + d.pAdd.length.toLocaleString() + '\n\n' +
-              'กด OK เพื่อยืนยัน · Cancel เพื่อยกเลิก';
-  if (!confirm(msg)) return;
 
-  DB.set('customers',    d.ex.concat(d.add));
-  DB.set('wpg_products', d.exP.concat(d.pAdd));
+  // ----- manual mode: show confirm -----
+  if (!opts.skipConfirm) {
+    const msg = 'ยืนยันการนำเข้า:\n\n' +
+                '👥 ลูกค้าใหม่: ' + d.add.length.toLocaleString() + '\n' +
+                '📦 สินค้าใหม่: ' + d.pAdd.length.toLocaleString() + '\n\n' +
+                'กด OK เพื่อยืนยัน · Cancel เพื่อยกเลิก';
+    if (!confirm(msg)) return;
+  }
 
+  // ----- write -----
+  try {
+    DB.set('customers',    d.ex.concat(d.add));
+    DB.set('wpg_products', d.exP.concat(d.pAdd));
+  } catch (e) {
+    showFail('เขียน localStorage ไม่สำเร็จ: ' + e.message +
+             '\n\nอาจเป็นเพราะ: Storage เต็ม / browser ตั้งค่าปิด localStorage / โหมด private');
+    return;
+  }
+
+  // ----- VERIFY: re-read to confirm bytes actually saved -----
+  const verifyC = DB.get('customers', []).length;
+  const verifyP = DB.get('wpg_products', []).length;
+  const expectedC = d.ex.length + d.add.length;
+  const expectedP = d.exP.length + d.pAdd.length;
+  if (verifyC !== expectedC || verifyP !== expectedP) {
+    showFail('ยืนยันไม่ผ่าน: คาด customers=' + expectedC + ' พบ=' + verifyC +
+             ' · คาด products=' + expectedP + ' พบ=' + verifyP +
+             '\n\nลองตรวจ browser storage settings (อาจถูกบล็อก)');
+    return;
+  }
+
+  // ----- log history -----
   const hist = DB.get('wpg_import_history', []);
   const stamp = new Date().toISOString().slice(0, 10);
   const fn = 'Jubili sync (' + new Date().toLocaleString('th-TH') + ')';
@@ -193,21 +218,49 @@ function doImport() {
   if (d.pAdd.length) hist.unshift({ id: 'jub' + Date.now() + 'p', filename: fn, count: d.pAdd.length, type: 'products',  createdAt: stamp });
   DB.set('wpg_import_history', hist);
 
+  // ----- success UI -----
   const result = document.getElementById('result');
   result.innerHTML = '<div class="alert success">' +
-    '<strong>✅ นำเข้าสำเร็จ!</strong><br>' +
-    'เพิ่มลูกค้า ' + d.add.length.toLocaleString() + ' ราย · เพิ่มสินค้า ' + d.pAdd.length.toLocaleString() + ' รายการ' +
-    '<br><a class="linkbtn" href="./">→ ไปที่ CRM ดูข้อมูล</a>' +
+    '<strong>✅ นำเข้าสำเร็จ + ยืนยันแล้ว!</strong><br>' +
+    'เพิ่มลูกค้า ' + d.add.length.toLocaleString() + ' ราย · เพิ่มสินค้า ' + d.pAdd.length.toLocaleString() + ' รายการ<br>' +
+    'รวมตอนนี้: <strong>' + verifyC.toLocaleString() + ' ลูกค้า</strong> · <strong>' + verifyP.toLocaleString() + ' สินค้า</strong>' +
+    '<br><a class="linkbtn" href="./">→ ไปที่ CRM ดูข้อมูล (กำลังเปิดอัตโนมัติใน 3 วินาที)</a>' +
     '</div>';
   result.style.display = 'block';
   const b = document.getElementById('btnImport');
   b.disabled = true;
-  b.textContent = '✓ นำเข้าแล้ว';
-  setTimeout(() => location.href = './', 2500);
+  b.textContent = '✓ นำเข้าแล้ว · กำลังเปิด CRM...';
+  setTimeout(() => location.href = './', 3000);
 }
 
-document.getElementById('btnImport').addEventListener('click', doImport);
-load();
+function showFail(msg) {
+  const result = document.getElementById('result');
+  result.innerHTML = '<div class="alert error"><strong>❌ ผิดพลาด</strong><br><pre style="white-space:pre-wrap;font-family:inherit;margin:8px 0 0;">' + msg.replace(/</g,'&lt;') + '</pre></div>';
+  result.style.display = 'block';
+}
+
+document.getElementById('btnImport').addEventListener('click', () => doImport());
+
+// ----- AUTO-RUN: ถ้า CRM ว่าง (ทั้ง customers + products) → import อัตโนมัติทันที -----
+async function autoRunIfEmpty() {
+  await load();
+  if (!window._payload) return;       // โหลด data ไม่ผ่าน — รอ manual
+  const ex  = DB.get('customers', []);
+  const exP = DB.get('wpg_products', []);
+  if (ex.length === 0 && exP.length === 0) {
+    // CRM ว่างเปล่า → auto-import
+    const banner = document.createElement('div');
+    banner.className = 'alert info';
+    banner.innerHTML = '🤖 ตรวจพบ CRM ว่าง — กำลัง <strong>นำเข้าอัตโนมัติ</strong> ใน 1.5 วินาที... <a href="javascript:void(0)" onclick="window._cancel=true;this.parentNode.remove()" style="color:#1e40af;font-weight:600;margin-left:8px">[ยกเลิก]</a>';
+    document.getElementById('main').insertBefore(banner, document.getElementById('main').firstChild);
+    setTimeout(() => {
+      if (window._cancel) return;
+      banner.remove();
+      doImport({ skipConfirm: true });
+    }, 1500);
+  }
+}
+autoRunIfEmpty();
 </script>
 </body>
 </html>
