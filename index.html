@@ -3509,18 +3509,8 @@ function daysDiff(d) { const now = new Date(today()); const t = new Date(d+'T00:
 // ============================================================
 const pageNames = { dashboard:'แผงบริหาร', activities:'งานติดตาม', customers:'ลูกค้า', projects:'โครงการ', leads:'โอกาส', quotes:'ใบเสนอราคา', orders:'ใบสั่งขาย', forecast:'คาดการณ์', reports:'รายงาน', settings:'ตั้งค่า' };
 
-function navTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-'+page)?.classList.add('active');
-  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
-  document.getElementById('topbar-title').textContent = pageNames[page] || page;
-  document.getElementById('content').scrollTop = 0;
-  if (page === 'activities') renderTasks();
-  if (page === 'customers') { renderCustomers(); updateCustStats(); }
-  if (page === 'dashboard') updateDashboard();
-  if (page === 'settings') renderSettings();
-}
+// navTo() คือฟังก์ชันเดียว — นิยามจริงอยู่ในส่วน INIT ด้านล่าง (รองรับทุกหน้า: projects/leads/quotes/orders/forecast/reports)
+// (เดิมมี navTo ซ้ำตรงนี้ = dead code ถูกตัวล่างทับ · ลบออก 2026-06-07 โดย Content Studio)
 
 document.querySelectorAll('.nav-item').forEach(el => {
   el.addEventListener('click', () => navTo(el.dataset.page));
