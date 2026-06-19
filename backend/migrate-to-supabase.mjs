@@ -13,7 +13,7 @@ function loadCreds() {
   const txt = readFileSync(CRED_FILE, 'utf8');
   const url = (txt.match(/https:\/\/[a-z0-9]+\.supabase\.(?:co|in)/) || [])[0];
   // key = JWT ขึ้นต้น eyJ (anon หรือ service role)
-  const key = (txt.match(/eyJ[A-Za-z0-9_\-.]+/) || [])[0];
+  const key = (txt.match(/sb_(?:publishable|secret)_[A-Za-z0-9_\-]+|eyJ[A-Za-z0-9_\-.]+/) || [])[0];
   if (!url || !key) throw new Error('ไม่พบ URL หรือ key ในไฟล์ ' + CRED_FILE);
   return { url, key };
 }

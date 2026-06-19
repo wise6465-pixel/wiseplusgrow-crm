@@ -3476,9 +3476,49 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 // ============================================================
 //  DATA LAYER
 // ============================================================
+// ── Supabase backend (ฐานข้อมูลกลาง — ทุก profile/เครื่อง เห็นข้อมูลชุดเดียว) ──
+const SUPA_URL = 'https://loxvsrmcmuzugqsortgg.supabase.co';
+const SUPA_KEY = 'sb_publishable_IcJkr_Py2WQ8AMShWus4FA_Z66gaCoU'; // publishable = public by design (RLS คุม)
+const SUPA_H = { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' };
+function supaUpsert(table, rows) {
+  if (!rows || !rows.length) return;
+  fetch(SUPA_URL + '/rest/v1/' + table, { method:'POST',
+    headers:{ ...SUPA_H, Prefer:'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(rows) }).catch(e => console.warn('[sync] push', e));
+}
+function supaPush(k, v) {
+  try {
+    if (k === 'customers') supaUpsert('customers', v.map(c => ({ id:String(c.id), name:c.name||'', ref_id:c.refId||null,
+      phone:c.phone||null, email:c.email||null, tax:c.tax||null, status:c.status||'prospect', address:c.address||null,
+      province:c.province||null, note:c.note||null, hotness:c.hotness||0, tags:c.tags||[], contacts:c.contacts||[],
+      unfollow:!!c.unfollow, owner_email:c.ownerEmail||null })));
+    else if (k === 'wpg_products') supaUpsert('products', v.map(p => ({ id:String(p.id), name:p.name||'', code:p.code||null,
+      grp:p.group||null, price:Number(p.price)||0, unit:p.unit||'ชิ้น' })));
+    else if (['quotes','orders','leads','activities','projects','tasks','members','settings'].includes(k))
+      supaUpsert('crm_kv', [{ key:k, value:v }]);
+  } catch(e) { console.warn('[sync] push map', e); }
+}
+async function supaHydrate() {
+  try {
+    const g = async (p) => { const r = await fetch(SUPA_URL+'/rest/v1/'+p, {headers:SUPA_H}); if(!r.ok) throw new Error(p+' '+r.status); return r.json(); };
+    // PostgREST จำกัด 1000 แถว/ครั้ง → แบ่งหน้าดึงให้ครบ
+    const gAll = async (table) => { let all=[], off=0; for(;;){ const rows = await g(table+'?select=*&order=id&limit=1000&offset='+off); all=all.concat(rows); if(rows.length<1000) break; off+=1000; } return all; };
+    const [cust, prod, kv] = await Promise.all([ gAll('customers'), gAll('products'), g('crm_kv?select=*') ]);
+    localStorage.setItem('wpg_customers', JSON.stringify(cust.map(r => ({ id:r.id, name:r.name, refId:r.ref_id, phone:r.phone,
+      email:r.email, tax:r.tax, status:r.status, address:r.address, province:r.province, note:r.note, hotness:r.hotness,
+      tags:r.tags||[], contacts:r.contacts||[], unfollow:r.unfollow, ownerEmail:r.owner_email, ...(r.extra||{}) }))));
+    localStorage.setItem('wpg_wpg_products', JSON.stringify(prod.map(r => ({ id:r.id, name:r.name, code:r.code, group:r.grp,
+      price:Number(r.price)||0, unit:r.unit, ...(r.extra||{}) }))));
+    const kvo = Object.fromEntries(kv.map(r => [r.key, r.value]));
+    ['quotes','orders','leads','activities','projects','tasks','members','settings'].forEach(k => { if (kvo[k]!==undefined) localStorage.setItem('wpg_'+k, JSON.stringify(kvo[k])); });
+    console.log('[sync] hydrated', cust.length, 'customers,', prod.length, 'products');
+    return true;
+  } catch(e) { console.warn('[sync] hydrate failed — ใช้ cache:', e.message); return false; }
+}
+
 const DB = {
   get: (k, def) => { try { return JSON.parse(localStorage.getItem('wpg_'+k)) ?? def; } catch { return def; } },
-  set: (k, v) => localStorage.setItem('wpg_'+k, JSON.stringify(v)),
+  set: (k, v) => { localStorage.setItem('wpg_'+k, JSON.stringify(v)); supaPush(k, v); },
 };
 
 let customers = DB.get('customers', []);
@@ -5195,17 +5235,29 @@ function navTo(page) {
 // ============================================================
 //  INIT
 // ============================================================
-(function init() {
-  // Load settings
+(async function init() {
+  // Load settings + phase2 data จาก cache → render ทันที (ไม่รอ network)
   document.getElementById('set-company').value = settings.company||'';
-  // Load phase2 data
   projects = DB.get('projects', []);
   leads = DB.get('leads', []);
   quotes = DB.get('quotes', []);
   orders = DB.get('orders', []);
-  // Go to dashboard first
   navTo('dashboard');
   updateCustStats();
+  // แล้วดึงข้อมูลล่าสุดจาก Supabase (ฐานกลาง) → re-render ให้ตรงทุกเครื่อง
+  const ok = await supaHydrate();
+  if (ok) {
+    customers   = DB.get('customers', []);
+    activities  = DB.get('activities', []);
+    tasks       = DB.get('tasks', []);
+    try { products = DB.get('wpg_products', []); } catch(e) {}
+    projects = DB.get('projects', []);
+    leads    = DB.get('leads', []);
+    quotes   = DB.get('quotes', []);
+    orders   = DB.get('orders', []);
+    navTo('dashboard');
+    updateCustStats();
+  }
 })();
 
 // ============================================================
