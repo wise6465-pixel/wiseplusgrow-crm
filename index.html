@@ -725,6 +725,19 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 </head>
 <body>
 
+<!-- ===== LOGIN (Supabase Auth) ===== -->
+<div id="login-overlay" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:36px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+    <div style="text-align:center;font-size:32px;">💎</div>
+    <div style="text-align:center;font-weight:700;font-size:18px;margin-bottom:2px;">Wiseplusgrow CRM</div>
+    <div style="text-align:center;color:#64748b;font-size:13px;margin-bottom:20px;">เข้าสู่ระบบเพื่อใช้งาน</div>
+    <input id="login-email" type="email" placeholder="อีเมล" autocomplete="username" style="width:100%;box-sizing:border-box;height:42px;border:1px solid #cbd5e1;border-radius:8px;padding:0 12px;margin-bottom:10px;font-size:14px;">
+    <input id="login-pw" type="password" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;box-sizing:border-box;height:42px;border:1px solid #cbd5e1;border-radius:8px;padding:0 12px;margin-bottom:14px;font-size:14px;">
+    <button id="login-btn" onclick="doLogin()" style="width:100%;height:44px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">เข้าสู่ระบบ</button>
+    <div id="login-err" style="color:#dc2626;font-size:13px;margin-top:12px;text-align:center;min-height:18px;"></div>
+  </div>
+</div>
+
 <!-- ===== SIDEBAR ===== -->
 <nav id="sidebar">
   <div class="sidebar-brand">
@@ -3479,11 +3492,34 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 // ── Supabase backend (ฐานข้อมูลกลาง — ทุก profile/เครื่อง เห็นข้อมูลชุดเดียว) ──
 const SUPA_URL = 'https://loxvsrmcmuzugqsortgg.supabase.co';
 const SUPA_KEY = 'sb_publishable_IcJkr_Py2WQ8AMShWus4FA_Z66gaCoU'; // publishable = public by design (RLS คุม)
-const SUPA_H = { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' };
+let SUPA_TOKEN = null; // user access_token หลัง login (null = ยังไม่ login → ใช้ publishable ซึ่ง RLS จะบล็อก)
+function supaH() { return { apikey: SUPA_KEY, Authorization: 'Bearer ' + (SUPA_TOKEN || SUPA_KEY), 'Content-Type': 'application/json' }; }
+// ── Auth (Supabase) — ทีม sales ต้อง login ก่อนถึงเห็นข้อมูล ──
+async function supaLogin(email, pw) {
+  const r = await fetch(SUPA_URL+'/auth/v1/token?grant_type=password', { method:'POST',
+    headers:{ apikey:SUPA_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ email, password: pw }) });
+  const d = await r.json();
+  if (!r.ok || !d.access_token) throw new Error(d.error_description || d.msg || d.error || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+  SUPA_TOKEN = d.access_token;
+  localStorage.setItem('wpg_auth', JSON.stringify({ token:d.access_token, refresh:d.refresh_token, email }));
+  return d;
+}
+async function supaRefresh(refresh) {
+  try {
+    const r = await fetch(SUPA_URL+'/auth/v1/token?grant_type=refresh_token', { method:'POST',
+      headers:{ apikey:SUPA_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ refresh_token: refresh }) });
+    const d = await r.json();
+    if (r.ok && d.access_token) { SUPA_TOKEN = d.access_token;
+      localStorage.setItem('wpg_auth', JSON.stringify({ token:d.access_token, refresh:d.refresh_token, email:d.user&&d.user.email })); return true; }
+  } catch(e) {}
+  return false;
+}
+function supaSession() { try { return JSON.parse(localStorage.getItem('wpg_auth')||'null'); } catch { return null; } }
+function supaLogout() { SUPA_TOKEN=null; localStorage.removeItem('wpg_auth'); location.reload(); }
 function supaUpsert(table, rows) {
   if (!rows || !rows.length) return;
   fetch(SUPA_URL + '/rest/v1/' + table, { method:'POST',
-    headers:{ ...SUPA_H, Prefer:'resolution=merge-duplicates,return=minimal' },
+    headers:{ ...supaH(), Prefer:'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(rows) }).catch(e => console.warn('[sync] push', e));
 }
 function supaPush(k, v) {
@@ -3500,7 +3536,7 @@ function supaPush(k, v) {
 }
 async function supaHydrate() {
   try {
-    const g = async (p) => { const r = await fetch(SUPA_URL+'/rest/v1/'+p, {headers:SUPA_H}); if(!r.ok) throw new Error(p+' '+r.status); return r.json(); };
+    const g = async (p) => { const r = await fetch(SUPA_URL+'/rest/v1/'+p, {headers:supaH()}); if(!r.ok) throw new Error(p+' '+r.status); return r.json(); };
     // PostgREST จำกัด 1000 แถว/ครั้ง → แบ่งหน้าดึงให้ครบ
     const gAll = async (table) => { let all=[], off=0; for(;;){ const rows = await g(table+'?select=*&order=id&limit=1000&offset='+off); all=all.concat(rows); if(rows.length<1000) break; off+=1000; } return all; };
     const [cust, prod, kv] = await Promise.all([ gAll('customers'), gAll('products'), g('crm_kv?select=*') ]);
@@ -5235,29 +5271,31 @@ function navTo(page) {
 // ============================================================
 //  INIT
 // ============================================================
-(async function init() {
-  // Load settings + phase2 data จาก cache → render ทันที (ไม่รอ network)
+function startApp() {
+  document.getElementById('login-overlay').style.display = 'none';
   document.getElementById('set-company').value = settings.company||'';
-  projects = DB.get('projects', []);
-  leads = DB.get('leads', []);
-  quotes = DB.get('quotes', []);
-  orders = DB.get('orders', []);
-  navTo('dashboard');
-  updateCustStats();
-  // แล้วดึงข้อมูลล่าสุดจาก Supabase (ฐานกลาง) → re-render ให้ตรงทุกเครื่อง
-  const ok = await supaHydrate();
-  if (ok) {
-    customers   = DB.get('customers', []);
-    activities  = DB.get('activities', []);
-    tasks       = DB.get('tasks', []);
+  projects = DB.get('projects', []); leads = DB.get('leads', []); quotes = DB.get('quotes', []); orders = DB.get('orders', []);
+  navTo('dashboard'); updateCustStats();
+  // ดึงข้อมูลล่าสุดจาก Supabase → re-render
+  supaHydrate().then(ok => { if (ok) {
+    customers = DB.get('customers', []); activities = DB.get('activities', []); tasks = DB.get('tasks', []);
     try { products = DB.get('wpg_products', []); } catch(e) {}
-    projects = DB.get('projects', []);
-    leads    = DB.get('leads', []);
-    quotes   = DB.get('quotes', []);
-    orders   = DB.get('orders', []);
-    navTo('dashboard');
-    updateCustStats();
-  }
+    projects = DB.get('projects', []); leads = DB.get('leads', []); quotes = DB.get('quotes', []); orders = DB.get('orders', []);
+    navTo('dashboard'); updateCustStats();
+  }});
+}
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const btn = document.getElementById('login-btn'), err = document.getElementById('login-err');
+  err.textContent = ''; btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ...';
+  try { await supaLogin(email, pw); startApp(); }
+  catch(e) { err.textContent = e.message; btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ'; }
+}
+(async function init() {
+  const sess = supaSession();
+  if (sess && sess.refresh && await supaRefresh(sess.refresh)) startApp();
+  else document.getElementById('login-overlay').style.display = 'flex'; // ยังไม่ login → โชว์หน้า login
 })();
 
 // ============================================================
